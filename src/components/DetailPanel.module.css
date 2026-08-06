@@ -1,0 +1,242 @@
+.panel {
+  padding: 18px 20px 20px;
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+}
+
+.eyebrow {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--coral);
+  font-size: 10.5px;
+  font-weight: 500;
+  letter-spacing: 0.16em;
+}
+
+.titleRow {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 9px;
+}
+
+.title {
+  font-size: 40px;
+  line-height: 1.02;
+  letter-spacing: 0.005em;
+}
+
+.portrait {
+  width: 64px;
+  height: 64px;
+  border-radius: 999px;
+  flex-shrink: 0;
+  display: grid;
+  place-items: center;
+  border: 1px solid var(--line);
+  box-shadow: var(--shadow-inset), 0 6px 18px #573e2b12;
+}
+
+.epithet {
+  font-family: var(--serif);
+  font-style: italic;
+  font-size: 16px;
+  color: var(--lavender);
+  margin-top: 6px;
+}
+
+.summary {
+  font-size: 13px;
+  line-height: 1.72;
+  color: #4a423c;
+  margin-top: 14px;
+}
+
+.rule {
+  height: 1px;
+  background: var(--line);
+  margin: 16px 0 14px;
+}
+
+.factList {
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+  margin-top: 11px;
+}
+
+.fact {
+  display: grid;
+  grid-template-columns: 15px 62px 1fr;
+  align-items: baseline;
+  gap: 9px;
+  font-size: 12px;
+}
+
+.factIcon {
+  color: var(--coral);
+  opacity: 0.85;
+  transform: translateY(2px);
+}
+
+.factKey {
+  color: var(--muted);
+}
+
+.factValue {
+  color: var(--ink);
+  line-height: 1.5;
+}
+
+/* 两块浅色说明卡：生态角色 / 你知道吗 */
+.aside {
+  display: flex;
+  gap: 9px;
+  padding: 11px 13px;
+  border-radius: 13px;
+  background: #755b460d;
+  margin-top: 12px;
+}
+
+.asideIcon {
+  flex-shrink: 0;
+  color: var(--sage);
+  transform: translateY(1px);
+}
+
+.asideBody {
+  min-width: 0;
+}
+
+.asideTitle {
+  font-size: 11.5px;
+  font-weight: 500;
+  color: var(--ink);
+  margin-bottom: 3px;
+}
+
+.asideText {
+  font-size: 11.5px;
+  line-height: 1.6;
+  color: var(--muted);
+}
+
+/* ---------------------------------------------------------------- 生活史 */
+
+.cycle {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  margin-top: 14px;
+  flex-wrap: wrap;
+}
+
+.cycleStep {
+  display: inline-flex;
+  align-items: center;
+  padding: 5px 10px;
+  border-radius: 999px;
+  background: #fffbf4;
+  border: 1px solid var(--line);
+  font-size: 10.5px;
+  color: #5c534c;
+}
+
+.cycleArrow {
+  color: #bcb1a6;
+  font-size: 10px;
+}
+
+/* ---------------------------------------------------------------- 按钮 */
+
+.actions {
+  margin-top: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+}
+
+.primary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 13px 17px;
+  border-radius: 13px;
+  background: linear-gradient(180deg, #ef8674, #e26e5c);
+  color: #fffaf5;
+  font-size: 13px;
+  font-weight: 500;
+  box-shadow: 0 8px 20px #e26e5c33;
+  transition: transform 0.16s ease, box-shadow 0.16s ease;
+}
+
+.primary:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 12px 26px #e26e5c42;
+}
+
+.pairRow {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 9px;
+}
+
+.ghost {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  padding: 11px 12px;
+  border-radius: 12px;
+  border: 1px solid var(--line);
+  background: #fffbf47a;
+  font-size: 12px;
+  color: var(--ink);
+  transition: background 0.16s ease, border-color 0.16s ease;
+}
+
+.ghost:hover {
+  background: var(--paper-solid);
+  border-color: var(--line-strong);
+}
+
+.ghost svg {
+  color: var(--lavender);
+}
+
+.ghost.wide svg {
+  color: var(--muted);
+}
+
+/* ---------------------------------------------------------------- 页脚元数据 */
+
+.meta {
+  margin-top: 16px;
+  padding-top: 13px;
+  border-top: 1px solid var(--line);
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+
+.metaRow {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+  font-size: 11px;
+}
+
+.metaKey {
+  color: var(--muted);
+  flex-shrink: 0;
+}
+
+.metaValue {
+  color: #5c534c;
+  text-align: right;
+  line-height: 1.5;
+}

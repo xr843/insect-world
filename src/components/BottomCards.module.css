@@ -1,0 +1,253 @@
+.row {
+  display: grid;
+  grid-template-columns: 232px repeat(5, minmax(0, 1fr));
+  gap: var(--gap);
+  margin-top: var(--gap);
+  align-items: stretch;
+}
+
+@media (max-width: 1500px) {
+  .row {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+  .quote {
+    grid-column: 1 / -1;
+  }
+}
+
+@media (max-width: 900px) {
+  .row {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 620px) {
+  .row {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/* ---------------------------------------------------------------- 引言卡 */
+
+.quote {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 12px;
+  padding: 22px 20px;
+  background: #f4ebdd8c;
+}
+
+.quoteMark {
+  color: var(--coral);
+  opacity: 0.75;
+}
+
+.quoteText {
+  font-family: var(--serif);
+  font-size: 19px;
+  line-height: 1.35;
+  color: var(--ink);
+}
+
+.quoteLink {
+  font-family: var(--serif);
+  font-style: italic;
+  font-size: 14px;
+  color: var(--lavender);
+}
+
+/* ---------------------------------------------------------------- 内容卡 */
+
+.card {
+  display: flex;
+  flex-direction: column;
+  padding: 15px 15px 13px;
+  min-height: 268px;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-lift);
+}
+
+.head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.kicker {
+  font-size: 9.5px;
+  font-weight: 500;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--lavender);
+}
+
+.headIcon {
+  color: var(--muted);
+  opacity: 0.7;
+  flex-shrink: 0;
+}
+
+.subject {
+  font-family: var(--serif);
+  font-size: 16px;
+  color: var(--ink);
+  margin-top: 4px;
+  line-height: 1.25;
+}
+
+.figure {
+  flex: 1;
+  display: grid;
+  place-items: center;
+  margin: 12px 0 10px;
+  min-height: 108px;
+}
+
+.foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 9px 12px;
+  border-radius: 11px;
+  border: 1px solid var(--line);
+  background: #fffbf46b;
+  font-size: 11.5px;
+  color: var(--ink);
+  transition: background 0.16s ease;
+}
+
+.card:hover .foot {
+  background: var(--paper-solid);
+}
+
+.foot svg {
+  color: var(--muted);
+  transition: transform 0.2s ease;
+}
+
+.card:hover .foot svg {
+  transform: translateX(3px);
+}
+
+/* ---------------------------------------------------------------- 图形 */
+
+.facetDisc {
+  width: 106px;
+  height: 106px;
+  border-radius: 999px;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  box-shadow: inset 0 0 22px #573e2b1f;
+}
+
+/* 体长对比条 */
+.bars {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+
+.bar {
+  display: grid;
+  grid-template-columns: 46px 1fr auto;
+  align-items: center;
+  gap: 7px;
+  font-size: 10px;
+}
+
+.barName {
+  color: var(--muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.barTrack {
+  height: 7px;
+  border-radius: 999px;
+  background: #755b4614;
+  overflow: hidden;
+}
+
+.barFill {
+  height: 100%;
+  border-radius: 999px;
+  transition: width 0.5s cubic-bezier(0.3, 1, 0.4, 1);
+}
+
+.barVal {
+  color: #5c534c;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+/* 生活史环 */
+.cycleFig {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+}
+
+.cycleItem {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+}
+
+.cycleDot {
+  width: 21px;
+  height: 21px;
+  border-radius: 999px;
+  display: grid;
+  place-items: center;
+  font-size: 9.5px;
+  font-weight: 700;
+  color: #fffdf8;
+  flex-shrink: 0;
+}
+
+.cycleLabel {
+  font-size: 11.5px;
+  color: #4a423c;
+}
+
+/* 观察笔记列表 */
+.notes {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.noteItem {
+  display: flex;
+  align-items: flex-start;
+  gap: 7px;
+  font-size: 11px;
+  line-height: 1.45;
+  color: #4a423c;
+}
+
+.noteBullet {
+  color: var(--coral);
+  flex-shrink: 0;
+  transform: translateY(1px);
+  font-size: 9px;
+}
+
+/* 栖息地插画 */
+.habitat {
+  width: 100%;
+  height: 108px;
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1px solid var(--line);
+}

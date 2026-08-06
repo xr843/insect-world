@@ -1,0 +1,298 @@
+.stage {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+}
+
+/* 展台：一枚从底部升起的巨大浅色圆，模型停在它的弧顶上。
+   参考站用同样的手法把 3D 物体「放」在一个平面上而不显得漂浮。 */
+.stage::before {
+  content: '';
+  position: absolute;
+  left: 50%;
+  bottom: -78%;
+  width: 128%;
+  aspect-ratio: 1;
+  transform: translateX(-50%);
+  border-radius: 50%;
+  background: radial-gradient(circle at 50% 22%, #efe4d6 0%, #e9dccb 46%, #e4d5c2 100%);
+  z-index: 0;
+}
+
+.stage::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(120% 78% at 50% 12%, #fffdfa 0%, #fffdfa00 58%);
+  z-index: 0;
+  pointer-events: none;
+}
+
+.canvasWrap {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+}
+
+.canvasWrap canvas {
+  outline: none;
+  touch-action: none;
+}
+
+/* ---------------------------------------------------------------- 工具条 */
+
+.rail {
+  position: absolute;
+  left: 16px;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 6;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 8px 6px;
+  border-radius: 16px;
+  background: #fffbf4d9;
+  border: 1px solid var(--line);
+  box-shadow: var(--shadow);
+  backdrop-filter: blur(8px);
+}
+
+.tool {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  width: 52px;
+  padding: 9px 2px 7px;
+  border-radius: 11px;
+  color: var(--ink);
+  transition: background 0.16s ease, color 0.16s ease;
+}
+
+.tool:hover {
+  background: #755b4614;
+}
+
+.tool[data-active='true'] {
+  background: #eb7c6b1f;
+  color: #c25a49;
+}
+
+.tool[data-active='true'] .toolLabel {
+  color: #c25a49;
+}
+
+.toolLabel {
+  font-size: 8px;
+  letter-spacing: 0.05em;
+  color: var(--muted);
+  white-space: nowrap;
+  transition: color 0.16s ease;
+}
+
+.railSplit {
+  height: 1px;
+  margin: 5px 8px;
+  background: var(--line);
+}
+
+/* ---------------------------------------------------------------- 便签 */
+
+.note {
+  position: absolute;
+  right: 22px;
+  top: 22px;
+  z-index: 6;
+  width: 176px;
+  padding: 13px 15px 15px;
+  background: #fdf3bf;
+  border-radius: 3px 14px 3px 3px;
+  box-shadow: 0 10px 26px #7d651d24, 0 1px 2px #7d651d1a;
+  transform: rotate(-0.7deg);
+  animation: fade-up 0.4s ease both;
+}
+
+.noteHead {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11px;
+  font-weight: 700;
+  color: #8a7420;
+  margin-bottom: 7px;
+}
+
+.noteBody {
+  font-family: var(--hand);
+  font-size: 12px;
+  line-height: 1.65;
+  color: #6f5c1c;
+}
+
+.noteBody span {
+  display: block;
+}
+
+.noteClose {
+  position: absolute;
+  top: 7px;
+  right: 8px;
+  color: #a08c37;
+  opacity: 0;
+  transition: opacity 0.16s ease;
+  font-size: 13px;
+  line-height: 1;
+}
+
+.note:hover .noteClose {
+  opacity: 1;
+}
+
+/* ---------------------------------------------------------------- 角标 */
+
+.caption {
+  position: absolute;
+  left: 24px;
+  bottom: 20px;
+  z-index: 5;
+  pointer-events: none;
+}
+
+.captionEyebrow {
+  font-size: 9.5px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: #9c9086;
+}
+
+.captionLatin {
+  font-family: var(--serif);
+  font-style: italic;
+  font-size: 17px;
+  color: #6f6259;
+  margin-top: 3px;
+}
+
+.autoRotate {
+  position: absolute;
+  right: 20px;
+  bottom: 20px;
+  z-index: 6;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 8px 11px 8px 13px;
+  border-radius: 999px;
+  background: #fffbf4d9;
+  border: 1px solid var(--line);
+  box-shadow: var(--shadow);
+  backdrop-filter: blur(8px);
+  font-size: 11.5px;
+  color: var(--ink);
+}
+
+.switch {
+  position: relative;
+  width: 34px;
+  height: 19px;
+  border-radius: 999px;
+  background: #cbbfb2;
+  transition: background 0.2s ease;
+  flex-shrink: 0;
+}
+
+.switch[data-on='true'] {
+  background: #59b6e0;
+}
+
+.switch::after {
+  content: '';
+  position: absolute;
+  top: 2.5px;
+  left: 2.5px;
+  width: 14px;
+  height: 14px;
+  border-radius: 999px;
+  background: #fff;
+  box-shadow: 0 1px 3px #00000026;
+  transition: transform 0.2s cubic-bezier(0.3, 1.4, 0.5, 1);
+}
+
+.switch[data-on='true']::after {
+  transform: translateX(15px);
+}
+
+/* ---------------------------------------------------------------- 状态 */
+
+.status {
+  position: absolute;
+  inset: 0;
+  z-index: 4;
+  display: grid;
+  place-items: center;
+  pointer-events: none;
+}
+
+.spinner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  color: var(--muted);
+  font-size: 12px;
+  animation: fade-up 0.3s ease both;
+}
+
+.spinnerRing {
+  width: 26px;
+  height: 26px;
+  border-radius: 999px;
+  border: 2px solid #755b4626;
+  border-top-color: var(--coral);
+  animation: spin 0.85s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.error {
+  max-width: 300px;
+  padding: 16px 18px;
+  border-radius: 14px;
+  background: #fffbf4;
+  border: 1px solid #eb7c6b4d;
+  color: #b4523f;
+  font-size: 12.5px;
+  line-height: 1.6;
+  text-align: center;
+  pointer-events: auto;
+}
+
+/* ---------------------------------------------------------------- 目标签 */
+
+.orderTag {
+  position: absolute;
+  left: 24px;
+  top: 22px;
+  z-index: 5;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: 999px;
+  background: #fffbf4c9;
+  border: 1px solid var(--line);
+  font-size: 11px;
+  color: var(--ink);
+  backdrop-filter: blur(6px);
+}
+
+.orderDot {
+  width: 6px;
+  height: 6px;
+  border-radius: 999px;
+}

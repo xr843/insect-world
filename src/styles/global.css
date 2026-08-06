@@ -1,0 +1,326 @@
+/**
+ * 设计系统 —— 纸感博物图鉴
+ *
+ * 色板与排版规格取自参考站 Anatomy Atelier：奶油纸背景 + 衬线标题 + 三色标注体系。
+ * 昆虫主题在原有 coral/lavender/sage 之外增补 amber（琥珀），用于第四类标注点。
+ */
+
+:root {
+  --ink: #2f2a27;
+  --muted: #8d847c;
+  --canvas: #f7f0e7;
+  --paper: #fffbf4d1;
+  --paper-solid: #fffbf4;
+  --line: #755b462e;
+  --line-strong: #755b4647;
+
+  --coral: #eb7c6b;
+  --lavender: #8d6bcc;
+  --sage: #769d74;
+  --amber: #c8944a;
+
+  --shadow: 0 18px 48px #573e2b0f;
+  --shadow-lift: 0 22px 56px #573e2b1c;
+  --shadow-inset: inset 0 1px 0 #ffffff8c;
+
+  --serif: 'Cormorant Garamond', 'Noto Serif SC', Georgia, serif;
+  --sans: 'DM Sans', 'Noto Sans SC', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --hand: 'Comic Sans MS', 'Segoe Print', cursive;
+
+  --radius: 18px;
+  --radius-sm: 12px;
+  --gap: 16px;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: var(--sans);
+  color: var(--ink);
+  background: var(--canvas);
+  /* 纸张的细微不匀：两层极淡的径向渐变，避免大面积纯色显得廉价 */
+  background-image:
+    radial-gradient(1200px 680px at 18% -8%, #fffdf9 0%, #fffdf900 62%),
+    radial-gradient(900px 560px at 92% 6%, #f5ece0 0%, #f5ece000 58%);
+  background-attachment: fixed;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+h1,
+h2,
+h3 {
+  font-family: var(--serif);
+  font-weight: 500;
+  letter-spacing: 0.01em;
+  margin: 0;
+}
+
+button {
+  font-family: inherit;
+  color: inherit;
+  border: 0;
+  background: none;
+  cursor: pointer;
+  padding: 0;
+}
+
+::selection {
+  background: #eb7c6b33;
+}
+
+/* 统一的滚动条，纸感页面里不能出现系统深色滚动条 */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: #755b4638 transparent;
+}
+*::-webkit-scrollbar {
+  width: 7px;
+  height: 7px;
+}
+*::-webkit-scrollbar-thumb {
+  background: #755b4638;
+  border-radius: 99px;
+}
+*::-webkit-scrollbar-thumb:hover {
+  background: #755b4666;
+}
+*::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+/* ---------------------------------------------------------------- 通用卡片 */
+
+.card {
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  backdrop-filter: blur(6px);
+}
+
+/* 小节标题：字距拉开的大写标签，图鉴里到处在用 */
+.eyebrow {
+  font-size: 10.5px;
+  font-weight: 500;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+/* ---------------------------------------------------------------- 页面骨架 */
+
+.app {
+  min-height: 100vh;
+  padding: 0 76px 64px;
+  max-width: 1640px;
+  margin: 0 auto;
+}
+
+@media (max-width: 1500px) {
+  .app {
+    padding: 0 32px 56px;
+  }
+}
+
+.workbench {
+  display: grid;
+  grid-template-columns: 232px minmax(0, 1fr) 292px;
+  gap: var(--gap);
+  align-items: start;
+}
+
+@media (max-width: 1240px) {
+  .workbench {
+    grid-template-columns: 200px minmax(0, 1fr);
+  }
+  .workbench > .detail-panel {
+    grid-column: 1 / -1;
+  }
+}
+
+@media (max-width: 900px) {
+  .workbench {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+.stage-height {
+  height: clamp(520px, calc(100vh - 210px), 720px);
+}
+
+/* 页面右缘的悬浮快捷键 */
+.rail-float {
+  position: fixed;
+  right: 18px;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 20;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.rail-float button {
+  width: 34px;
+  height: 34px;
+  border-radius: 11px;
+  display: grid;
+  place-items: center;
+  background: var(--paper);
+  border: 1px solid var(--line);
+  box-shadow: var(--shadow);
+  color: var(--muted);
+  backdrop-filter: blur(6px);
+  transition: color 0.16s ease, transform 0.16s ease, background 0.16s ease;
+}
+
+.rail-float button:hover {
+  color: var(--coral);
+  background: var(--paper-solid);
+  transform: translateY(-1px);
+}
+
+@media (max-width: 1240px) {
+  .rail-float {
+    display: none;
+  }
+}
+
+/* ---------------------------------------------------------------- 动画 */
+
+@keyframes fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes pop-in {
+  from {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes pulse-ring {
+  0% {
+    transform: scale(1);
+    opacity: 0.55;
+  }
+  70% {
+    transform: scale(2.1);
+    opacity: 0;
+  }
+  100% {
+    transform: scale(2.1);
+    opacity: 0;
+  }
+}
+
+/* ---------------------------------------------------------------- 3D 热点
+   由 drei 的 <Html> 渲染到 canvas 上层，故用全局类名而非 CSS Module。 */
+
+.hotspot {
+  position: relative;
+  pointer-events: none;
+}
+
+.hotspot-dot {
+  position: relative;
+  display: block;
+  width: 13px;
+  height: 13px;
+  border-radius: 999px;
+  background: var(--tone);
+  border: 2.5px solid #fffdf9;
+  box-shadow: 0 2px 7px #3a2a1c40;
+  pointer-events: auto;
+  transition: transform 0.18s cubic-bezier(0.3, 1.5, 0.5, 1);
+}
+
+.hotspot-dot:hover {
+  transform: scale(1.28);
+}
+
+.hotspot[data-open='true'] .hotspot-dot {
+  transform: scale(1.32);
+}
+
+/* 未展开时缓慢呼吸，提示这里可以点 */
+.hotspot-ring {
+  position: absolute;
+  inset: -2.5px;
+  border-radius: 999px;
+  border: 2px solid var(--tone);
+  animation: pulse-ring 2.6s ease-out infinite;
+}
+
+.hotspot[data-open='true'] .hotspot-ring {
+  animation: none;
+  opacity: 0;
+}
+
+.hotspot-card {
+  position: absolute;
+  left: 20px;
+  top: -9px;
+  width: 172px;
+  padding: 10px 13px 11px;
+  border-radius: 12px;
+  background: #fffdf8f2;
+  border: 1px solid var(--line);
+  box-shadow: 0 12px 30px #573e2b24;
+  backdrop-filter: blur(8px);
+  pointer-events: auto;
+  animation: fade-up 0.18s ease both;
+}
+
+.hotspot-title {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--ink);
+  margin-bottom: 4px;
+}
+
+.hotspot-swatch {
+  width: 6px;
+  height: 6px;
+  border-radius: 999px;
+  flex-shrink: 0;
+}
+
+.hotspot-note {
+  font-size: 11.5px;
+  line-height: 1.55;
+  color: var(--muted);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+}
