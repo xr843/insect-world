@@ -41,6 +41,17 @@
 
 /* ---------------------------------------------------------------- 工具条 */
 
+/**
+ * ⚠️ 两条影响文字清晰度的约束，改这块时注意：
+ *
+ * 1. 别加 backdrop-filter。它会把整条工具条变成合成层，里面的文字从
+ *    子像素渲染退化成灰度抗锯齿，小字会明显发虚。这里背景本来就压在
+ *    一片平缓渐变上，模糊看不出效果，纯属白亏清晰度。
+ * 2. `top:50% + translateY(-50%)` 在**高度为奇数**时会算出 −x.5px，
+ *    整条工具条连同文字一起偏半个像素，看起来就是糊的。当前高度 414
+ *    （偶数）没问题；若增删工具按钮或改字号导致高度变奇数，需要调
+ *    padding 补回偶数。
+ */
 .rail {
   position: absolute;
   left: 16px;
@@ -52,10 +63,9 @@
   gap: 2px;
   padding: 8px 6px;
   border-radius: 16px;
-  background: #fffbf4d9;
+  background: #fffcf6;
   border: 1px solid var(--line);
   box-shadow: var(--shadow);
-  backdrop-filter: blur(8px);
 }
 
 .tool {
@@ -84,8 +94,7 @@
 }
 
 .toolLabel {
-  font-size: 8px;
-  letter-spacing: 0.05em;
+  font-size: 11px;
   color: var(--muted);
   white-space: nowrap;
   transition: color 0.16s ease;
@@ -125,9 +134,9 @@
 
 .noteBody {
   font-family: var(--hand);
-  font-size: 12px;
-  line-height: 1.65;
-  color: #6f5c1c;
+  font-size: 12.5px;
+  line-height: 1.7;
+  color: #6b581a;
 }
 
 .noteBody span {
@@ -160,10 +169,9 @@
 }
 
 .captionEyebrow {
-  font-size: 9.5px;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  color: #9c9086;
+  font-size: 10.5px;
+  letter-spacing: 0.1em;
+  color: #8a7e73;
 }
 
 .captionLatin {
@@ -184,11 +192,10 @@
   gap: 9px;
   padding: 8px 11px 8px 13px;
   border-radius: 999px;
-  background: #fffbf4d9;
+  background: #fffcf6;
   border: 1px solid var(--line);
   box-shadow: var(--shadow);
-  backdrop-filter: blur(8px);
-  font-size: 11.5px;
+  font-size: 12px;
   color: var(--ink);
 }
 
@@ -284,11 +291,10 @@
   gap: 6px;
   padding: 6px 12px;
   border-radius: 999px;
-  background: #fffbf4c9;
+  background: #fffcf6;
   border: 1px solid var(--line);
-  font-size: 11px;
+  font-size: 11.5px;
   color: var(--ink);
-  backdrop-filter: blur(6px);
 }
 
 .orderDot {

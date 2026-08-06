@@ -25,7 +25,9 @@
 
   --serif: 'Cormorant Garamond', 'Noto Serif SC', Georgia, serif;
   --sans: 'DM Sans', 'Noto Sans SC', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-  --hand: 'Comic Sans MS', 'Segoe Print', cursive;
+  /* 手写体只有拉丁字形，中文会回退。回退项必须挑小字号下笔画清楚的黑体，
+     楷体一类在 12px 上会糊成一片。 */
+  --hand: 'Comic Sans MS', 'Segoe Print', 'Microsoft YaHei', 'PingFang SC', 'Noto Sans SC', cursive;
 
   --radius: 18px;
   --radius-sm: 12px;
