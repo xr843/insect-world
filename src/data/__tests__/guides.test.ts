@@ -31,8 +31,8 @@ describe('GUIDES 数据完整性', () => {
     }
   })
 
-  it('INSECTS 恰好 24 个物种', () => {
-    expect(INSECTS).toHaveLength(24)
+  it('INSECTS 恰好 32 个物种', () => {
+    expect(INSECTS).toHaveLength(32)
   })
 
   it.each(Object.keys(GUIDES))('%s：getGuide 能按 id 查到对应记录', id => {

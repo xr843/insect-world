@@ -27,6 +27,14 @@ const ALLOWED_ANCHORS: Record<string, string[]> = {
   hoverfly: ['haltere', 'wing', 'eye', 'abdomen', 'antenna', 'thorax'],
   lacewing: ['wing', 'eye', 'antenna', 'thorax', 'abdomen', 'leg'],
   earwig: ['forceps', 'elytra', 'antenna', 'head', 'abdomen', 'leg'],
+  'dung-beetle': ['clypeus', 'foreleg', 'elytra', 'horn', 'eye', 'pronotum'],
+  weevil: ['rostrum', 'antenna', 'elytra', 'eye', 'leg', 'pronotum'],
+  'click-beetle': ['pronotum', 'clickSpine', 'elytra', 'antenna', 'eye', 'leg'],
+  'diving-beetle': ['hindleg', 'elytra', 'eye', 'antenna', 'airStore', 'body'],
+  'rove-beetle': ['elytra', 'abdomen', 'mandible', 'antenna', 'eye', 'leg'],
+  'flower-chafer': ['elytra', 'notch', 'pronotum', 'eye', 'antenna', 'leg'],
+  'burying-beetle': ['elytra', 'antenna', 'abdomen', 'mandible', 'eye', 'pronotum'],
+  'tortoise-beetle': ['margin', 'elytra', 'head', 'eye', 'leg', 'pronotum'],
 }
 
 const EXPECTED_IDS = [
@@ -54,13 +62,21 @@ const EXPECTED_IDS = [
   'hoverfly',
   'lacewing',
   'earwig',
+  'dung-beetle',
+  'weevil',
+  'click-beetle',
+  'diving-beetle',
+  'rove-beetle',
+  'flower-chafer',
+  'burying-beetle',
+  'tortoise-beetle',
 ]
 
 const HEX_COLOR = /^#[0-9a-fA-F]{6}$/
 
 describe('INSECTS 数据完整性', () => {
-  it('恰好包含 24 条记录', () => {
-    expect(INSECTS).toHaveLength(24)
+  it('恰好包含 32 条记录', () => {
+    expect(INSECTS).toHaveLength(32)
   })
 
   it('id 全部唯一且与规定列表一致（含顺序）', () => {
@@ -169,5 +185,10 @@ describe('INSECTS 数据完整性', () => {
   it('order 覆盖了全部 11 个目', () => {
     const orders = new Set(INSECTS.map(i => i.order))
     expect(orders.size).toBe(11)
+  })
+
+  it('鞘翅目物种数为 15', () => {
+    const beetles = INSECTS.filter(i => i.order === '鞘翅目')
+    expect(beetles).toHaveLength(15)
   })
 })

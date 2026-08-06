@@ -124,3 +124,28 @@ describe('wing 的 spread 语义', () => {
     expect(bf.max.x - bf.min.x).toBeGreaterThan(bf.max.z - bf.min.z)
   })
 })
+
+describe('spindle 的 flat 语义', () => {
+  /**
+   * 同样钉住实际行为而非直觉：实现是 `ry = r/flat, rz = r*flat`，
+   * 所以 flat>1 是背腹压扁（花金龟那种扁平体型），flat<1 才是侧扁。
+   * kit 的文档一度写反，害得物种作者要自己反推公式才敢用。
+   */
+  it('flat > 1 压扁的是上下（高度），不是左右', async () => {
+    const { spindle } = await import('../kit')
+    const g = spindle([0, 0, 0], [3, 0, 0], 1, { flat: 2 })
+    g.computeBoundingBox()
+    const b = g.boundingBox!
+    const h = b.max.y - b.min.y
+    const w = b.max.z - b.min.z
+    expect(h, `flat=2 时高度 ${h.toFixed(2)} 应当明显小于宽度 ${w.toFixed(2)}`).toBeLessThan(w)
+  })
+
+  it('flat < 1 压扁的是左右（宽度）', async () => {
+    const { spindle } = await import('../kit')
+    const g = spindle([0, 0, 0], [3, 0, 0], 1, { flat: 0.5 })
+    g.computeBoundingBox()
+    const b = g.boundingBox!
+    expect(b.max.z - b.min.z).toBeLessThan(b.max.y - b.min.y)
+  })
+})

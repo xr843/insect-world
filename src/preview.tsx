@@ -39,6 +39,14 @@ const SPECIES = [
   ['mole-cricket', '东方蝼蛄'],
   ['water-strider', '水黾'],
   ['hoverfly', '黑带食蚜蝇'],
+  ['dung-beetle', '神农洁蜣螂'],
+  ['weevil', '竹象'],
+  ['click-beetle', '沟叩头虫'],
+  ['diving-beetle', '黄缘龙虱'],
+  ['rove-beetle', '梭毒隐翅虫'],
+  ['flower-chafer', '白星花金龟'],
+  ['burying-beetle', '日本埋葬虫'],
+  ['tortoise-beetle', '甘薯腊龟甲'],
 ] as const
 
 function countTriangles(obj: THREE.Object3D): number {

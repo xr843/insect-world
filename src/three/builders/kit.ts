@@ -203,7 +203,11 @@ export function loft(sections: Section[], radialSegments = 24, capEnds = true): 
  * 纺锤体：给定起止点与最粗处半径，生成两端收尖的椭球体。
  * 昆虫的头、胸、各腹节几乎都是这个形状。
  * @param bulge 最粗处在路径上的位置 0~1，默认 0.45
- * @param flat  扁平度：<1 上下扁（步行虫），>1 左右扁（螳螂腹）
+ * @param flat  扁平度。⚠️ 语义与直觉相反，实现是 `ry = r/flat, rz = r*flat`：
+ *              **>1 = 上下（背腹）压扁**，越大越扁平宽阔（花金龟、蠼螋）；
+ *              **<1 = 左右（侧向）压扁**，越小越侧扁高耸（螳螂腹）。
+ *              各物种文件都按这个实际行为标定过，`__tests__/mirror.test.ts`
+ *              钉住了它，别顺手「修正」—— 改了会让一批虫的体型一起翻转。
  */
 export function spindle(
   from: [number, number, number],
