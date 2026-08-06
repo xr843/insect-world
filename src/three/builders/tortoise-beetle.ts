@@ -173,13 +173,15 @@ export function buildTortoiseBeetle(): InsectModel {
   const pronotumProfile = (t: number) => carapaceProfile(globalT(THREE.MathUtils.lerp(pronotumXFrom, pronotumXTo, t)))
   const elytraProfile = (t: number) => carapaceProfile(globalT(THREE.MathUtils.lerp(elytraXFrom, elytraXTo, t)))
 
-  // ---- 前胸背板：前缘盖住头部（足印覆盖头部足印，正背面看不见头）
-  const pronotumDome = new THREE.Mesh(loft(domeSections(pronotumXFrom, pronotumXTo, domeBaseY, pronotumProfile, 1.3, 16), 26), carapaceMat)
+  // ---- 前胸背板：前缘盖住头部（足印覆盖头部足印，正背面看不见头）。
+  // steps 比初版加密（16→24），三角面预算远没花完，加密换取更平滑的
+  // 拱线，也让接缝附近的离散采样点更贴近连续曲线的真实值。
+  const pronotumDome = new THREE.Mesh(loft(domeSections(pronotumXFrom, pronotumXTo, domeBaseY, pronotumProfile, 1.3, 24), 26), carapaceMat)
   pronotumDome.name = 'pronotum'
   g.add(pronotumDome)
 
-  // ---- 鞘翅：覆盖胸腹大部
-  const elytraDome = new THREE.Mesh(loft(domeSections(elytraXFrom, elytraXTo, domeBaseY, elytraProfile, 1.3, 22), 28), carapaceMat)
+  // ---- 鞘翅：覆盖胸腹大部（steps 同样加密，22→30）
+  const elytraDome = new THREE.Mesh(loft(domeSections(elytraXFrom, elytraXTo, domeBaseY, elytraProfile, 1.3, 30), 28), carapaceMat)
   elytraDome.name = 'elytra'
   g.add(elytraDome)
 

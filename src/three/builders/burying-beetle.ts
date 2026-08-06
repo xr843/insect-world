@@ -240,14 +240,20 @@ export function buildBuryingBeetle(): InsectModel {
     // 曲面在 band 顶点对应角度上的真实半径，两者一比就知道偏了多少）。
     shell.userData.axisCenters = elytronCenters.map((c) => c.clone())
     shell.userData.axisSections = elytronSections.map((s) => ({ ry: s.ry, rz: s.rz }))
+    shell.userData.side = side
     g.add(shell)
 
     // 两条波浪橙红色带：紧贴鞘翅曲面（见 surfaceStripe 注释），前带靠近
-    // 肩部，后带靠近截断的末端
+    // 肩部，后带靠近截断的末端。带子的 theta 扫得较宽（一路扫到接近
+    // 背中线），个别顶点的世界坐标 z 会非常接近 0——测试若靠"z 的正负
+    // 号"判断左右侧会在这些点上翻车，因此顺手把 side 记进 userData，
+    // 供测试精确匹配同侧轴线，不用猜符号。
     const band1 = surfaceStripe(elytronSections, elytronCenters, side * elytraZ, 6, 1.8, -0.95, 1.3, 1.6, 2, bandMat)
     const band2 = surfaceStripe(elytronSections, elytronCenters, side * elytraZ, 15, 1.8, -0.95, 1.3, 1.6, 2, bandMat)
     band1.name = 'band'
     band2.name = 'band'
+    band1.userData.side = side
+    band2.userData.side = side
     g.add(band1, band2)
   }
 

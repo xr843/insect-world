@@ -1,12 +1,14 @@
 # 昆虫世界
 
-可交互的 3D 昆虫图鉴 —— 旋转、缩放、点击标注点，认识 24 种昆虫的身体构造、生活史与生态角色。
+可交互的 3D 昆虫图鉴 —— 旋转、缩放、点击标注点，认识 32 种昆虫的身体构造、生活史与生态角色。
 
 **线上：https://insect-world.pages.dev**
 
 **每一只虫都是代码实时生成的，仓库里没有一个模型文件。**
 
-24 个物种覆盖 11 个目：鞘翅目 7、鳞翅目 3、膜翅目 3、直翅目 3、半翅目 2，蜻蜓目、螳螂目、䗛目、双翅目、脉翅目、革翅目各 1。
+32 个物种覆盖 11 个目：鞘翅目 15、鳞翅目 3、膜翅目 3、直翅目 3、半翅目 2，蜻蜓目、螳螂目、䗛目、双翅目、脉翅目、革翅目各 1。
+
+目标 60 种，路线图见 [docs/roadmap.md](docs/roadmap.md)。
 
 ![图鉴总览](docs/screenshots/05-gallery-24.jpg)
 
@@ -18,7 +20,7 @@
 npm install
 npm run dev          # 主站      http://localhost:5178
                      # 模型调试台 http://localhost:5178/preview.html
-npm test             # 1034 个测试
+npm test             # 1384 个测试
 npm run build        # tsc --noEmit + vite build
 npm run deploy       # 构建并发布到 Cloudflare Pages（需先 npx wrangler login）
 ```
@@ -81,11 +83,11 @@ src/
     Discovery.tsx         讲解弹窗（讲解 / 动态演示 / 小测 / 栖境 四个变体）
     CompareBar.tsx        展台底部的内联对比条
     Gallery.tsx           按目分组的全部物种总览
-    InsectGlyph.tsx       24 个手写 SVG 剪影
+    InsectGlyph.tsx       32 个手写 SVG 剪影
   data/
     types.ts              数据契约
-    insects.ts            24 种昆虫的图鉴数据
-    guides.ts             24 种的分步讲解与测验
+    insects.ts            32 种昆虫的图鉴数据
+    guides.ts             32 种的分步讲解与测验
   preview.tsx             模型调试台（/preview.html）
 ```
 
@@ -102,7 +104,7 @@ src/
 
 `loft` 是全部几何的地基：给一串椭圆截面，沿路径放样成封闭实体。它对退化输入（重合点、零半径、竖直路径）有专门的测试，因为这些情况一旦产生 NaN，整个模型会静默变成空白。
 
-物种文件只依赖 kit，彼此不依赖 —— 24 个物种是分批并行写出来的。
+物种文件只依赖 kit，彼此不依赖 —— 32 个物种是分批并行写出来的。
 
 ### 坐标与数据的约定
 
@@ -151,7 +153,7 @@ src/
 npm test
 ```
 
-13 个文件、1034 个测试：
+19 个文件、1384 个测试：
 
 | 文件 | 数量 | 管什么 |
 | --- | --- | --- |

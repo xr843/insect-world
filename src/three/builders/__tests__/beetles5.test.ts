@@ -176,42 +176,48 @@ describe('日本埋葬虫 buildBuryingBeetle', () => {
   it('色带贴合鞘翅曲面：顶点到曲面真实半径的径向偏移 < 局部半径的 5%（证明是染色而非焊接物体）', () => {
     model.group.updateMatrixWorld(true)
 
-    // 收集两侧鞘翅各自暴露的截面轴线数据（世界坐标）。两侧共享同一份
-    // 原始（z=0）局部数据，分别乘各自 mesh 的 matrixWorld 后，会正确
-    // 分开落在 +Z/-Z 两侧，用来跟同一侧的 band 顶点比对。
+    // 收集两侧鞘翅各自暴露的截面轴线数据（世界坐标），按 builder 写进
+    // userData.side 的 1/-1 分组——band 的 theta 扫得较宽（一路扫到接近
+    // 背中线），个别顶点的世界坐标 z 会非常接近 0，若靠"z 的正负号"猜
+    // 左右侧，会在这些临界点上把顶点错配到对侧轴线（首次实测就撞上了：
+    // 错配后 dz 因对称性凑巧接近正确值的点算出的偏移很小，但没这么巧的
+    // 点会算出几十个百分点的假偏移）。用 side 精确匹配，不猜符号。
     type AxisSample = { center: THREE.Vector3; ry: number; rz: number }
-    const axisSamples: AxisSample[] = []
+    const axisSamplesBySide = new Map<number, AxisSample[]>()
     model.group.traverse((obj) => {
       const mesh = obj as THREE.Mesh
       if (!mesh.isMesh || mesh.name !== 'elytra') return
       const centers = mesh.userData.axisCenters as THREE.Vector3[] | undefined
       const secs = mesh.userData.axisSections as { ry: number; rz: number }[] | undefined
+      const side = mesh.userData.side as number | undefined
       expect(centers, 'elytra mesh 缺少 userData.axisCenters').toBeTruthy()
       expect(secs, 'elytra mesh 缺少 userData.axisSections').toBeTruthy()
+      expect(side, 'elytra mesh 缺少 userData.side').toBeTruthy()
+      const list: AxisSample[] = axisSamplesBySide.get(side!) ?? []
       for (let i = 0; i < centers!.length; i++) {
         const worldCenter = centers![i].clone().applyMatrix4(mesh.matrixWorld)
-        axisSamples.push({ center: worldCenter, ry: secs![i].ry, rz: secs![i].rz })
+        list.push({ center: worldCenter, ry: secs![i].ry, rz: secs![i].rz })
       }
+      axisSamplesBySide.set(side!, list)
     })
-    expect(axisSamples.length, '没有采到任何 elytra 截面轴线数据').toBeGreaterThan(0)
+    expect(axisSamplesBySide.size, '没有采到任何 elytra 截面轴线数据').toBeGreaterThan(0)
 
     let maxRatio = 0
     let sampleCount = 0
     model.group.traverse((obj) => {
       const mesh = obj as THREE.Mesh
       if (!mesh.isMesh || mesh.name !== 'band') return
+      const side = mesh.userData.side as number | undefined
+      expect(side, 'band mesh 缺少 userData.side').toBeTruthy()
+      const candidates = axisSamplesBySide.get(side!)
+      expect(candidates, `side=${side} 没有对应的轴线样本`).toBeTruthy()
       const pos = mesh.geometry.getAttribute('position')
       for (let i = 0; i < pos.count; i++) {
         const world = new THREE.Vector3(pos.getX(i), pos.getY(i), pos.getZ(i)).applyMatrix4(mesh.matrixWorld)
 
-        // 先按 z 同号筛出"同一侧"的轴线样本，再在其中找 x 最接近的——
-        // 两侧鞘翅的轴线在 x 上完全重合，不按 side 过滤会把左侧顶点错配
-        // 到右侧轴线上。
-        const sameSide = axisSamples.filter((s) => Math.sign(s.center.z || 1) === Math.sign(world.z || 1))
-        const candidates = sameSide.length > 0 ? sameSide : axisSamples
         let nearest: AxisSample | null = null
         let nearestDx = Infinity
-        for (const s of candidates) {
+        for (const s of candidates!) {
           const dx = Math.abs(s.center.x - world.x)
           if (dx < nearestDx) {
             nearestDx = dx
@@ -322,10 +328,11 @@ describe('甘薯腊龟甲 buildTortoiseBeetle', () => {
     const pronotumHeight = pronotumBox.max.y - pronotumBox.min.y
     const elytraHeight = elytraBox.max.y - elytraBox.min.y
 
-    // 接缝在 builder 里是 x=0（前胸背板与鞘翅的分界，见 tortoise-beetle.ts
-    // 的 seamX）；用"该命名 mesh 上离 x=0 最近的顶点的高度"分别量两段，
-    // 而不是复述 builder 里的常量。
-    const seamX = 0
+    // 接缝在 builder 局部坐标里是 x=0，但 finalize() 会把整个模型平移到
+    // 包围盒中心，渲染出来的世界坐标里接缝并不在 0——实测偏了约 0.016。
+    // 不复述 builder 里的常量，而是从渲染出的两个命名 mesh 的包围盒边界
+    // 反推真实接缝位置：前胸背板的最小 x 与鞘翅的最大 x 的中点。
+    const seamX = (pronotumBox.min.x + elytraBox.max.x) / 2
     const pronotumSeamY = yNearestX(model.group, 'pronotum', seamX)
     const elytraSeamY = yNearestX(model.group, 'elytra', seamX)
     expect(Number.isFinite(pronotumSeamY), '找不到 pronotum 上任何顶点').toBe(true)
