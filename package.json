@@ -4,6 +4,21 @@
   "private": true,
   "type": "module",
   "description": "昆虫世界 — 像博物学家一样认识昆虫。可交互 3D 昆虫图鉴。",
+  "license": "MIT",
+  "author": "xr843",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/xr843/insect-world.git"
+  },
+  "keywords": [
+    "three.js",
+    "react-three-fiber",
+    "procedural-geometry",
+    "insects",
+    "entomology",
+    "3d",
+    "field-guide"
+  ],
   "scripts": {
     "dev": "vite",
     "build": "tsc --noEmit && vite build",

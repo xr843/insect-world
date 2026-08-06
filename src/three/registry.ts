@@ -36,10 +36,6 @@ function pickBuilder(mod: Record<string, unknown>): () => InsectModel {
   throw new Error('模块中没有找到 build* 导出')
 }
 
-export function isKnownSpecies(id: string): boolean {
-  return id in LOADERS
-}
-
 /** 取得某物种的模型；重复调用返回同一个实例 */
 export async function loadInsectModel(id: string): Promise<InsectModel> {
   const hit = cache.get(id)
