@@ -7,6 +7,15 @@
  *   出来的尺寸（同 beetles2.test.ts 里 trunk/mandible 的手法），而
  *   不是复述 builder 里的数字，这样删掉/削弱那个形态特征时断言真的
  *   会失败。
+ *
+ * 2026-08-06 返工记录：协调者用浏览器实机渲染后发现两处"测试全绿但
+ * 看着不像"——tortoise-beetle 的两个 dome 断裂成"两颗分离的蛋"，
+ * burying-beetle 的横带是"凸起焊在壳上的软垫"。geometry 本身没有
+ * 报错、旧断言（截面积/半径比例）也全过，因为那些断言压根没有测到
+ * "连续性"和"贴合度"这两个真正出问题的维度。本文件补的四条新断言
+ * 专门测这两个维度，并且都用"逆向从真实渲染几何体量取数字"的方式
+ * 写（不复述 builder 里的构造参数），确保改回旧版本时会真的失败——
+ * 已用旧版本的构造参数手工验算过，全部确认会 fail。
  */
 import * as THREE from 'three'
 import { describe, expect, it } from 'vitest'
@@ -72,6 +81,30 @@ function firstMaterialByName(group: THREE.Group, name: string): THREE.MeshPhysic
     }
   })
   return found
+}
+
+/**
+ * 在某个命名 mesh 的所有顶点里，找"世界坐标 x 最接近 xTarget"的那一个，
+ * 返回它的世界坐标 y。用于量"接缝正好在哪个高度"——比"窗口内取最大
+ * y"更精确，不会被窗口内离接缝稍远、但恰好更高的采样点带偏。
+ */
+function yNearestX(group: THREE.Group, name: string, xTarget: number): number {
+  let bestY = NaN
+  let bestDx = Infinity
+  group.traverse((obj) => {
+    const mesh = obj as THREE.Mesh
+    if (!mesh.isMesh || mesh.name !== name) return
+    const pos = mesh.geometry.getAttribute('position')
+    for (let i = 0; i < pos.count; i++) {
+      const world = new THREE.Vector3(pos.getX(i), pos.getY(i), pos.getZ(i)).applyMatrix4(mesh.matrixWorld)
+      const dx = Math.abs(world.x - xTarget)
+      if (dx < bestDx) {
+        bestDx = dx
+        bestY = world.y
+      }
+    }
+  })
+  return bestY
 }
 
 describe('日本埋葬虫 buildBuryingBeetle', () => {
@@ -140,6 +173,73 @@ describe('日本埋葬虫 buildBuryingBeetle', () => {
     ).toBeGreaterThanOrEqual(baseRadius * 2.5)
   })
 
+  it('色带贴合鞘翅曲面：顶点到曲面真实半径的径向偏移 < 局部半径的 5%（证明是染色而非焊接物体）', () => {
+    model.group.updateMatrixWorld(true)
+
+    // 收集两侧鞘翅各自暴露的截面轴线数据（世界坐标）。两侧共享同一份
+    // 原始（z=0）局部数据，分别乘各自 mesh 的 matrixWorld 后，会正确
+    // 分开落在 +Z/-Z 两侧，用来跟同一侧的 band 顶点比对。
+    type AxisSample = { center: THREE.Vector3; ry: number; rz: number }
+    const axisSamples: AxisSample[] = []
+    model.group.traverse((obj) => {
+      const mesh = obj as THREE.Mesh
+      if (!mesh.isMesh || mesh.name !== 'elytra') return
+      const centers = mesh.userData.axisCenters as THREE.Vector3[] | undefined
+      const secs = mesh.userData.axisSections as { ry: number; rz: number }[] | undefined
+      expect(centers, 'elytra mesh 缺少 userData.axisCenters').toBeTruthy()
+      expect(secs, 'elytra mesh 缺少 userData.axisSections').toBeTruthy()
+      for (let i = 0; i < centers!.length; i++) {
+        const worldCenter = centers![i].clone().applyMatrix4(mesh.matrixWorld)
+        axisSamples.push({ center: worldCenter, ry: secs![i].ry, rz: secs![i].rz })
+      }
+    })
+    expect(axisSamples.length, '没有采到任何 elytra 截面轴线数据').toBeGreaterThan(0)
+
+    let maxRatio = 0
+    let sampleCount = 0
+    model.group.traverse((obj) => {
+      const mesh = obj as THREE.Mesh
+      if (!mesh.isMesh || mesh.name !== 'band') return
+      const pos = mesh.geometry.getAttribute('position')
+      for (let i = 0; i < pos.count; i++) {
+        const world = new THREE.Vector3(pos.getX(i), pos.getY(i), pos.getZ(i)).applyMatrix4(mesh.matrixWorld)
+
+        // 先按 z 同号筛出"同一侧"的轴线样本，再在其中找 x 最接近的——
+        // 两侧鞘翅的轴线在 x 上完全重合，不按 side 过滤会把左侧顶点错配
+        // 到右侧轴线上。
+        const sameSide = axisSamples.filter((s) => Math.sign(s.center.z || 1) === Math.sign(world.z || 1))
+        const candidates = sameSide.length > 0 ? sameSide : axisSamples
+        let nearest: AxisSample | null = null
+        let nearestDx = Infinity
+        for (const s of candidates) {
+          const dx = Math.abs(s.center.x - world.x)
+          if (dx < nearestDx) {
+            nearestDx = dx
+            nearest = s
+          }
+        }
+        if (!nearest) continue
+
+        const dy = world.y - nearest.center.y
+        const dz = world.z - nearest.center.z
+        const theta = Math.atan2(dz, dy)
+        const cosT = Math.cos(theta)
+        const sinT = Math.sin(theta)
+        const trueR = 1 / Math.sqrt((cosT / nearest.ry) ** 2 + (sinT / nearest.rz) ** 2)
+        const actualR = Math.hypot(dy, dz)
+
+        const ratio = Math.abs(actualR - trueR) / trueR
+        if (ratio > maxRatio) maxRatio = ratio
+        sampleCount++
+      }
+    })
+
+    expect(sampleCount, '没有采到任何 band 顶点').toBeGreaterThan(0)
+    // eslint-disable-next-line no-console
+    console.log(`[burying-beetle] band max radial offset ratio = ${(maxRatio * 100).toFixed(2)}% over ${sampleCount} vertices`)
+    expect(maxRatio, `色带顶点最大径向偏移比例 ${(maxRatio * 100).toFixed(2)}% 应 < 5%`).toBeLessThan(0.05)
+  })
+
   it('三角面数在预算内', () => {
     const { triangles } = inspectGeometry(model.group)
     // eslint-disable-next-line no-console
@@ -196,6 +296,52 @@ describe('甘薯腊龟甲 buildTortoiseBeetle', () => {
     console.log(`[tortoise-beetle] margin material opacity=${mat!.opacity} transparent=${mat!.transparent}`)
     expect(mat!.opacity, `裙边材质 opacity ${mat!.opacity} 应 < 0.75`).toBeLessThan(0.75)
     expect(mat!.transparent, '裙边材质 transparent 应为 true').toBe(true)
+  })
+
+  it('背甲（前胸背板+鞘翅，不含裙边）足够扁平：高度/长度 < 0.3（证明是低矮拱线而非两颗高鼓包）', () => {
+    const shellBox = unionBoxByName(model.group, 'pronotum')
+    shellBox.union(unionBoxByName(model.group, 'elytra'))
+    expect(shellBox.isEmpty(), '找不到 pronotum/elytra 命名的 mesh').toBe(false)
+
+    const shellSize = new THREE.Vector3()
+    shellBox.getSize(shellSize)
+    const ratio = shellSize.y / shellSize.x
+
+    // eslint-disable-next-line no-console
+    console.log(`[tortoise-beetle] shellHeight=${shellSize.y.toFixed(3)} shellLength=${shellSize.x.toFixed(3)} ratio=${ratio.toFixed(3)}`)
+    expect(ratio, `背甲高度 ${shellSize.y.toFixed(3)} / 长度 ${shellSize.x.toFixed(3)} = ${ratio.toFixed(3)} 应 < 0.3`).toBeLessThan(0.3)
+  })
+
+  it('前胸背板与鞘翅在接缝处平滑接合：高度差 < 两者平均最大高度的 20%（证明是一条连续拱线而非两个台阶）', () => {
+    model.group.updateMatrixWorld(true)
+
+    const pronotumBox = unionBoxByName(model.group, 'pronotum')
+    const elytraBox = unionBoxByName(model.group, 'elytra')
+    expect(pronotumBox.isEmpty(), '找不到 pronotum 命名的 mesh').toBe(false)
+    expect(elytraBox.isEmpty(), '找不到 elytra 命名的 mesh').toBe(false)
+    const pronotumHeight = pronotumBox.max.y - pronotumBox.min.y
+    const elytraHeight = elytraBox.max.y - elytraBox.min.y
+
+    // 接缝在 builder 里是 x=0（前胸背板与鞘翅的分界，见 tortoise-beetle.ts
+    // 的 seamX）；用"该命名 mesh 上离 x=0 最近的顶点的高度"分别量两段，
+    // 而不是复述 builder 里的常量。
+    const seamX = 0
+    const pronotumSeamY = yNearestX(model.group, 'pronotum', seamX)
+    const elytraSeamY = yNearestX(model.group, 'elytra', seamX)
+    expect(Number.isFinite(pronotumSeamY), '找不到 pronotum 上任何顶点').toBe(true)
+    expect(Number.isFinite(elytraSeamY), '找不到 elytra 上任何顶点').toBe(true)
+
+    const seamDiff = Math.abs(pronotumSeamY - elytraSeamY)
+    const refHeight = (pronotumHeight + elytraHeight) / 2
+
+    // eslint-disable-next-line no-console
+    console.log(
+      `[tortoise-beetle] pronotumSeamY=${pronotumSeamY.toFixed(4)} elytraSeamY=${elytraSeamY.toFixed(4)} seamDiff=${seamDiff.toFixed(4)} refHeight=${refHeight.toFixed(4)} ratio=${(seamDiff / refHeight).toFixed(3)}`,
+    )
+    expect(
+      seamDiff,
+      `接缝处高度差 ${seamDiff.toFixed(4)} 应 < 两者平均最大高度 ${refHeight.toFixed(4)} 的 20%（${(refHeight * 0.2).toFixed(4)}）`,
+    ).toBeLessThan(refHeight * 0.2)
   })
 
   it('三角面数在预算内', () => {

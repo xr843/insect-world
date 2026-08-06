@@ -19,11 +19,17 @@
  *   读出来是真正半透明而不是普通哑光色。
  * - 中央拱起部分（前胸背板+鞘翅）复用 ladybird.ts 的"平底圆顶"手法
  *   （domeSections/humpProfile：路径中心 y 随半径同步抬升，底边始终
- *   贴在同一条水平线上）——但把 maxR 相对路径长度压得更低，做出比
- *   瓢虫扁得多的、更接近"微微拱起"而非"高高隆起"的丘状轮廓，且其
- *   足印（XZ 范围）必须明显小于裙边，好让裙边从四周探出来。材质走
- *   elytra() 的金属+清漆路线（clearcoat 由 elytra() 内定 0.55，不
- *   手动加高），另加轻微 iridescence 做出"金绿到琥珀色"随角度漂移
+ *   贴在同一条水平线上），但**两段共用同一条全局包络曲线**（见
+ *   carapaceProfile）——前胸背板与鞘翅只是这条曲线在不同 x 区间的
+ *   两段截取，且在接缝处 x 上留一小段重叠，因此半径在接缝处必然
+ *   连续、不会出现"两个各自独立收尖的鼓包、中间凹一道"的台阶感。
+ *   最初的版本让两段各自独立 humpProfile()、且两段 x 范围之间还留了
+ *   空隙，实机渲染出来是断开的两颗蛋，这是本文件唯一动过返工的地方。
+ *   整条曲线的 maxR 相对全长压得很低（高度/全长 < 0.3），从侧面看
+ *   是一条平滑低矮的拱线，而不是瓢虫那种高高隆起的半球。材质上两段
+ *   共用同一枚材质对象（同色同光泽，不再是"一深绿一褐"两种色相），
+ *   走 elytra() 的金属+清漆路线（clearcoat 由 elytra() 内定 0.55，
+ *   不手动加高），叠轻微 iridescence 做出"金绿到琥珀色"随角度漂移
  *   的金属光泽（同 jewel-beetle.ts 的加法）。
  * - 头部完全缩在前胸背板圆顶前缘下方（背板足印覆盖头部足印），六足
  *   短小、splay 角压得很低，紧贴身体收在裙边下方，不越出裙边范围。
@@ -97,12 +103,14 @@ function marginGeometry(halfLength: number, halfWidth: number, thickness: number
 export function buildTortoiseBeetle(): InsectModel {
   const g = new THREE.Group()
 
-  // 中央拱起：金属光泽，金绿到琥珀色。elytra() 内定 clearcoat=0.55，不手动加高。
-  const pronotumMat = elytra('#a8842f', 0.6) // 偏琥珀的暖金
-  const elytraMat = elytra('#7d8f2e', 0.55) // 偏绿的金属光泽
-  elytraMat.iridescence = 0.4
-  elytraMat.iridescenceIOR = 1.8
-  elytraMat.iridescenceThicknessRange = [250, 500]
+  // 中央拱起：前胸背板与鞘翅**共用同一枚材质对象**（同色同光泽），
+  // 避免"一深绿一褐"两种色相并排读成两个不同物体；同一材质上叠轻微
+  // iridescence 做出金绿到琥珀色随角度漂移的金属光泽。
+  // elytra() 内定 clearcoat=0.55，不手动加高。
+  const carapaceMat = elytra('#8c8438', 0.58)
+  carapaceMat.iridescence = 0.4
+  carapaceMat.iridescenceIOR = 1.8
+  carapaceMat.iridescenceThicknessRange = [250, 500]
 
   // 半透明裙边：opacity 压到 0.42（<0.75）+ translucent，读出来是真正的半透明薄檐
   const marginMat = chitin({ color: '#dce6ab', gloss: 0.55, opacity: 0.42, translucent: true, side: THREE.DoubleSide })
@@ -142,15 +150,36 @@ export function buildTortoiseBeetle(): InsectModel {
   // ---- 复眼：极小，藏在头部两侧（头又藏在前胸背板下方，正上方看不见）
   g.add(compoundEyePair({ at: [0.155, groundY + 0.035, 0.035], radius: 0.014, color: '#0b0908', flatten: 0.85, facets: false }))
 
-  // ---- 前胸背板：中央拱起，前缘盖住头部（足印覆盖头部足印，正背面看不见头）
-  const pronotumProfile = humpProfile(0.55, 0.018, 0.1, 0.03)
-  const pronotumDome = new THREE.Mesh(loft(domeSections(0.22, -0.01, domeBaseY, pronotumProfile, 1.3, 18), 26), pronotumMat)
+  // ---- 背甲（前胸背板+鞘翅）：两段共用同一条全局包络 carapaceProfile，
+  // 见文件头注释。carapaceProfile 的输入 t 是"背甲全长"上的全局进度：
+  // 0 = 背甲最前端（前胸背板前缘），1 = 背甲最后端（鞘翅末端）。峰值
+  // 略偏后段（鞘翅区），且整体压得很扁——高度只有全长的一小部分，
+  // 符合"从侧面看是一条平滑低矮拱线"的真实龟甲轮廓。
+  const carapaceXFront = 0.23
+  const carapaceXBack = -0.27
+  const carapaceLen = carapaceXFront - carapaceXBack
+  const carapaceProfile = humpProfile(0.6, 0.012, 0.06, 0.016)
+  const globalT = (x: number) => THREE.MathUtils.clamp((carapaceXFront - x) / carapaceLen, 0, 1)
+
+  // 前胸背板与鞘翅在 x 上各自只覆盖背甲的一段，且在 seamX 两侧留一小段
+  // 重叠（overlap）——两段用的是同一个 carapaceProfile，重叠区内两片
+  // 曲面完全重合，因此接缝处半径连续、贴紧甚至微微咬合，不会露出缝隙。
+  const seamX = 0.0
+  const overlap = 0.015
+  const pronotumXFrom = carapaceXFront
+  const pronotumXTo = seamX - overlap
+  const elytraXFrom = seamX + overlap
+  const elytraXTo = carapaceXBack
+  const pronotumProfile = (t: number) => carapaceProfile(globalT(THREE.MathUtils.lerp(pronotumXFrom, pronotumXTo, t)))
+  const elytraProfile = (t: number) => carapaceProfile(globalT(THREE.MathUtils.lerp(elytraXFrom, elytraXTo, t)))
+
+  // ---- 前胸背板：前缘盖住头部（足印覆盖头部足印，正背面看不见头）
+  const pronotumDome = new THREE.Mesh(loft(domeSections(pronotumXFrom, pronotumXTo, domeBaseY, pronotumProfile, 1.3, 16), 26), carapaceMat)
   pronotumDome.name = 'pronotum'
   g.add(pronotumDome)
 
-  // ---- 鞘翅：中央拱起，覆盖胸腹大部
-  const elytraProfile = humpProfile(0.4, 0.045, 0.135, 0.02)
-  const elytraDome = new THREE.Mesh(loft(domeSections(0.02, -0.27, domeBaseY, elytraProfile, 1.25, 22), 28), elytraMat)
+  // ---- 鞘翅：覆盖胸腹大部
+  const elytraDome = new THREE.Mesh(loft(domeSections(elytraXFrom, elytraXTo, domeBaseY, elytraProfile, 1.3, 22), 28), carapaceMat)
   elytraDome.name = 'elytra'
   g.add(elytraDome)
 
@@ -160,8 +189,8 @@ export function buildTortoiseBeetle(): InsectModel {
   marginMesh.name = 'margin'
   g.add(marginMesh)
 
-  const pronotumTop = domeTop(0.22, -0.01, domeBaseY, pronotumProfile, 0.45)
-  const elytraTop = domeTop(0.02, -0.27, domeBaseY, elytraProfile, 0.4)
+  const pronotumTop = domeTop(pronotumXFrom, pronotumXTo, domeBaseY, pronotumProfile, 0.85)
+  const elytraTop = domeTop(elytraXFrom, elytraXTo, domeBaseY, elytraProfile, 0.35)
 
   const anchors: Record<string, THREE.Vector3> = {
     margin: new THREE.Vector3(0.0, 0.03, 0.27), // 裙边外缘上

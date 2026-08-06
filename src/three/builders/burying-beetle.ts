@@ -10,11 +10,20 @@
  *   一个近乎平齐的截面，而不是像常规甲虫那样收尖成一个点。腹部则
  *   用 kit.segmentedAbdomen() 整段建出，长度明显超过鞘翅覆盖范围。
  * - 鞘翅上两条橙红色波浪横带是本种最醒目的视觉标志（黑底橙纹，俗
- *   称"红胸"/"黑背橙纹"埋葬虫的日常外观）。横带用 wavyBand()：在
- *   沿宽度方向（theta）扫描的同时，让取样所用的"长度方向截面下标"
- *   按正弦波动，这样带子的前后边缘会天然起伏成波浪状，而不是一条
- *   齐整的环带——比 tiger-beetle.ts 里笔直的 surfaceBand() 多了一维
- *   扰动。
+ *   称"红胸"/"黑背橙纹"埋葬虫的日常外观）。横带用 surfaceStripe()：
+ *   带子必须是"鞘翅表面本身被染色"，不能是"贴在表面上的独立物体"
+ *   ——第一版用 kit.loft() 造了一根有实体半径的管子焊在壳上，实机
+ *   渲染出来是一块块凸起的橙色软垫，边缘还翘起，这是本文件唯一动
+ *   过返工的地方。修正后不再造管子：每个采样点都用与放样鞘翅完全
+ *   相同的截面数据（sections/centers）算出曲面上的精确位置和法线，
+ *   径向只偏移局部半径的 1.5%（下限 0.0012，仅用于避免 z-fighting），
+ *   宽度和厚度都通过在曲面上取两条相邻边界线（沿 theta 扫描 = 带子
+ *   的长边；沿截面下标取一小段偏移 = 带子的窄边）拉出一条贴面三角
+ *   带，而不是靠管子半径撑出体积。取样时让"长度方向截面下标"按正弦
+ *   波动，两条边界线跟着一起波动，带子的前后边缘因此天然起伏成波浪
+ *   状。同时把放样鞘翅用的 sections/centers 原始数据存进 shell mesh
+ *   的 userData，供测试独立验证"色带顶点到鞘翅真实曲面的径向偏移"
+ *   ——而不是只信构造时声明的偏移量。
  * - 触角是本种第二个招牌特征：埋葬虫靠触角末端骤然膨大的橙色"棒
  *   状端球"嗅闻数百米外的尸体气味。kit.antenna() 的 'clavate' 类型
  *   只在最后 22% 路径上渐扩，膨大倍数上限约 2.5x 且是连续渐变，读
@@ -59,41 +68,75 @@ function truncatedWidth(t: number): number {
 }
 
 /**
- * 波浪横带：沿鞘翅宽度方向（theta）扫过，同时让取样用的"长度方向截面
- * 下标"按正弦波动，带子的前后边缘因此天然起伏——同 tiger-beetle.ts
- * 里 surfaceBand() 共用的法线贴面公式，只多了 wave 这一维扰动。
+ * 贴合曲面的色带：不造管子，直接在鞘翅曲面上铺一条极薄的三角带。
+ * 沿 theta（鞘翅宽度方向，从背中线扫向体侧）方向前进的同时，在每一步
+ * 都取两条"长度方向截面下标"相邻的边界线（中心下标 ± halfThicknessIdx，
+ * 且这个中心下标本身按正弦波动），两条边界线各自用与放样鞘翅完全相同
+ * 的截面数据算出曲面上的精确位置——径向只偏移局部半径的 1.5%（下限
+ * 0.0012，仅用于避免 z-fighting）。宽度和厚度都是"曲面上两条线拉开的
+ * 距离"，不是靠管子半径撑出体积，因此读出来是"这片壳变成了橙色"而
+ * 不是"壳上粘了个东西"。中心下标的正弦波动让两条边界线一起起伏，带子
+ * 的前后边缘因此天然是波浪状。
  */
-function wavyBand(
+function surfaceStripe(
   sections: Section[],
   centers: THREE.Vector3[],
   zOffset: number,
   centerIdx: number,
+  halfThicknessIdx: number,
   thetaFrom: number,
   thetaTo: number,
   waveAmpIdx: number,
   waveCount: number,
-  tubeR: number,
   material: THREE.Material,
 ): THREE.Mesh {
-  const steps = 28
-  const pts: Section[] = []
-  for (let i = 0; i <= steps; i++) {
-    const f = i / steps
-    const theta = THREE.MathUtils.lerp(thetaFrom, thetaTo, f)
-    const wave = Math.sin(f * Math.PI * waveCount) * waveAmpIdx
-    const idx = THREE.MathUtils.clamp(Math.round(centerIdx + wave), 0, sections.length - 1)
+  const steps = 40
+
+  const surfaceAt = (theta: number, idxF: number): { pos: THREE.Vector3; normal: THREE.Vector3 } => {
+    const idx = THREE.MathUtils.clamp(Math.round(idxF), 0, sections.length - 1)
     const sec = sections[idx]
     const center = centers[idx]
     const nx = (Math.cos(theta) / Math.max(sec.ry, 1e-6)) * sec.rz
     const nz = (Math.sin(theta) / Math.max(sec.rz, 1e-6)) * sec.ry
     const normal = new THREE.Vector3(0, nx, nz).normalize()
+    const localR = Math.min(sec.ry, sec.rz)
     const pos = new THREE.Vector3(center.x, center.y + Math.cos(theta) * sec.ry, zOffset + Math.sin(theta) * sec.rz).addScaledVector(
       normal,
-      0.014,
+      Math.max(localR * 0.015, 0.0012),
     )
-    pts.push({ at: pos, ry: tubeR, rz: tubeR * 1.6 })
+    return { pos, normal }
   }
-  return new THREE.Mesh(loft(pts, 10), material)
+
+  // 显式给每个顶点写入曲面法线（与放样鞘翅同一套公式算出来的真实法线），
+  // 不用 computeVertexNormals() 现算——一条前后两条边界线共享顶点、两条
+  // 边只在"长度方向下标"上差 2*halfThicknessIdx，若靠自动算法线，边界
+  // 退化窄带时容易出现权重异常；直接写解析法线更稳，也与壳体法线完全
+  // 一致，贴上去光照不会显得"浮"。material 另开 DoubleSide，避免三角形
+  // 环绕方向偶尔算反导致背面消隐、色带从正常视角看不见。
+  const positions: number[] = []
+  const normals: number[] = []
+  const indices: number[] = []
+  for (let i = 0; i <= steps; i++) {
+    const f = i / steps
+    const theta = THREE.MathUtils.lerp(thetaFrom, thetaTo, f)
+    const wave = Math.sin(f * Math.PI * waveCount) * waveAmpIdx
+    const idxCenter = centerIdx + wave
+    const front = surfaceAt(theta, idxCenter - halfThicknessIdx)
+    const back = surfaceAt(theta, idxCenter + halfThicknessIdx)
+    positions.push(front.pos.x, front.pos.y, front.pos.z, back.pos.x, back.pos.y, back.pos.z)
+    normals.push(front.normal.x, front.normal.y, front.normal.z, back.normal.x, back.normal.y, back.normal.z)
+    if (i < steps) {
+      const a = i * 2
+      const b = a + 2
+      indices.push(a, b, a + 1, b, b + 1, a + 1)
+    }
+  }
+
+  const geo = new THREE.BufferGeometry()
+  geo.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3))
+  geo.setAttribute('normal', new THREE.Float32BufferAttribute(normals, 3))
+  geo.setIndex(indices)
+  return new THREE.Mesh(geo, material)
 }
 
 /**
@@ -159,8 +202,9 @@ export function buildBuryingBeetle(): InsectModel {
 
   const bodyMat = chitin({ color: '#141110', gloss: 0.6, metal: 0.15, clearcoat: 0.35 })
   const elytraMat = elytra('#100d0c', 0.15) // 乌黑鞘翅底色；clearcoat 由 elytra() 内定 0.55，不手动加高
-  const bandMat = chitin({ color: '#dd6a22', gloss: 0.6, metal: 0.08, clearcoat: 0.3 }) // 橙红横带
-  const antennaStalkMat = chitin({ color: '#241a14', gloss: 0.45 })
+  // 橙红横带：DoubleSide 防止 surfaceStripe() 的三角形环绕方向偶尔算反导致背面消隐
+  const bandMat = chitin({ color: '#dd6a22', gloss: 0.6, metal: 0.08, clearcoat: 0.3, side: THREE.DoubleSide })
+  const antennaStalkMat = chitin({ color: '#362419', gloss: 0.45 }) // 略调暖，向端球过渡不那么陡
   const antennaClubMat = chitin({ color: '#e97a24', gloss: 0.55, clearcoat: 0.28 }) // 触角端球，与横带同色系呼应
   const mandMat = chitin({ color: '#0f0c0a', gloss: 0.68, metal: 0.2, clearcoat: 0.4 })
   const legMat = chitin({ color: '#1c1512', gloss: 0.42, metal: 0.12, clearcoat: 0.25 })
@@ -191,11 +235,20 @@ export function buildBuryingBeetle(): InsectModel {
     const shell = new THREE.Mesh(loft(elytronSections, 26), elytraMat)
     shell.position.z = side * elytraZ
     shell.name = 'elytra'
+    // 把放样鞘翅用的原始截面数据存进 userData，供测试独立验证 band 是否
+    // 真的贴合曲面（不是信构造时的偏移声明，而是拿这份真实截面数据反推
+    // 曲面在 band 顶点对应角度上的真实半径，两者一比就知道偏了多少）。
+    shell.userData.axisCenters = elytronCenters.map((c) => c.clone())
+    shell.userData.axisSections = elytronSections.map((s) => ({ ry: s.ry, rz: s.rz }))
     g.add(shell)
 
-    // 两条波浪横带：前带靠近肩部，后带靠近截断的末端
-    g.add(wavyBand(elytronSections, elytronCenters, side * elytraZ, 6, -1.0, 1.35, 1.3, 2, 0.05, bandMat))
-    g.add(wavyBand(elytronSections, elytronCenters, side * elytraZ, 15, -1.0, 1.35, 1.3, 2, 0.05, bandMat))
+    // 两条波浪橙红色带：紧贴鞘翅曲面（见 surfaceStripe 注释），前带靠近
+    // 肩部，后带靠近截断的末端
+    const band1 = surfaceStripe(elytronSections, elytronCenters, side * elytraZ, 6, 1.8, -0.95, 1.3, 1.6, 2, bandMat)
+    const band2 = surfaceStripe(elytronSections, elytronCenters, side * elytraZ, 15, 1.8, -0.95, 1.3, 1.6, 2, bandMat)
+    band1.name = 'band'
+    band2.name = 'band'
+    g.add(band1, band2)
   }
 
   // ---- 前胸背板：压扁椭球做隆起中央 + 更宽的扁平圆柱做外扩的檐，
@@ -225,8 +278,10 @@ export function buildBuryingBeetle(): InsectModel {
   // ---- 大颚：发达，通用咀嚼式口器足够表现"切割用"
   g.add(mandibles({ at: [1.02, 0.13, 0.08], length: 0.19, spread: 0.4, curve: 0.5 }, mandMat))
 
-  // ---- 触角：短柄 + 骤然膨大的橙色端球（见 clubbedAntenna 注释）
-  g.add(clubbedAntennaPair([0.94, 0.22, 0.13], 0.4, 0.022, 0.07, antennaStalkMat, antennaClubMat))
+  // ---- 触角：短柄 + 骤然膨大的橙色端球（见 clubbedAntenna 注释）。
+  // 端球半径比初版略收（0.07→0.062），比例仍 ≥2.5x 柄基半径，视觉上
+  // 不那么像棒棒糖。
+  g.add(clubbedAntennaPair([0.94, 0.22, 0.13], 0.4, 0.022, 0.062, antennaStalkMat, antennaClubMat))
 
   // ---- 三对足：扁平宽阔体型下的支撑步行足，前足带刺（掘穴/翻动尸体）
   const legSpecs: LegSpec[] = [
