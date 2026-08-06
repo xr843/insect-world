@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import type { Insect } from '../data/types'
 import { InsectCanvas, type ViewMode } from '../three/InsectCanvas'
+import { CompareBar } from './CompareBar'
 import {
   IconBox,
   IconIsolate,
@@ -15,10 +16,18 @@ import s from './Stage.module.css'
 
 export function Stage({
   insect,
-  onCompare,
+  compareWith,
+  onCompareToggle,
+  onCompareCycle,
+  focusAnchor = null,
 }: {
   insect: Insect
-  onCompare: () => void
+  /** 非 null 时展台底部浮出对比条 */
+  compareWith: Insect | null
+  onCompareToggle: () => void
+  onCompareCycle: () => void
+  /** 讲解弹窗下发的镜头指令 */
+  focusAnchor?: string | null
 }) {
   const [mode, setMode] = useState<ViewMode>('normal')
   const [spin, setSpin] = useState(true)
@@ -68,6 +77,7 @@ export function Stage({
           onToggleHotspot={setOpenHotspot}
           zoomNonce={zoomNonce}
           resetNonce={resetNonce}
+          focusAnchor={focusAnchor}
           onStatus={onStatus}
         />
       </div>
@@ -112,7 +122,7 @@ export function Stage({
           <IconLayers size={17} />
           <span className={s.toolLabel}>分层</span>
         </button>
-        <button className={s.tool} onClick={onCompare}>
+        <button className={s.tool} data-active={compareWith !== null} onClick={onCompareToggle}>
           <IconBox size={17} />
           <span className={s.toolLabel}>对比</span>
         </button>
@@ -152,11 +162,21 @@ export function Stage({
         <div className={s.captionLatin}>{insect.latin}</div>
       </div>
 
-      <button className={s.autoRotate} onClick={() => setSpin((v) => !v)}>
-        <IconRotate size={13} />
-        自动旋转
-        <span className={s.switch} data-on={spin} />
-      </button>
+      {/* 对比条占住展台底部，此时让自动旋转开关让位，避免两块浮层叠在一起 */}
+      {compareWith ? (
+        <CompareBar
+          left={insect}
+          right={compareWith}
+          onCycle={onCompareCycle}
+          onClose={onCompareToggle}
+        />
+      ) : (
+        <button className={s.autoRotate} onClick={() => setSpin((v) => !v)}>
+          <IconRotate size={13} />
+          自动旋转
+          <span className={s.switch} data-on={spin} />
+        </button>
+      )}
 
       {(showLoading || status.error) && (
         <div className={s.status}>

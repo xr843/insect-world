@@ -1,4 +1,5 @@
 import type { Insect } from '../data/types'
+import type { DiscoveryKind } from './Discovery'
 import { InsectGlyph } from './InsectGlyph'
 import {
   FactIcon,
@@ -15,11 +16,11 @@ import s from './DetailPanel.module.css'
 export function DetailPanel({
   insect,
   onCompare,
-  onLesson,
+  onDiscover,
 }: {
   insect: Insect
   onCompare: () => void
-  onLesson: () => void
+  onDiscover: (kind: DiscoveryKind) => void
 }) {
   return (
     <aside className={`card stage-height ${s.panel} detail-panel`} key={insect.id}>
@@ -88,16 +89,16 @@ export function DetailPanel({
       </div>
 
       <div className={s.actions}>
-        <button className={s.primary} onClick={onLesson}>
+        <button className={s.primary} onClick={() => onDiscover('lesson')}>
           读它的图鉴详解
           <IconArrowRight size={15} />
         </button>
         <div className={s.pairRow}>
-          <button className={s.ghost} onClick={onLesson}>
+          <button className={s.ghost} onClick={() => onDiscover('motion')}>
             <IconPlay size={13} />
             动态演示
           </button>
-          <button className={s.ghost} onClick={onLesson}>
+          <button className={s.ghost} onClick={() => onDiscover('quiz')}>
             <IconQuiz size={13} />
             小测
           </button>

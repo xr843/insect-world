@@ -27,6 +27,18 @@ const SPECIES = [
   ['firefly', '中华黄萤'],
   ['longhorn-beetle', '星天牛'],
   ['stick-insect', '中华修竹节虫'],
+  ['swallowtail', '玉带凤蝶'],
+  ['silk-moth', '柞蚕蛾'],
+  ['hornet', '金环胡蜂'],
+  ['lacewing', '中华草蛉'],
+  ['tiger-beetle', '中华虎甲'],
+  ['stag-beetle', '中华大锹甲'],
+  ['jewel-beetle', '日本吉丁'],
+  ['earwig', '海滨蠼螋'],
+  ['katydid', '优雅蝈螽'],
+  ['mole-cricket', '东方蝼蛄'],
+  ['water-strider', '水黾'],
+  ['hoverfly', '黑带食蚜蝇'],
 ] as const
 
 function countTriangles(obj: THREE.Object3D): number {

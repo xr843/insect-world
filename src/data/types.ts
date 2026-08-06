@@ -10,6 +10,8 @@ export type Order =
   | '直翅目'
   | '半翅目'
   | '双翅目'
+  | '脉翅目'
+  | '革翅目'
   | '䗛目'
 
 /** 3D 模型上的一个可点击标注点 */
@@ -33,6 +35,29 @@ export interface Fact {
   value: string
   /** 行首小图标标识 */
   icon: 'size' | 'weight' | 'time' | 'place' | 'food' | 'ability'
+}
+
+/**
+ * 讲解弹窗的一步。带 anchor 时，3D 展台会把镜头移到那个部位上，
+ * 让「读到哪里、看到哪里」对上 —— 参考站的讲解弹窗只是静态文字，
+ * 这里让它和模型联动。
+ */
+export interface LessonStep {
+  title: string
+  body: string
+  /** 对应 InsectModel.anchors 的 key，可省略 */
+  anchor?: string
+}
+
+/** 一道单选题 */
+export interface QuizQuestion {
+  question: string
+  /** 3 个选项 */
+  options: string[]
+  /** 正确选项的下标 */
+  answer: number
+  /** 作答后展示的解释，说明为什么 */
+  explain: string
 }
 
 export interface Insect {
@@ -66,4 +91,16 @@ export interface Insect {
   relatives: string[]
   /** 缩略图与主题色（十六进制） */
   accent: string
+}
+
+/** 讲解与测验内容，按物种 id 索引；与 Insect 分文件存放以免单个文件过大 */
+export interface Guide {
+  /** 3~4 步的分步讲解 */
+  lesson: LessonStep[]
+  /** 「动态演示」弹窗讲的是这个物种最值得看的一个动作 */
+  motion: { title: string; body: string }
+  /** 2 道单选题 */
+  quiz: QuizQuestion[]
+  /** 「它在哪里」：栖境与在生态系统中的位置 */
+  habitat: { title: string; body: string }
 }

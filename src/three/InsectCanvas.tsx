@@ -182,10 +182,15 @@ function Framing({
       goal.current = { target: focus.clone(), dist: radius * 0.62 }
       c.minDistance = radius * 0.18
     } else {
-      goal.current = { target: new THREE.Vector3(0, 0, 0), dist: radius * 2.3 }
+      // 退出聚焦要回到与初次取景相同的距离，否则镜头会一直停在偏近的位置
+      const fov = ((camera as THREE.PerspectiveCamera).fov * Math.PI) / 180
+      goal.current = {
+        target: new THREE.Vector3(0, 0, 0),
+        dist: (radius / Math.sin(fov / 2)) * 1.12,
+      }
       c.minDistance = radius * 1.15
     }
-  }, [focus, controls, radius])
+  }, [focus, controls, radius, camera])
 
   useFrame((_, dt) => {
     const c = controls.current
@@ -273,6 +278,7 @@ function Scene({
   controls,
   zoomNonce,
   resetNonce,
+  focusAnchor,
   onLoaded,
   onError,
 }: {
@@ -284,6 +290,7 @@ function Scene({
   controls: React.RefObject<OrbitControlsImpl>
   zoomNonce: number
   resetNonce: number
+  focusAnchor: string | null
   onLoaded: () => void
   onError: (msg: string) => void
 }) {
@@ -325,13 +332,19 @@ function Scene({
   const radius = model?.radius ?? 1
   const floorY = box ? box.min.y * 0.86 - radius * 0.06 : -radius * 0.7
 
-  // 聚焦模式下凑近看的部位：优先当前展开的标注点，没有就取第一个
+  /**
+   * 镜头凑近看的部位，两个来源：
+   * 讲解弹窗逐步下发的 focusAnchor 优先（读到哪、看到哪），
+   * 其次才是工具条的「聚焦」模式（取当前展开的标注点）。
+   */
   const focus = useMemo(() => {
-    if (mode !== 'isolate' || !model) return null
+    if (!model) return null
+    if (focusAnchor) return model.anchors[focusAnchor] ?? null
+    if (mode !== 'isolate') return null
     const spot =
       insect.hotspots.find((h) => h.id === openHotspot) ?? insect.hotspots[0]
     return spot ? model.anchors[spot.anchor] ?? null : null
-  }, [mode, model, insect.hotspots, openHotspot])
+  }, [mode, model, insect.hotspots, openHotspot, focusAnchor])
 
   return (
     <>
@@ -402,6 +415,7 @@ export function InsectCanvas({
   onToggleHotspot,
   zoomNonce,
   resetNonce,
+  focusAnchor = null,
   onStatus,
 }: {
   insect: Insect
@@ -411,6 +425,8 @@ export function InsectCanvas({
   onToggleHotspot: (id: string | null) => void
   zoomNonce: number
   resetNonce: number
+  /** 由讲解弹窗下发的镜头指令，优先于工具条的聚焦模式 */
+  focusAnchor?: string | null
   onStatus: (s: { loading: boolean; error: string | null }) => void
 }) {
   const controls = useRef<OrbitControlsImpl>(null)
@@ -441,6 +457,7 @@ export function InsectCanvas({
           controls={controls}
           zoomNonce={zoomNonce}
           resetNonce={resetNonce}
+          focusAnchor={focusAnchor}
           onLoaded={() => onStatus({ loading: false, error: null })}
           onError={(msg) => onStatus({ loading: false, error: msg })}
         />

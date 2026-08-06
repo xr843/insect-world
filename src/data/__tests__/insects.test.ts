@@ -15,6 +15,18 @@ const ALLOWED_ANCHORS: Record<string, string[]> = {
   firefly: ['lantern', 'elytra', 'eye', 'antenna', 'thorax', 'leg'],
   'longhorn-beetle': ['antenna', 'elytra', 'mandible', 'eye', 'pronotum', 'leg'],
   'stick-insect': ['body', 'leg', 'antenna', 'head', 'thorax', 'camouflage'],
+  swallowtail: ['forewing', 'hindwing', 'tail', 'antenna', 'eye', 'abdomen'],
+  'silk-moth': ['eyespot', 'antenna', 'forewing', 'hindwing', 'thorax', 'abdomen'],
+  hornet: ['mandible', 'sting', 'wing', 'eye', 'antenna', 'waist'],
+  'tiger-beetle': ['mandible', 'elytra', 'eye', 'leg', 'antenna', 'pronotum'],
+  'stag-beetle': ['mandible', 'elytra', 'head', 'antenna', 'leg', 'pronotum'],
+  'jewel-beetle': ['elytra', 'stripe', 'eye', 'antenna', 'pronotum', 'leg'],
+  katydid: ['antenna', 'wing', 'hindleg', 'ovipositor', 'eye', 'tympanum'],
+  'mole-cricket': ['foreleg', 'pronotum', 'wing', 'abdomen', 'eye', 'antenna'],
+  'water-strider': ['midleg', 'foreleg', 'hindleg', 'body', 'eye', 'antenna'],
+  hoverfly: ['haltere', 'wing', 'eye', 'abdomen', 'antenna', 'thorax'],
+  lacewing: ['wing', 'eye', 'antenna', 'thorax', 'abdomen', 'leg'],
+  earwig: ['forceps', 'elytra', 'antenna', 'head', 'abdomen', 'leg'],
 }
 
 const EXPECTED_IDS = [
@@ -30,13 +42,25 @@ const EXPECTED_IDS = [
   'firefly',
   'longhorn-beetle',
   'stick-insect',
+  'swallowtail',
+  'silk-moth',
+  'hornet',
+  'tiger-beetle',
+  'stag-beetle',
+  'jewel-beetle',
+  'katydid',
+  'mole-cricket',
+  'water-strider',
+  'hoverfly',
+  'lacewing',
+  'earwig',
 ]
 
 const HEX_COLOR = /^#[0-9a-fA-F]{6}$/
 
 describe('INSECTS 数据完整性', () => {
-  it('恰好包含 12 条记录', () => {
-    expect(INSECTS).toHaveLength(12)
+  it('恰好包含 24 条记录', () => {
+    expect(INSECTS).toHaveLength(24)
   })
 
   it('id 全部唯一且与规定列表一致（含顺序）', () => {
@@ -140,5 +164,10 @@ describe('INSECTS 数据完整性', () => {
   it('全部物种的 accent 互不相同', () => {
     const accents = INSECTS.map(i => i.accent.toLowerCase())
     expect(new Set(accents).size).toBe(accents.length)
+  })
+
+  it('order 覆盖了全部 11 个目', () => {
+    const orders = new Set(INSECTS.map(i => i.order))
+    expect(orders.size).toBe(11)
   })
 })

@@ -23,9 +23,12 @@ const NAV = [
 export function TopBar({
   insects,
   onPick,
+  onLessons,
 }: {
   insects: Insect[]
   onPick: (id: string) => void
+  /** 「课程」打开讲解弹窗 —— 参考站的 Lessons 也是这个行为 */
+  onLessons: () => void
 }) {
   const [active, setActive] = useState<string>('explore')
   const [query, setQuery] = useState('')
@@ -67,7 +70,10 @@ export function TopBar({
             key={key}
             className={s.navItem}
             data-active={active === key}
-            onClick={() => setActive(key)}
+            onClick={() => {
+              setActive(key)
+              if (key === 'lessons') onLessons()
+            }}
           >
             <Icon size={15} />
             {label}

@@ -7,6 +7,7 @@
  */
 import { useMemo } from 'react'
 import type { Insect } from '../data/types'
+import type { DiscoveryKind } from './Discovery'
 import {
   IconArrowRight,
   IconDocument,
@@ -128,12 +129,12 @@ export function BottomCards({
   insect,
   peers,
   onCompare,
-  onLesson,
+  onDiscover,
 }: {
   insect: Insect
   peers: Insect[]
   onCompare: () => void
-  onLesson: () => void
+  onDiscover: (kind: DiscoveryKind) => void
 }) {
   // 体长对比：当前物种 + 三个体型差异明显的同伴，按长度排序
   const bars = useMemo(() => {
@@ -184,7 +185,7 @@ export function BottomCards({
         <div className={s.figure}>
           <FacetDisc color={insect.accent} />
         </div>
-        <button className={s.foot} onClick={onLesson}>
+        <button className={s.foot} onClick={() => onDiscover('lesson')}>
           放大看结构
           <IconArrowRight size={13} />
         </button>
@@ -249,7 +250,7 @@ export function BottomCards({
             ))}
           </div>
         </div>
-        <button className={s.foot} onClick={onLesson}>
+        <button className={s.foot} onClick={() => onDiscover('motion')}>
           播放发育动画
           <IconArrowRight size={13} />
         </button>
@@ -273,7 +274,7 @@ export function BottomCards({
             ))}
           </div>
         </div>
-        <button className={s.foot} onClick={onLesson}>
+        <button className={s.foot} onClick={() => onDiscover('lesson')}>
           查看全部笔记
           <IconArrowRight size={13} />
         </button>
@@ -290,7 +291,7 @@ export function BottomCards({
         <div className={s.figure}>
           <HabitatFigure color={insect.accent} order={insect.order} />
         </div>
-        <button className={s.foot} onClick={onCompare}>
+        <button className={s.foot} onClick={() => onDiscover('habitat')}>
           看这一目的成员
           <IconShare size={13} />
         </button>
