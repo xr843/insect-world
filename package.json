@@ -24,7 +24,8 @@
     "build": "tsc --noEmit && vite build",
     "preview": "vite preview",
     "typecheck": "tsc --noEmit",
-    "test": "vitest run"
+    "test": "vitest run",
+    "deploy": "npm run build && npx wrangler pages deploy dist --project-name=insect-world --branch=master --commit-dirty=true"
   },
   "dependencies": {
     "@react-three/drei": "^9.117.3",
@@ -41,5 +42,6 @@
     "typescript": "^5.7.2",
     "vite": "^6.0.7",
     "vitest": "^2.1.8"
-  }
+  },
+  "homepage": "https://insect-world.pages.dev"
 }

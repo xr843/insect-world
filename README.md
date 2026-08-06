@@ -2,6 +2,8 @@
 
 可交互的 3D 昆虫图鉴 —— 旋转、缩放、点击标注点，认识 24 种昆虫的身体构造、生活史与生态角色。
 
+**线上：https://insect-world.pages.dev**
+
 **每一只虫都是代码实时生成的，仓库里没有一个模型文件。**
 
 24 个物种覆盖 11 个目：鞘翅目 7、鳞翅目 3、膜翅目 3、直翅目 3、半翅目 2，蜻蜓目、螳螂目、䗛目、双翅目、脉翅目、革翅目各 1。
@@ -18,7 +20,11 @@ npm run dev          # 主站      http://localhost:5178
                      # 模型调试台 http://localhost:5178/preview.html
 npm test             # 1034 个测试
 npm run build        # tsc --noEmit + vite build
+npm run deploy       # 构建并发布到 Cloudflare Pages（需先 npx wrangler login）
 ```
+
+部署在 Cloudflare Pages，静态托管，无后端。`public/_headers` 配了缓存策略：
+产物文件名带内容哈希，按一年不可变缓存；HTML 每次回源校验，保证发新版立刻生效。
 
 ## 怎么用
 
