@@ -26,18 +26,30 @@ export type ViewMode = 'normal' | 'isolate' | 'section' | 'layers'
 
 // ---------------------------------------------------------------- 模型
 
+/**
+ * 虫体本身 + 挂在它身上的一切。
+ *
+ * ⚠️ 标注点必须作为 children 放进**这个** group，而不是当兄弟节点摆在
+ * 场景里。anchors 是模型的**局部坐标**，只有跟着同一个 group 一起被
+ * 旋转和缩放，圆点才会钉在虫身上；放在外面就会出现「虫在转、点不动」。
+ */
 function InsectMesh({
   model,
   mode,
   spin,
   onReady,
+  children,
+  groupRef,
 }: {
+  children?: React.ReactNode
+  /** 由 Scene 持有，Framing 需要用它把局部锚点换算成世界坐标 */
+  groupRef: React.MutableRefObject<THREE.Group | null>
   model: InsectModel
   mode: ViewMode
   spin: boolean
   onReady: (box: THREE.Box3) => void
 }) {
-  const ref = useRef<THREE.Group>(null)
+  const ref = groupRef
   const born = useRef(0)
 
   // 切换物种时从略小的尺度弹入，避免生硬替换
@@ -84,6 +96,7 @@ function InsectMesh({
   return (
     <group ref={ref}>
       <primitive object={model.group} />
+      {children}
     </group>
   )
 }
@@ -146,13 +159,16 @@ function Framing({
   zoomNonce,
   resetNonce,
   focus,
+  groupRef,
 }: {
   radius: number
   controls: React.RefObject<OrbitControlsImpl>
   zoomNonce: number
   resetNonce: number
-  /** 聚焦模式要凑近看的那个部位；null 表示回到全身取景 */
+  /** 聚焦模式要凑近看的那个部位（模型**局部**坐标）；null 表示回到全身取景 */
   focus: THREE.Vector3 | null
+  /** 会旋转的那个 group —— 局部锚点必须经它换算才是真实位置 */
+  groupRef: React.MutableRefObject<THREE.Group | null>
 }) {
   const { camera } = useThree()
   const target = useRef(new THREE.Vector3())
@@ -179,7 +195,14 @@ function Framing({
     const c = controls.current
     if (!c) return
     if (focus) {
-      goal.current = { target: focus.clone(), dist: radius * 0.62 }
+      // 自转角度是累加的，锚点是局部坐标 —— 不套世界矩阵就会对到空处
+      const g = groupRef.current
+      const target = focus.clone()
+      if (g) {
+        g.updateMatrixWorld(true)
+        target.applyMatrix4(g.matrixWorld)
+      }
+      goal.current = { target, dist: radius * 0.62 }
       c.minDistance = radius * 0.18
     } else {
       // 退出聚焦要回到与初次取景相同的距离，否则镜头会一直停在偏近的位置
@@ -190,7 +213,7 @@ function Framing({
       }
       c.minDistance = radius * 1.15
     }
-  }, [focus, controls, radius, camera])
+  }, [focus, controls, radius, camera, groupRef])
 
   useFrame((_, dt) => {
     const c = controls.current
@@ -296,6 +319,7 @@ function Scene({
 }) {
   const [model, setModel] = useState<InsectModel | null>(null)
   const [box, setBox] = useState<THREE.Box3 | null>(null)
+  const spinGroup = useRef<THREE.Group | null>(null)
   const { gl } = useThree()
 
   // 剖切要求渲染器开启局部裁剪
@@ -355,28 +379,36 @@ function Scene({
         zoomNonce={zoomNonce}
         resetNonce={resetNonce}
         focus={focus}
+        groupRef={spinGroup}
       />
 
       {model && (
         <>
-          <InsectMesh model={model} mode={mode} spin={spin} onReady={setBox} />
-
-          {mode !== 'section' &&
-            insect.hotspots.map((h) => {
-              const p = model.anchors[h.anchor]
-              if (!p) return null
-              return (
-                <Hotspot
-                  key={h.id}
-                  position={p}
-                  label={h.label}
-                  note={h.note}
-                  tone={h.tone}
-                  open={openHotspot === h.id}
-                  onToggle={() => onToggleHotspot(openHotspot === h.id ? null : h.id)}
-                />
-              )
-            })}
+          {/* 聚焦某个部位时停转：镜头锁在一点上而虫还在转，那个部位会自己溜走 */}
+          <InsectMesh
+            model={model}
+            mode={mode}
+            spin={spin && !focus}
+            onReady={setBox}
+            groupRef={spinGroup}
+          >
+            {mode !== 'section' &&
+              insect.hotspots.map((h) => {
+                const p = model.anchors[h.anchor]
+                if (!p) return null
+                return (
+                  <Hotspot
+                    key={h.id}
+                    position={p}
+                    label={h.label}
+                    note={h.note}
+                    tone={h.tone}
+                    open={openHotspot === h.id}
+                    onToggle={() => onToggleHotspot(openHotspot === h.id ? null : h.id)}
+                  />
+                )
+              })}
+          </InsectMesh>
 
           <ContactShadows
             position={[0, floorY, 0]}
