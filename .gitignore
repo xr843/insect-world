@@ -3,3 +3,6 @@ dist/
 *.local
 .DS_Store
 .vite/
+
+# wrangler pages dev 的本地缓存
+.wrangler/
