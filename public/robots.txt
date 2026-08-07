@@ -1,4 +1,6 @@
-# preview.html 是开发用的模型调试台，正文页之外不需要被收录
+# preview 是开发用的模型调试台，正文页之外不需要被收录。
+# Cloudflare Pages 会把 /preview.html 308 到美化地址 /preview，两个都得拦。
 User-agent: *
 Allow: /
+Disallow: /preview
 Disallow: /preview.html
