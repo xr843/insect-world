@@ -30,7 +30,15 @@ export function Stage({
   focusAnchor?: string | null
 }) {
   const [mode, setMode] = useState<ViewMode>('normal')
-  const [spin, setSpin] = useState(true)
+  /**
+   * 自动旋转默认开，但访客的系统若声明了「减少动态效果」，就以关闭起步 ——
+   * CSS 动画有全局的 prefers-reduced-motion 规则兜着，这个 WebGL 旋转
+   * 是 JS 驱动的，媒体查询管不到它，只能在这里问一次。
+   * 开关仍在界面上，想看转的随时可以打开。
+   */
+  const [spin, setSpin] = useState(
+    () => !window.matchMedia('(prefers-reduced-motion: reduce)').matches,
+  )
   const [openHotspot, setOpenHotspot] = useState<string | null>(null)
   const [noteVisible, setNoteVisible] = useState(true)
   const [zoomNonce, setZoomNonce] = useState(0)

@@ -194,7 +194,7 @@
 .captionEyebrow {
   font-size: 10.5px;
   letter-spacing: 0.1em;
-  color: #8a7e73;
+  color: #71685f; /* 跟随 --muted 的对比度修正 */
 }
 
 .captionLatin {

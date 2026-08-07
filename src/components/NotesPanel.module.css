@@ -96,7 +96,6 @@
   color: var(--ink);
   background: transparent;
   border: none;
-  outline: none;
 }
 
 .textarea::placeholder {

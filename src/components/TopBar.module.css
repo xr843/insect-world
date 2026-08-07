@@ -110,7 +110,6 @@
 
 .search input {
   border: 0;
-  outline: 0;
   background: none;
   font-family: var(--sans);
   font-size: 13px;

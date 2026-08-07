@@ -1,0 +1,4 @@
+# preview.html 是开发用的模型调试台，正文页之外不需要被收录
+User-agent: *
+Allow: /
+Disallow: /preview.html

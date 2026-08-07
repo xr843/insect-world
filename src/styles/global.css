@@ -7,7 +7,7 @@
 
 :root {
   --ink: #2f2a27;
-  --muted: #8d847c;
+  --muted: #71685f; /* 原 #8d847c 对纸底只有 3.3:1，11~13px 的辅助文字读不清；4.95:1 过 AA */
   --canvas: #f7f0e7;
   --paper: #fffbf4d1;
   --paper-solid: #fffbf4;
@@ -15,7 +15,7 @@
   --line-strong: #755b4647;
 
   --coral: #eb7c6b;
-  --lavender: #8d6bcc;
+  --lavender: #7455b5; /* 原 #8d6bcc 3.7:1；斜体小字号尤其吃亏，压到 5.1:1 */
   --sage: #769d74;
   --amber: #c8944a;
 
@@ -73,6 +73,23 @@ button {
   background: none;
   cursor: pointer;
   padding: 0;
+}
+
+/**
+ * 键盘焦点环。
+ *
+ * 鼠标点击留下的 :focus 光圈与这套暖纸色格格不入，全部压掉；
+ * 但键盘使用者只有靠 :focus-visible 才知道自己在哪 —— 审查时实测
+ * 全站没有任何 focus-visible 规则，Tab 过去毫无反应。两条一起给：
+ * 鼠标无光圈，键盘有清晰的珊瑚色环。
+ */
+:focus {
+  outline: none;
+}
+
+:focus-visible {
+  outline: 2px solid #c25a49;
+  outline-offset: 2px;
 }
 
 ::selection {
