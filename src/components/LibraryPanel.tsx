@@ -1,14 +1,7 @@
 import type { Insect } from '../data/types'
 import { InsectGlyph } from './InsectGlyph'
-import { IconArrowRight, IconBookmark } from './icons'
+import { IconArrowRight, IconBookmark, IconLeafSolid } from './icons'
 import s from './LibraryPanel.module.css'
-
-/** 选中项右侧的小标记：一片叶子，替代参考站的心形 */
-const LeafMark = () => (
-  <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor">
-    <path d="M4.2 20.2c-.5-7.8 4.6-13.3 15.6-13.6.5 8.9-4.4 13.6-12.4 13.6h-2c1.9-3.4 4.6-5.8 8.2-7.4-4.1 1.1-7.2 3.6-9.4 7.4Z" />
-  </svg>
-)
 
 export function LibraryPanel({
   insects,
@@ -87,7 +80,8 @@ export function LibraryPanel({
               </span>
               {active && (
                 <span className={s.mark}>
-                  <LeafMark />
+                  {/* 选中项的小标记：一片叶子，替代参考站的心形 */}
+                  <IconLeafSolid size={15} />
                 </span>
               )}
             </button>

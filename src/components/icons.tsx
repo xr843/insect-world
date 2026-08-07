@@ -187,6 +187,18 @@ export const IconChevronDown = ({ size, className, strokeWidth }: P) => (
   </svg>
 )
 
+/**
+ * 实心叶片 —— 本站的标记。
+ *
+ * 与 IconLeaf（描边版）不同，这个是填充的：它要么很小（左栏选中项 15px），
+ * 要么压在饱和的珊瑚色圆底上（顶栏 18px），描边版在这两种场合都会糊掉。
+ */
+export const IconLeafSolid = ({ size = 16, className }: { size?: number; className?: string }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor" className={className} aria-hidden="true">
+    <path d="M4.2 20.2c-.5-7.8 4.6-13.3 15.6-13.6.5 8.9-4.4 13.6-12.4 13.6h-2c1.9-3.4 4.6-5.8 8.2-7.4-4.1 1.1-7.2 3.6-9.4 7.4Z" />
+  </svg>
+)
+
 // ---- KEY FACTS 行首的小标记，比导航图标更细，视觉上像手绘符号
 
 export const FactIcon = ({ kind, size = 13 }: { kind: string; size?: number }) => {

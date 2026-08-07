@@ -5,6 +5,7 @@ import {
   IconChevronDown,
   IconCompass,
   IconLayers,
+  IconLeafSolid,
   IconLibrary,
   IconNote,
   IconSearch,
@@ -222,9 +223,18 @@ export function TopBar({
             onClick={() => setMenu((m) => (m === 'account' ? null : 'account'))}
             aria-haspopup="menu"
             aria-expanded={menu === 'account'}
+            aria-label="观察记录"
             title="观察记录"
           >
-            <span className={s.disc}>昆</span>
+            {/*
+              这里原来放的是一个「昆」字。圆底 + 单字是头像的写法，
+              而本站没有账号体系，点开也不是账号设置而是观察笔记 ——
+              一个不存在的登录态不该被画出来。换成叶片标记：
+              左栏选中项用的就是它，两处呼应。
+            */}
+            <span className={s.disc}>
+              <IconLeafSolid size={21} />
+            </span>
             <IconChevronDown size={14} />
           </button>
 
