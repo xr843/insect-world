@@ -108,6 +108,21 @@
 
 /* ---------------------------------------------------------------- 便签 */
 
+/**
+ * 便签的 −0.7° 倾斜只作用在纸面上，文字保持水平。
+ *
+ * 原先整块 .note 带着 `transform: rotate(-0.7deg)`，而**任何非零旋转都会把整个
+ * 元素提升为合成层**：字形从此改用灰度抗锯齿（不再有次像素渲染），
+ * 每一笔又都落在非整数像素上。实测这台机器 devicePixelRatio = 1，
+ * 1× 屏没有多余像素可以掩盖这半个像素的偏移，12.5px 的中文就糊成一团。
+ *
+ * 倾斜是装饰，清晰度不是 —— 所以纸面（底色 / 圆角 / 阴影）交给 ::before 去转，
+ * 内容留在未变换的 .note 上。178px 宽、0.7° 的差异是两端约 2px，
+ * 肉眼看仍是一张歪贴的便签。
+ *
+ * 同时把字号与行高从 12.5px / 21.25px 改成整数 —— 小数字号会让每一行的基线
+ * 都停在半个像素上，和上面那件事叠加。
+ */
 .note {
   position: absolute;
   right: 22px;
@@ -115,11 +130,19 @@
   z-index: 6;
   width: 176px;
   padding: 13px 15px 15px;
+  isolation: isolate;
+  animation: fade-up 0.4s ease both;
+}
+
+.note::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
   background: #fdf3bf;
   border-radius: 3px 14px 3px 3px;
   box-shadow: 0 10px 26px #7d651d24, 0 1px 2px #7d651d1a;
   transform: rotate(-0.7deg);
-  animation: fade-up 0.4s ease both;
 }
 
 .noteHead {
@@ -134,9 +157,9 @@
 
 .noteBody {
   font-family: var(--hand);
-  font-size: 12.5px;
-  line-height: 1.7;
-  color: #6b581a;
+  font-size: 13px;
+  line-height: 22px;
+  color: #63500f;
 }
 
 .noteBody span {
