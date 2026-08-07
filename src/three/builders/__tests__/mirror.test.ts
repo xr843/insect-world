@@ -105,23 +105,44 @@ describe('其余成对部件', () => {
 
 describe('wing 的 spread 语义', () => {
   /**
-   * 这条测试钉住的是 kit 的**实际**行为，而非直觉行为：
-   * spread=0 才是完全侧展，spread=90 是沿体轴向前。
-   * 五个物种文件已按实际行为标定过姿态，谁要「顺手修正」这个语义，
-   * 会让全部翅膀一起转错方向 —— 所以先让这条测试拦住。
+   * 这组测试钉住的是 kit 的**实际**行为，而非直觉行为。
+   * 物种文件都已按实际行为标定过姿态，谁要「顺手修正」这个语义，
+   * 会让全部翅膀一起转错方向 —— 所以先让这些测试拦住。
+   *
+   * 这里原本只有一条「跨度」断言，而 spread=0 与 spread=180 的 z 向跨度
+   * 一模一样、只是方向相反，于是那条断言对两者都是绿的，
+   * 白白替一份写反的文档背了书。现在把方向一起钉住。
    */
-  it('spread=0 时翅指向体侧，spread=90 时翅指向前方', async () => {
-    const { wing, membrane } = await import('../kit')
-    const base: [number, number, number] = [0, 0, 0.2]
-    const lateral = wing({ base, length: 3, width: 1, spread: 0 }, membrane(), undefined, 1)
-    const forward = wing({ base, length: 3, width: 1, spread: 90 }, membrane(), undefined, 1)
+  const base: [number, number, number] = [0, 0, 0.2]
 
-    const bl = worldBox(lateral)
-    const bf = worldBox(forward)
-    // 侧展：z 向跨度应远大于 x 向
-    expect(bl.max.z - bl.min.z).toBeGreaterThan(bl.max.x - bl.min.x)
-    // 向前：x 向跨度应远大于 z 向
-    expect(bf.max.x - bf.min.x).toBeGreaterThan(bf.max.z - bf.min.z)
+  it('spread=90 时翅沿体轴指向前方', async () => {
+    const { wing, membrane } = await import('../kit')
+    const b = worldBox(wing({ base, length: 3, width: 1, spread: 90 }, membrane(), undefined, 1))
+    expect(b.max.x - b.min.x).toBeGreaterThan(b.max.z - b.min.z)
+  })
+
+  it('spread=180 时右翅伸向 +z —— 这才是「向本侧展开」', async () => {
+    const { wing, membrane } = await import('../kit')
+    const right = wing({ base, length: 3, width: 1, spread: 180 }, membrane(), undefined, 1)
+    const left = wing({ base, length: 3, width: 1, spread: 180 }, membrane(), undefined, -1)
+    const br = worldBox(right)
+    const bl = worldBox(left)
+
+    expect(br.max.z - br.min.z).toBeGreaterThan(br.max.x - br.min.x)
+    // 右翅的远端必须在 +z 一侧，左翅在 −z 一侧，两翅不交叉
+    expect(br.max.z, '右翅没有伸向 +z').toBeGreaterThan(0.2)
+    expect(bl.min.z, '左翅没有伸向 −z').toBeLessThan(-0.2)
+  })
+
+  it('spread=0 时翅横过中线跑到对侧去 —— 跨度看着像侧展，方向是反的', async () => {
+    const { wing, membrane } = await import('../kit')
+    const right = wing({ base, length: 3, width: 1, spread: 0 }, membrane(), undefined, 1)
+    const b = worldBox(right)
+
+    // 跨度上确实「像」侧展 —— 正是这一点让写反的文档蒙混了过去
+    expect(b.max.z - b.min.z).toBeGreaterThan(b.max.x - b.min.x)
+    // 但基座在 +z 的右翅，翅尖却落在 −z：它穿过了身体
+    expect(b.min.z, 'spread=0 的右翅本应越过中线落在 −z 侧').toBeLessThan(-0.2)
   })
 })
 

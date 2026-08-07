@@ -11,51 +11,25 @@ import { Canvas, useThree } from '@react-three/fiber'
 import { ContactShadows, Environment, Grid, Lightformer, OrbitControls } from '@react-three/drei'
 import * as THREE from 'three'
 import type { InsectModel } from './three/builders/kit'
-import { loadInsectModel } from './three/registry'
+import { knownSpecies, loadInsectModel } from './three/registry'
+import { INSECTS } from './data/insects'
 import './styles/global.css'
 
-const SPECIES = [
-  ['rhinoceros-beetle', '双叉犀金龟'],
-  ['monarch-butterfly', '帝王蝶'],
-  ['honeybee', '西方蜜蜂'],
-  ['dragonfly', '碧伟蜓'],
-  ['mantis', '中华大刀螳'],
-  ['ladybird', '七星瓢虫'],
-  ['ant', '日本弓背蚁'],
-  ['cicada', '黑蚱蝉'],
-  ['locust', '东亚飞蝗'],
-  ['firefly', '中华黄萤'],
-  ['longhorn-beetle', '星天牛'],
-  ['stick-insect', '中华修竹节虫'],
-  ['swallowtail', '玉带凤蝶'],
-  ['silk-moth', '柞蚕蛾'],
-  ['hornet', '金环胡蜂'],
-  ['lacewing', '中华草蛉'],
-  ['tiger-beetle', '中华虎甲'],
-  ['stag-beetle', '中华大锹甲'],
-  ['jewel-beetle', '日本吉丁'],
-  ['earwig', '海滨蠼螋'],
-  ['katydid', '优雅蝈螽'],
-  ['mole-cricket', '东方蝼蛄'],
-  ['water-strider', '水黾'],
-  ['hoverfly', '黑带食蚜蝇'],
-  ['dung-beetle', '神农洁蜣螂'],
-  ['weevil', '竹象'],
-  ['click-beetle', '沟叩头虫'],
-  ['diving-beetle', '黄缘龙虱'],
-  ['rove-beetle', '梭毒隐翅虫'],
-  ['flower-chafer', '白星花金龟'],
-  ['burying-beetle', '日本埋葬虫'],
-  ['tortoise-beetle', '甘薯腊龟甲'],
-  ['hercules-beetle', '长戟大兜虫'],
-  ['whirligig-beetle', '豉甲'],
-  ['ground-beetle', '中华金星步甲'],
-  ['blister-beetle', '中华豆芫菁'],
-  ['hister-beetle', '阎甲'],
-  ['treehopper', '角蝉'],
-  ['ichneumon-wasp', '姬蜂'],
-  ['dobsonfly', '中华齿蛉'],
-] as const
+/**
+ * 名单不写死，直接问注册表要 —— 只要 builder 文件在目录里就会出现在这里。
+ *
+ * 这里曾是一份手抄的清单，而漏抄一行的后果是：那个物种从没被人放大看过，
+ * 恰恰新做的模型才最需要这一关。顺序沿用图鉴数据的编排；
+ * 有模型但还没有图鉴数据的排在最后，用 id 原样显示，一眼能看出还缺内容。
+ */
+const SPECIES: [string, string][] = (() => {
+  const built = new Set(knownSpecies())
+  const listed = INSECTS.filter((i) => built.has(i.id)).map((i) => [i.id, i.name] as [string, string])
+  const orphans = knownSpecies()
+    .filter((id) => !INSECTS.some((i) => i.id === id))
+    .map((id) => [id, `${id}（无图鉴数据）`] as [string, string])
+  return [...listed, ...orphans]
+})()
 
 function countTriangles(obj: THREE.Object3D): number {
   let n = 0
@@ -70,6 +44,7 @@ function countTriangles(obj: THREE.Object3D): number {
 
 function Rig({ model, wire }: { model: InsectModel; wire: boolean }) {
   const { camera } = useThree()
+  const controls = useThree((s) => s.controls)
 
   useEffect(() => {
     const fov = ((camera as THREE.PerspectiveCamera).fov * Math.PI) / 180
@@ -78,7 +53,20 @@ function Rig({ model, wire }: { model: InsectModel; wire: boolean }) {
     camera.near = d * 0.02
     camera.far = d * 12
     camera.updateProjectionMatrix()
-  }, [model, camera])
+
+    /**
+     * OrbitControls 自己记着一套球坐标，开了阻尼后每帧都据此把相机放回去，
+     * 会盖掉上面这几行。只要手动转过一次视角，之后切物种就还用着上一只虫的
+     * 取景距离 —— 从 4.7 半径的犀金龟切到 0.45 半径的白蚁兵蚁，虫小到不足一个
+     * 像素，屏幕全空。那不是模型坏了，是台子没重新取景，
+     * 而「一片空白」恰恰是建模真出问题时的样子，最容易据此误判、把好模型打回去。
+     */
+    const orbit = controls as { target: THREE.Vector3; update: () => void } | null
+    if (orbit) {
+      orbit.target.set(0, 0, 0)
+      orbit.update()
+    }
+  }, [model, camera, controls])
 
   useEffect(() => {
     model.group.traverse((o) => {
@@ -107,7 +95,7 @@ function Rig({ model, wire }: { model: InsectModel; wire: boolean }) {
 }
 
 function App() {
-  const [id, setId] = useState<string>(SPECIES[0][0])
+  const [id, setId] = useState<string>(SPECIES[0]?.[0] ?? '')
   const [model, setModel] = useState<InsectModel | null>(null)
   const [err, setErr] = useState<string | null>(null)
   const [wire, setWire] = useState(false)
@@ -143,7 +131,7 @@ function App() {
     <div style={{ display: 'flex', height: '100vh', overflow: 'hidden' }}>
       <div style={{ width: 210, padding: 14, borderRight: '1px solid var(--line)', overflowY: 'auto', flexShrink: 0 }}>
         <div className="eyebrow" style={{ marginBottom: 10 }}>
-          模型调试台
+          模型调试台 · {SPECIES.length}
         </div>
         {SPECIES.map(([sid, name]) => (
           <button
@@ -236,8 +224,18 @@ function App() {
   )
 }
 
+/**
+ * root 存在 window 上复用。
+ *
+ * 每次热更新都会重新执行本模块，若每次都 createRoot 同一个容器，
+ * React 会警告「容器已经 createRoot 过」，并留下两个 root 抢同一个 canvas ——
+ * 表现是改完代码画面一片空白，而控制台只有一句看着无害的警告。
+ * 调试台本来就是拿来分辨「模型有没有问题」的，它自己先花屏，结论就全不可信了。
+ */
 const el = document.getElementById('root')!
-createRoot(el).render(
+const store = window as unknown as { __previewRoot?: ReturnType<typeof createRoot> }
+store.__previewRoot ??= createRoot(el)
+store.__previewRoot.render(
   <StrictMode>
     <App />
   </StrictMode>,

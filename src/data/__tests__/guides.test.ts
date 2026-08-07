@@ -31,8 +31,26 @@ describe('GUIDES 数据完整性', () => {
     }
   })
 
-  it('INSECTS 恰好 40 个物种', () => {
-    expect(INSECTS).toHaveLength(40)
+  it('INSECTS 恰好 50 个物种', () => {
+    expect(INSECTS).toHaveLength(50)
+  })
+
+  it('新增的 10 个物种 id 均已收录进 GUIDES', () => {
+    const newIds = [
+      'goliath-beetle',
+      'bombardier-beetle',
+      'darkling-beetle',
+      'net-winged-beetle',
+      'leaf-beetle',
+      'damselfly',
+      'orchid-mantis',
+      'dead-leaf-butterfly',
+      'hawk-moth',
+      'termite-soldier',
+    ]
+    for (const id of newIds) {
+      expect(Object.keys(GUIDES), `GUIDES 中缺少新增物种 ${id}`).toContain(id)
+    }
   })
 
   it.each(Object.keys(GUIDES))('%s：getGuide 能按 id 查到对应记录', id => {

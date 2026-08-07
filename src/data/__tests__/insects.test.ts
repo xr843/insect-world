@@ -1,6 +1,22 @@
 import { describe, expect, it } from 'vitest'
 import { getInsect, INSECTS } from '../insects'
 
+/** 两段文字里最长的一段一模一样的话，用来识别「换个说法又讲一遍」 */
+function longestCommonSubstring(a: string, b: string): string {
+  let best = ''
+  let prev = new Array<number>(b.length + 1).fill(0)
+  for (let i = 1; i <= a.length; i++) {
+    const cur = new Array<number>(b.length + 1).fill(0)
+    for (let j = 1; j <= b.length; j++) {
+      if (a[i - 1] !== b[j - 1]) continue
+      cur[j] = prev[j - 1] + 1
+      if (cur[j] > best.length) best = a.slice(i - cur[j], i)
+    }
+    prev = cur
+  }
+  return best
+}
+
 /** 3D 模型上实际存在的锚点集合，逐物种给定；hotspot.anchor 不得越界 */
 const ALLOWED_ANCHORS: Record<string, string[]> = {
   'rhinoceros-beetle': ['horn', 'thoraxHorn', 'elytra', 'eye', 'antenna', 'foreleg'],
@@ -43,6 +59,16 @@ const ALLOWED_ANCHORS: Record<string, string[]> = {
   treehopper: ['helmet', 'wing', 'eye', 'rostrum', 'hindleg', 'abdomen'],
   'ichneumon-wasp': ['ovipositor', 'antenna', 'wing', 'waist', 'eye', 'leg'],
   dobsonfly: ['mandible', 'wing', 'eye', 'antenna', 'thorax', 'abdomen'],
+  'goliath-beetle': ['headHorn', 'elytra', 'stripe', 'eye', 'leg', 'pronotum'],
+  'bombardier-beetle': ['sprayTip', 'elytra', 'mandible', 'eye', 'antenna', 'leg'],
+  'darkling-beetle': ['fusedElytra', 'leg', 'head', 'antenna', 'pronotum', 'abdomen'],
+  'net-winged-beetle': ['elytra', 'ridge', 'antenna', 'eye', 'pronotum', 'leg'],
+  'leaf-beetle': ['elytra', 'head', 'antenna', 'leg', 'pronotum', 'eye'],
+  damselfly: ['wing', 'eye', 'abdomen', 'thorax', 'leg', 'antenna'],
+  'orchid-mantis': ['petalLeg', 'raptorialLeg', 'head', 'eye', 'abdomen', 'wing'],
+  'dead-leaf-butterfly': ['underwing', 'forewing', 'tail', 'antenna', 'eye', 'abdomen'],
+  'hawk-moth': ['proboscis', 'forewing', 'hindwing', 'antenna', 'eye', 'abdomen'],
+  'termite-soldier': ['head', 'mandible', 'abdomen', 'antenna', 'thorax', 'leg'],
 }
 
 const EXPECTED_IDS = [
@@ -86,13 +112,23 @@ const EXPECTED_IDS = [
   'treehopper',
   'ichneumon-wasp',
   'dobsonfly',
+  'goliath-beetle',
+  'bombardier-beetle',
+  'darkling-beetle',
+  'net-winged-beetle',
+  'leaf-beetle',
+  'damselfly',
+  'orchid-mantis',
+  'dead-leaf-butterfly',
+  'hawk-moth',
+  'termite-soldier',
 ]
 
 const HEX_COLOR = /^#[0-9a-fA-F]{6}$/
 
 describe('INSECTS 数据完整性', () => {
-  it('恰好包含 40 条记录', () => {
-    expect(INSECTS).toHaveLength(40)
+  it('恰好包含 50 条记录', () => {
+    expect(INSECTS).toHaveLength(50)
   })
 
   it('id 全部唯一且与规定列表一致（含顺序）', () => {
@@ -163,6 +199,23 @@ describe('INSECTS 数据完整性', () => {
         expect(insect.trivia.length).toBeLessThanOrEqual(90)
       })
 
+      /**
+       * 「你知道吗」不能是总述的复述。
+       *
+       * 长度、字段齐全这些都能过，内容却把上一段话换个说法再讲一遍 ——
+       * 读者在同一页看到两遍同一件事，两栏就白占了一栏。
+       * 曾经一次加十种，十种里有七种的 trivia 是照着 summary 改写的，
+       * 而当时全部测试是绿的，所以在这里量一下两段话的最长公共子串。
+       */
+      it('trivia 不是 summary 的改写 —— 两者最长公共子串短于 12 字', () => {
+        const shared = longestCommonSubstring(insect.summary, insect.trivia)
+        expect(
+          shared.length,
+          `${insect.name} 的 trivia 与 summary 有 ${shared.length} 字雷同：「${shared}」\n` +
+            `trivia 该讲一件 summary 里没讲过的事，而不是把它换个说法`,
+        ).toBeLessThan(12)
+      })
+
       it('metamorphosis 是合法枚举值', () => {
         expect(['完全变态', '不完全变态']).toContain(insect.metamorphosis)
       })
@@ -198,13 +251,13 @@ describe('INSECTS 数据完整性', () => {
     expect(new Set(accents).size).toBe(accents.length)
   })
 
-  it('order 覆盖了全部 12 个目', () => {
+  it('order 覆盖了全部 13 个目', () => {
     const orders = new Set(INSECTS.map(i => i.order))
-    expect(orders.size).toBe(12)
+    expect(orders.size).toBe(13)
   })
 
-  it('鞘翅目物种数为 20', () => {
+  it('鞘翅目物种数为 25', () => {
     const beetles = INSECTS.filter(i => i.order === '鞘翅目')
-    expect(beetles).toHaveLength(20)
+    expect(beetles).toHaveLength(25)
   })
 })

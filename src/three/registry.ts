@@ -47,6 +47,17 @@ export function isKnownSpecies(id: string): boolean {
   return id in LOADERS
 }
 
+/**
+ * 产物里全部已注册的物种 id（按字母序）。
+ *
+ * 给模型调试台用：它要列出的是**所有存在的建模文件**，而不是图鉴数据里的物种。
+ * 两者不一样 —— 新物种总是先有模型后有数据，调试台若跟着数据走，
+ * 新做的模型反而看不到，而目视验收恰恰是新模型最需要的一关。
+ */
+export function knownSpecies(): string[] {
+  return Object.keys(LOADERS).sort()
+}
+
 /** 取得某物种的模型；重复调用返回同一个实例 */
 export async function loadInsectModel(id: string): Promise<InsectModel> {
   const hit = cache.get(id)
