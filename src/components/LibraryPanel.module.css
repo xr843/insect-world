@@ -12,8 +12,13 @@
 }
 
 .bookmark {
+  display: grid;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 8px;
   color: var(--muted);
-  transition: color 0.16s ease;
+  transition: color 0.16s ease, background 0.16s ease;
 }
 .bookmark:hover {
   color: var(--coral);
@@ -115,4 +120,43 @@
 }
 .viewAll:hover svg {
   transform: translateX(3px);
+}
+
+.bookmark[data-active='true'] {
+  color: var(--coral);
+  background: #eb7c6b1f;
+}
+
+/* 「分类」筛选生效时的可点击提示条，点一下清掉筛选 */
+.filter {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  width: 100%;
+  margin: 0 0 8px;
+  padding: 6px 11px;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  background: #eb7c6b14;
+  color: #c25a49;
+  font-size: 12px;
+  transition: background 0.16s ease;
+}
+
+.filter:hover {
+  background: #eb7c6b26;
+}
+
+.filterX {
+  font-size: 14px;
+  line-height: 1;
+}
+
+.none {
+  padding: 26px 10px;
+  text-align: center;
+  font-size: 12.5px;
+  line-height: 1.7;
+  color: var(--muted);
 }

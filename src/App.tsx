@@ -1,6 +1,9 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { INSECTS } from './data/insects'
+import type { Order } from './data/types'
 import { getGuide } from './data/guides'
+import { notesToMarkdown, useFieldNotes } from './hooks/useFieldNotes'
+import { NotesPanel } from './components/NotesPanel'
 import { BottomCards } from './components/BottomCards'
 import { Discovery, type DiscoveryKind } from './components/Discovery'
 import { Gallery } from './components/Gallery'
@@ -22,14 +25,50 @@ const SPECIES = INSECTS.filter((i) => isKnownSpecies(i.id))
 export default function App() {
   const [activeId, setActiveId] = useState(SPECIES[0].id)
   const [galleryOpen, setGalleryOpen] = useState(false)
+  const [notesOpen, setNotesOpen] = useState(false)
   const [compareId, setCompareId] = useState<string | null>(null)
   const [discovery, setDiscovery] = useState<DiscoveryKind | null>(null)
   const [focusAnchor, setFocusAnchor] = useState<string | null>(null)
+  const [orderFilter, setOrderFilter] = useState<Order | null>(null)
+  const [notedOnly, setNotedOnly] = useState(false)
+
+  const { notes, write, clear } = useFieldNotes()
+  const noteCount = Object.keys(notes).length
 
   const insect = useMemo(
     () => SPECIES.find((i) => i.id === activeId) ?? SPECIES[0],
     [activeId],
   )
+
+  /**
+   * 左栏列表按「分类」与书签两个条件过滤。
+   *
+   * 注意只影响列表，不影响 activeId —— 筛掉当前选中的那只时，
+   * 展台仍然显示它，否则用户会觉得自己正在看的东西被筛没了。
+   */
+  const listed = useMemo(() => {
+    let out = SPECIES
+    if (orderFilter) out = out.filter((i) => i.order === orderFilter)
+    if (notedOnly) out = out.filter((i) => i.id in notes)
+    return out
+  }, [orderFilter, notedOnly, notes])
+
+  /** 顶栏「探索」：收起所有浮层，回到干净的观察状态 */
+  const backToExplore = useCallback(() => {
+    setGalleryOpen(false)
+    setNotesOpen(false)
+    setDiscovery(null)
+    setCompareId(null)
+    setNotedOnly(false)
+    setFocusAnchor(null)
+  }, [])
+
+  const copyNotes = useCallback(() => {
+    const md = notesToMarkdown(notes, (id) => SPECIES.find((i) => i.id === id)?.name)
+    void navigator.clipboard?.writeText(md).catch(() => {
+      /* 剪贴板被拒就算了，不打断用户 */
+    })
+  }, [notes])
   const compareWith = useMemo(
     () => (compareId ? SPECIES.find((i) => i.id === compareId) ?? null : null),
     [compareId],
@@ -58,7 +97,7 @@ export default function App() {
     const onKey = (e: KeyboardEvent) => {
       const el = e.target as HTMLElement | null
       if (el && (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA' || el.isContentEditable)) return
-      if (galleryOpen || discovery) return
+      if (galleryOpen || discovery || notesOpen) return
       if (e.key === 'ArrowDown' || e.key === 'ArrowRight') {
         e.preventDefault()
         step(1)
@@ -69,7 +108,7 @@ export default function App() {
     }
     document.addEventListener('keydown', onKey)
     return () => document.removeEventListener('keydown', onKey)
-  }, [step, galleryOpen, discovery])
+  }, [step, galleryOpen, discovery, notesOpen])
 
   /** 对照物种按当前物种在列表里的位置错开取，保证不会选到自己 */
   const pickPeer = useCallback(
@@ -107,14 +146,32 @@ export default function App() {
 
   return (
     <div className="app">
-      <TopBar insects={SPECIES} onPick={select} onLessons={() => setDiscovery('lesson')} />
+      <TopBar
+        insects={SPECIES}
+        onPick={select}
+        onLessons={() => setDiscovery('lesson')}
+        onLibrary={() => setGalleryOpen(true)}
+        onNotes={() => setNotesOpen(true)}
+        onExplore={backToExplore}
+        orderFilter={orderFilter}
+        onOrderFilter={setOrderFilter}
+        noteCount={noteCount}
+        onCopyNotes={copyNotes}
+        onClearNotes={clear}
+      />
 
       <main className="workbench">
         <LibraryPanel
-          insects={SPECIES}
+          insects={listed}
           activeId={activeId}
           onSelect={select}
           onViewAll={() => setGalleryOpen(true)}
+          totalCount={SPECIES.length}
+          filterLabel={orderFilter}
+          onClearFilter={() => setOrderFilter(null)}
+          notedOnly={notedOnly}
+          onToggleNotedOnly={() => setNotedOnly((v) => !v)}
+          noteCount={noteCount}
         />
         <Stage
           insect={insect}
@@ -149,6 +206,17 @@ export default function App() {
           activeId={activeId}
           onSelect={select}
           onClose={() => setGalleryOpen(false)}
+        />
+      )}
+
+      {notesOpen && (
+        <NotesPanel
+          insect={insect}
+          insects={SPECIES}
+          notes={notes}
+          onWrite={write}
+          onSelect={select}
+          onClose={() => setNotesOpen(false)}
         />
       )}
 
