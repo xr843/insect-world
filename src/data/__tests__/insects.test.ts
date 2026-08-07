@@ -35,6 +35,14 @@ const ALLOWED_ANCHORS: Record<string, string[]> = {
   'flower-chafer': ['elytra', 'notch', 'pronotum', 'eye', 'antenna', 'leg'],
   'burying-beetle': ['elytra', 'antenna', 'abdomen', 'mandible', 'eye', 'pronotum'],
   'tortoise-beetle': ['margin', 'elytra', 'head', 'eye', 'leg', 'pronotum'],
+  'hercules-beetle': ['thoracicHorn', 'headHorn', 'elytra', 'eye', 'leg', 'pronotum'],
+  'whirligig-beetle': ['upperEye', 'lowerEye', 'midleg', 'elytra', 'antenna', 'body'],
+  'ground-beetle': ['elytra', 'mandible', 'leg', 'eye', 'antenna', 'pronotum'],
+  'blister-beetle': ['elytra', 'neck', 'head', 'antenna', 'leg', 'abdomen'],
+  'hister-beetle': ['elytra', 'tuckedLeg', 'head', 'antenna', 'pronotum', 'abdomen'],
+  treehopper: ['helmet', 'wing', 'eye', 'rostrum', 'hindleg', 'abdomen'],
+  'ichneumon-wasp': ['ovipositor', 'antenna', 'wing', 'waist', 'eye', 'leg'],
+  dobsonfly: ['mandible', 'wing', 'eye', 'antenna', 'thorax', 'abdomen'],
 }
 
 const EXPECTED_IDS = [
@@ -70,13 +78,21 @@ const EXPECTED_IDS = [
   'flower-chafer',
   'burying-beetle',
   'tortoise-beetle',
+  'hercules-beetle',
+  'whirligig-beetle',
+  'ground-beetle',
+  'blister-beetle',
+  'hister-beetle',
+  'treehopper',
+  'ichneumon-wasp',
+  'dobsonfly',
 ]
 
 const HEX_COLOR = /^#[0-9a-fA-F]{6}$/
 
 describe('INSECTS 数据完整性', () => {
-  it('恰好包含 32 条记录', () => {
-    expect(INSECTS).toHaveLength(32)
+  it('恰好包含 40 条记录', () => {
+    expect(INSECTS).toHaveLength(40)
   })
 
   it('id 全部唯一且与规定列表一致（含顺序）', () => {
@@ -182,13 +198,13 @@ describe('INSECTS 数据完整性', () => {
     expect(new Set(accents).size).toBe(accents.length)
   })
 
-  it('order 覆盖了全部 11 个目', () => {
+  it('order 覆盖了全部 12 个目', () => {
     const orders = new Set(INSECTS.map(i => i.order))
-    expect(orders.size).toBe(11)
+    expect(orders.size).toBe(12)
   })
 
-  it('鞘翅目物种数为 15', () => {
+  it('鞘翅目物种数为 20', () => {
     const beetles = INSECTS.filter(i => i.order === '鞘翅目')
-    expect(beetles).toHaveLength(15)
+    expect(beetles).toHaveLength(20)
   })
 })

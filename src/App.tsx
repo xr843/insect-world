@@ -123,6 +123,7 @@ export default function App() {
         peers={INSECTS}
         onCompare={toggleCompare}
         onDiscover={setDiscovery}
+        onExplore={() => setGalleryOpen(true)}
       />
 
       <div className="rail-float">

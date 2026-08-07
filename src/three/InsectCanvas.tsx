@@ -90,7 +90,9 @@ function InsectMesh({
     born.current = Math.min(1, born.current + dt * 2.6)
     const t = 1 - Math.pow(1 - born.current, 3) // easeOutCubic
     g.scale.setScalar(0.82 + 0.18 * t)
-    if (spin) g.rotation.y += dt * 0.28
+    // 0.20 rad/s ≈ 转一圈 31 秒。博物馆标本的节奏，比原来的 22 秒沉一些，
+    // 慢到能让人看清转过来的结构，又不至于像卡住
+    if (spin) g.rotation.y += dt * 0.2
   })
 
   return (

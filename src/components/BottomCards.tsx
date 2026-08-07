@@ -130,11 +130,14 @@ export function BottomCards({
   peers,
   onCompare,
   onDiscover,
+  onExplore,
 }: {
   insect: Insect
   peers: Insect[]
   onCompare: () => void
   onDiscover: (kind: DiscoveryKind) => void
+  /** 引言卡的「继续观察」—— 它带着箭头，就必须真的能点 */
+  onExplore: () => void
 }) {
   // 体长对比：当前物种 + 三个体型差异明显的同伴，按长度排序
   const bars = useMemo(() => {
@@ -171,7 +174,9 @@ export function BottomCards({
           <br />
           看见得越多。
         </div>
-        <div className={s.quoteLink}>继续观察 →</div>
+        <button className={s.quoteLink} onClick={onExplore}>
+          继续观察 →
+        </button>
       </div>
 
       <article className={`card ${s.card}`}>
