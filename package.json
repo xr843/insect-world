@@ -25,7 +25,7 @@
     "preview": "vite preview",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
-    "deploy": "npm run build && npx wrangler pages deploy dist --project-name=insect-world --branch=master --commit-dirty=true"
+    "deploy": "npm test && npm run build && npx wrangler pages deploy dist --project-name=insect-world --branch=master --commit-dirty=true"
   },
   "dependencies": {
     "@react-three/drei": "^9.117.3",

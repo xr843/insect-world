@@ -9,21 +9,29 @@ import { LibraryPanel } from './components/LibraryPanel'
 import { Stage } from './components/Stage'
 import { TopBar } from './components/TopBar'
 import { IconGrid, IconSparkle } from './components/icons'
-import { prefetchInsectModel } from './three/registry'
+import { isKnownSpecies, prefetchInsectModel } from './three/registry'
+
+/**
+ * 只保留建模文件确实在产物里的物种。数据层与建模层是分头推进的，
+ * 中途某一侧领先很正常 —— 这道过滤保证界面永远不会列出一个点开只会
+ * 转圈的物种。`three/__tests__/integration.test.ts` 会在开发期把这种
+ * 不一致大声报出来，这里是生产环境的兜底。
+ */
+const SPECIES = INSECTS.filter((i) => isKnownSpecies(i.id))
 
 export default function App() {
-  const [activeId, setActiveId] = useState(INSECTS[0].id)
+  const [activeId, setActiveId] = useState(SPECIES[0].id)
   const [galleryOpen, setGalleryOpen] = useState(false)
   const [compareId, setCompareId] = useState<string | null>(null)
   const [discovery, setDiscovery] = useState<DiscoveryKind | null>(null)
   const [focusAnchor, setFocusAnchor] = useState<string | null>(null)
 
   const insect = useMemo(
-    () => INSECTS.find((i) => i.id === activeId) ?? INSECTS[0],
+    () => SPECIES.find((i) => i.id === activeId) ?? SPECIES[0],
     [activeId],
   )
   const compareWith = useMemo(
-    () => (compareId ? INSECTS.find((i) => i.id === compareId) ?? null : null),
+    () => (compareId ? SPECIES.find((i) => i.id === compareId) ?? null : null),
     [compareId],
   )
 
@@ -31,16 +39,16 @@ export default function App() {
     setActiveId(id)
     setFocusAnchor(null)
     // 顺手预热相邻物种，用户往下点时几乎无等待
-    const idx = INSECTS.findIndex((i) => i.id === id)
+    const idx = SPECIES.findIndex((i) => i.id === id)
     for (const n of [idx + 1, idx - 1]) {
-      if (INSECTS[n]) prefetchInsectModel(INSECTS[n].id)
+      if (SPECIES[n]) prefetchInsectModel(SPECIES[n].id)
     }
   }, [])
 
   const step = useCallback(
     (delta: number) => {
-      const idx = INSECTS.findIndex((i) => i.id === activeId)
-      select(INSECTS[(idx + delta + INSECTS.length) % INSECTS.length].id)
+      const idx = SPECIES.findIndex((i) => i.id === activeId)
+      select(SPECIES[(idx + delta + SPECIES.length) % SPECIES.length].id)
     },
     [activeId, select],
   )
@@ -66,8 +74,8 @@ export default function App() {
   /** 对照物种按当前物种在列表里的位置错开取，保证不会选到自己 */
   const pickPeer = useCallback(
     (offset: number) => {
-      const idx = INSECTS.findIndex((i) => i.id === activeId)
-      return INSECTS[(idx + offset + INSECTS.length) % INSECTS.length].id
+      const idx = SPECIES.findIndex((i) => i.id === activeId)
+      return SPECIES[(idx + offset + SPECIES.length) % SPECIES.length].id
     },
     [activeId],
   )
@@ -79,10 +87,10 @@ export default function App() {
   const cycleCompare = useCallback(() => {
     setCompareId((cur) => {
       if (!cur) return pickPeer(1)
-      const from = INSECTS.findIndex((i) => i.id === cur)
-      let next = (from + 1) % INSECTS.length
-      if (INSECTS[next].id === activeId) next = (next + 1) % INSECTS.length
-      return INSECTS[next].id
+      const from = SPECIES.findIndex((i) => i.id === cur)
+      let next = (from + 1) % SPECIES.length
+      if (SPECIES[next].id === activeId) next = (next + 1) % SPECIES.length
+      return SPECIES[next].id
     })
   }, [activeId, pickPeer])
 
@@ -93,17 +101,17 @@ export default function App() {
 
   const surprise = useCallback(() => {
     // 用当前索引推进而非 Math.random：连点两次不会撞回同一只
-    const idx = INSECTS.findIndex((i) => i.id === activeId)
-    select(INSECTS[(idx * 5 + 3) % INSECTS.length].id)
+    const idx = SPECIES.findIndex((i) => i.id === activeId)
+    select(SPECIES[(idx * 5 + 3) % SPECIES.length].id)
   }, [activeId, select])
 
   return (
     <div className="app">
-      <TopBar insects={INSECTS} onPick={select} onLessons={() => setDiscovery('lesson')} />
+      <TopBar insects={SPECIES} onPick={select} onLessons={() => setDiscovery('lesson')} />
 
       <main className="workbench">
         <LibraryPanel
-          insects={INSECTS}
+          insects={SPECIES}
           activeId={activeId}
           onSelect={select}
           onViewAll={() => setGalleryOpen(true)}
@@ -120,14 +128,14 @@ export default function App() {
 
       <BottomCards
         insect={insect}
-        peers={INSECTS}
+        peers={SPECIES}
         onCompare={toggleCompare}
         onDiscover={setDiscovery}
         onExplore={() => setGalleryOpen(true)}
       />
 
       <div className="rail-float">
-        <button onClick={() => setGalleryOpen(true)} title={`全部 ${INSECTS.length} 种`}>
+        <button onClick={() => setGalleryOpen(true)} title={`全部 ${SPECIES.length} 种`}>
           <IconGrid size={16} />
         </button>
         <button onClick={surprise} title="换一只看看">
@@ -137,7 +145,7 @@ export default function App() {
 
       {galleryOpen && (
         <Gallery
-          insects={INSECTS}
+          insects={SPECIES}
           activeId={activeId}
           onSelect={select}
           onClose={() => setGalleryOpen(false)}

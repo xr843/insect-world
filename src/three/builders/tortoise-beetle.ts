@@ -41,15 +41,45 @@ import { chitin, compoundEyePair, elytra, finalize, legPair, loft, spindle, type
 
 // ---------------------------------------------------------------- 局部工具（同 ladybird.ts 的"平底圆顶"手法）
 
-/** 半径包络：从 startR 经 sin 缓动升到 maxR（bulge 处），再经 cos 缓动降到 endR */
-function humpProfile(bulge: number, startR: number, maxR: number, endR: number): (t: number) => number {
+/**
+ * 半径包络：从 startR 经 sin 缓动升到 maxR（bulge 处），再经 cos 缓动降到 endR。
+ *
+ * 前 roundFrac、后 roundFrac（各占背甲全长的一段，默认 20%）两段改用
+ * 圆弧收口（sqrt(1-u²)）：半径越接近端点收得越陡，最终以一个不为零的
+ * 小半径（startR/endR）收口，而不是匀速甚至加速滑向端点——一条恒定
+ * （或持续加速）斜率的锥面会在端点留下一个真正的顶点，看着像水滴/
+ * 子弹尖；圆弧收口贴近端点时切线趋于与轴线垂直，像半球盖一样"兜"住
+ * 端点，读出来才是钝的。两段圆弧区与中央 bulge 峰值之间用首尾斜率均
+ * 为 0 的 S 形缓动（0.5-0.5cos）衔接——峰值本身斜率为 0，圆弧区在肩部
+ * 的斜率也钉成 0，因此整条曲线在两个衔接点上都斜率连续，不会留下一圈
+ * 突兀的棱；改动因此只集中在真正出问题的头尾两端，中段轮廓基本不变
+ * （肩部半径直接取自旧缓动公式在该处的值）。
+ */
+function humpProfile(bulge: number, startR: number, maxR: number, endR: number, roundFrac = 0.2): (t: number) => number {
+  const noseCut = roundFrac
+  const tailCut = 1 - roundFrac
+
+  // S 形缓动：k 从 0→1，输出从 a 缓动到 b，且在 k=0 与 k=1 处斜率均为 0
+  const sCurve = (k: number, a: number, b: number) =>
+    THREE.MathUtils.lerp(a, b, 0.5 - 0.5 * Math.cos(Math.PI * THREE.MathUtils.clamp(k, 0, 1)))
+
+  // 圆弧收口：tau=0 在肩部（shoulder，斜率 0，接 S 形缓动），tau=1 在端点
+  // （tip），越接近 tau=1 收得越陡，是"圆钝"而非"锥形尖"的关键
+  const arcClose = (tau: number, shoulder: number, tip: number) => {
+    const c = THREE.MathUtils.clamp(tau, 0, 1)
+    return tip + (shoulder - tip) * Math.sqrt(Math.max(0, 1 - c * c))
+  }
+
+  // 两处"肩部"半径：圆弧区与 S 形缓动区的交界值，直接取旧（未加圆弧
+  // 收口时）缓动曲线在交界处的值，让中段尽量维持原有轮廓
+  const noseShoulder = THREE.MathUtils.lerp(startR, maxR, Math.sin((noseCut / bulge) * Math.PI * 0.5))
+  const tailShoulder = THREE.MathUtils.lerp(maxR, endR, 1 - Math.cos(((tailCut - bulge) / (1 - bulge)) * Math.PI * 0.5))
+
   return (t: number) => {
-    if (t <= bulge) {
-      const k = bulge <= 1e-6 ? 1 : Math.min(1, t / bulge)
-      return THREE.MathUtils.lerp(startR, maxR, Math.sin(k * Math.PI * 0.5))
-    }
-    const k = Math.min(1, (t - bulge) / (1 - bulge))
-    return THREE.MathUtils.lerp(maxR, endR, 1 - Math.cos(k * Math.PI * 0.5))
+    if (t <= noseCut) return arcClose(1 - t / noseCut, noseShoulder, startR)
+    if (t <= bulge) return sCurve((t - noseCut) / (bulge - noseCut), noseShoulder, maxR)
+    if (t <= tailCut) return sCurve((t - bulge) / (tailCut - bulge), maxR, tailShoulder)
+    return arcClose((t - tailCut) / (1 - tailCut), tailShoulder, endR)
   }
 }
 

@@ -202,8 +202,20 @@ export function buildBuryingBeetle(): InsectModel {
 
   const bodyMat = chitin({ color: '#141110', gloss: 0.6, metal: 0.15, clearcoat: 0.35 })
   const elytraMat = elytra('#100d0c', 0.15) // 乌黑鞘翅底色；clearcoat 由 elytra() 内定 0.55，不手动加高
-  // 橙红横带：DoubleSide 防止 surfaceStripe() 的三角形环绕方向偶尔算反导致背面消隐
-  const bandMat = chitin({ color: '#dd6a22', gloss: 0.6, metal: 0.08, clearcoat: 0.3, side: THREE.DoubleSide })
+  // 橙红横带：DoubleSide 防止 surfaceStripe() 的三角形环绕方向偶尔算反导致背面消隐。
+  // 基色钉在饱和橙红~砖红（H≈17°，参照真实 Nicrophorus 的 #d95a1e~#c94a20），
+  // 且把 metalness/clearcoat 都压得比原来更低——旧值 metal=0.08+clearcoat=0.3
+  // 的组合在实机渲染里会被清漆层的白色高光把固有色冲淡成粉/藕荷调，读不出
+  // 警戒色该有的醒目橙红；降下来让漫反射的固有色主导，clearcoat 仍远低于
+  // elytra() 的 0.55 上限。
+  /**
+   * ⚠️ 这里的基色要比"想要的观感"**压深一档**。
+   * 渲染用的是 ACES 电影级色调映射，它会把受光面大幅提亮并去饱和 ——
+   * 材质设成 #d1521f（HSL 断言完全通过）渲出来仍是一片藕荷粉。
+   * 所以断言材质基色**预测不了最终像素**，必须压深让它经过 tone mapping
+   * 之后才落到橙红。gloss 也压低，减少高光对固有色的冲淡。
+   */
+  const bandMat = chitin({ color: '#a83208', gloss: 0.38, metal: 0.0, clearcoat: 0.1, side: THREE.DoubleSide })
   const antennaStalkMat = chitin({ color: '#362419', gloss: 0.45 }) // 略调暖，向端球过渡不那么陡
   const antennaClubMat = chitin({ color: '#e97a24', gloss: 0.55, clearcoat: 0.28 }) // 触角端球，与横带同色系呼应
   const mandMat = chitin({ color: '#0f0c0a', gloss: 0.68, metal: 0.2, clearcoat: 0.4 })

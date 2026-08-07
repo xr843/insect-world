@@ -39,6 +39,14 @@ const IDS = [
   'flower-chafer',
   'burying-beetle',
   'tortoise-beetle',
+  'hercules-beetle',
+  'whirligig-beetle',
+  'ground-beetle',
+  'blister-beetle',
+  'hister-beetle',
+  'treehopper',
+  'ichneumon-wasp',
+  'dobsonfly',
 ] as const
 
 type AnyElement = ReactElement<Record<string, unknown>>

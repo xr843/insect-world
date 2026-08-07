@@ -107,6 +107,42 @@ function yNearestX(group: THREE.Group, name: string, xTarget: number): number {
   return bestY
 }
 
+/**
+ * 在某个命名 mesh 里，取 UV.v 落在 [vTarget-eps, vTarget+eps] 内的所有顶点，
+ * 返回它们 y 的 (max-min)/2——该处横截面的半高，即该处的真实"半径"。
+ * kit.loft() 按放样路径参数化直接把 v 写进几何体（`uvs.push(j/radialSegments,
+ * i/(n-1))`，v=0 是路径起点、v=1 是终点），因此按 v 选顶点等价于精确选中
+ * "沿路径走到 vTarget 比例处的那一整圈截面"，与放样密度（steps/
+ * radialSegments，那是 builder 的构造细节）无关，也不受路径本身弯曲的
+ * 干扰。
+ *
+ * 最初按"世界坐标 x 离 xTarget 最近的 N 个顶点"取样（更接近直觉），但
+ * 背甲的放样路径中心 y 随半径同步抬升（flat-bottom dome 手法），路径本
+ * 身在弯，每一环所在的局部平面并不严格垂直于 X 轴，同一环内不同角度的
+ * 顶点世界坐标 x 会展开一段不小的范围——实测同一个目标位置换一个"取
+ * 最近几个顶点"的 N 就能让量出的半径从 45% 漂到 64%，不是稳的量法；
+ * 改按 v 选顶点后，eps 从 0.001 到 0.02 量出的都是同一整环、同一个数
+ * 字，才是真正贴着几何体量，而不是被采样策略带偏。
+ */
+function radiusAtV(group: THREE.Group, name: string, vTarget: number, eps = 0.01): number {
+  let minY = Infinity
+  let maxY = -Infinity
+  group.traverse((obj) => {
+    const mesh = obj as THREE.Mesh
+    if (!mesh.isMesh || mesh.name !== name) return
+    const pos = mesh.geometry.getAttribute('position')
+    const uv = mesh.geometry.getAttribute('uv')
+    if (!pos || !uv) return
+    for (let i = 0; i < pos.count; i++) {
+      if (Math.abs(uv.getY(i) - vTarget) > eps) continue
+      const world = new THREE.Vector3(pos.getX(i), pos.getY(i), pos.getZ(i)).applyMatrix4(mesh.matrixWorld)
+      if (world.y < minY) minY = world.y
+      if (world.y > maxY) maxY = world.y
+    }
+  })
+  return (maxY - minY) / 2
+}
+
 describe('日本埋葬虫 buildBuryingBeetle', () => {
   const model = buildBuryingBeetle()
 
@@ -246,6 +282,34 @@ describe('日本埋葬虫 buildBuryingBeetle', () => {
     expect(maxRatio, `色带顶点最大径向偏移比例 ${(maxRatio * 100).toFixed(2)}% 应 < 5%`).toBeLessThan(0.05)
   })
 
+  it('色带基色是饱和橙红而非粉/藕荷调：色相落在 10°~30° 且饱和度 ≥ 0.55', () => {
+    // 色相窗口比"大致 10°~30°"的口径收紧到上限 22°：改之前的粉调基色
+    // 单看色相/饱和度并不在明显偏离橙红区间的位置（H≈23.1°、S≈0.73，
+    // 数值上也能落进宽松的 10°~30° 窗口，之所以肉眼看着"粉/藕荷"，是
+    // 材质原本偏高的 metalness/clearcoat 在渲染时把它冲淡的）——如果
+    // 窗口照抄"大致 10°~30°"不收紧，这条断言在旧版本上也会通过，测
+    // 不出任何东西。上限收到 22° 后，旧色相 23.1° 会落在窗口外而失败，
+    // 新色相（约 17°）留有前后各 ~5°-7° 的余量，不是卡着边界的脆弱值。
+    //
+    // ⚠️ getHSL() 不传 colorSpace 参数时，返回的是 three.js 内部工作色域
+    // （线性空间）下的 HSL，不是十六进制字面量所在的 sRGB 空间——同一个
+    // #d1521f 在默认调用下量出 H≈6.8°/S≈0.96，必须显式传 THREE.SRGBColorSpace
+    // 才能量出和取色器一致、也是本断言真正想测的 H≈17.2°/S≈0.74。
+    const mat = firstMaterialByName(model.group, 'band')
+    expect(mat, '找不到 band 命名 mesh 的材质').toBeTruthy()
+
+    const hsl = { h: 0, s: 0, l: 0 }
+    mat!.color.getHSL(hsl, THREE.SRGBColorSpace)
+    const hueDeg = hsl.h * 360
+
+    // eslint-disable-next-line no-console
+    console.log(`[burying-beetle] band color hue=${hueDeg.toFixed(1)}deg saturation=${hsl.s.toFixed(3)} lightness=${hsl.l.toFixed(3)}`)
+
+    expect(hueDeg, `色带色相 ${hueDeg.toFixed(1)}° 应 ≥ 10°`).toBeGreaterThanOrEqual(10)
+    expect(hueDeg, `色带色相 ${hueDeg.toFixed(1)}° 应 ≤ 22°（落在橙红区间，而非偏黄橙的 23°+）`).toBeLessThanOrEqual(22)
+    expect(hsl.s, `色带饱和度 ${hsl.s.toFixed(3)} 应 ≥ 0.55`).toBeGreaterThanOrEqual(0.55)
+  })
+
   it('三角面数在预算内', () => {
     const { triangles } = inspectGeometry(model.group)
     // eslint-disable-next-line no-console
@@ -349,6 +413,44 @@ describe('甘薯腊龟甲 buildTortoiseBeetle', () => {
       seamDiff,
       `接缝处高度差 ${seamDiff.toFixed(4)} 应 < 两者平均最大高度 ${refHeight.toFixed(4)} 的 20%（${(refHeight * 0.2).toFixed(4)}）`,
     ).toBeLessThan(refHeight * 0.2)
+  })
+
+  it('鞘翅在距尾端 10% 处的半径 ≥ 最大半径的 45%（证明尾端是圆弧收口而非锥形收尖）', () => {
+    model.group.updateMatrixWorld(true)
+
+    // 鞘翅（elytra）这枚 mesh 本身就跨过了背甲隆起的最高点、一路延伸到尾
+    // 端（见 tortoise-beetle.ts carapaceProfile 的 bulge=0.6 在鞘翅局部 t
+    // 范围内，且鞘翅的放样 UV.v=1 正是尾尖），因此"最大半径"与"距尾端
+    // 10%处的半径"都能只从这一枚 mesh 的真实渲染顶点里量出来。
+    const elytraBox = unionBoxByName(model.group, 'elytra')
+    expect(elytraBox.isEmpty(), '找不到 elytra 命名的 mesh').toBe(false)
+
+    // 鞘翅包围盒的半高就是整条背甲的最大半径：每个放样环的最低点都精确
+    // 落在同一条水平线上（flat-bottom dome，见 domeSections），环的最高
+    // 点则由半径决定，故 (maxY-minY)/2 在隆起最高点处正好等于最大半径。
+    const maxRadius = (elytraBox.max.y - elytraBox.min.y) / 2
+
+    // "距尾端 10%"按鞘翅自身的放样参数折算为 UV.v=0.9（v=1 是尾尖，v=0
+    // 是鞘翅前端，与前胸背板重叠衔接处），而不是按世界坐标 x 折算：
+    // 背甲的放样路径中心 y 随半径同步抬升、路径本身在弯，每一环所在的
+    // 局部平面并不严格垂直于 X 轴，同一环内不同角度的顶点世界坐标 x 会
+    // 展开一段不小的范围，按"离目标 x 最近的 N 个顶点"取样在 N 的选择
+    // 上很不稳（实测同一目标位置换 N 就能让量出的半径从 45% 漂到
+    // 64%）；改按 UV.v 精确选中同一整环后，量出旧（锥形收尖）版本在
+    // v=0.9 处约 40.7%（< 45%，真的会 fail），新（圆弧收口）版本约
+    // 59.9%（舒适通过），这条断言才测得出两者的差异。
+    const nearTailRadius = radiusAtV(model.group, 'elytra', 0.9)
+    expect(Number.isFinite(nearTailRadius) && nearTailRadius > 0, '距尾端 10%（v=0.9）处找不到 elytra 顶点').toBe(true)
+
+    const ratio = nearTailRadius / maxRadius
+    // eslint-disable-next-line no-console
+    console.log(
+      `[tortoise-beetle] nearTailRadius=${nearTailRadius.toFixed(4)} maxRadius=${maxRadius.toFixed(4)} ratio=${(ratio * 100).toFixed(1)}%`,
+    )
+    expect(
+      nearTailRadius,
+      `距尾端 10% 处半径 ${nearTailRadius.toFixed(4)} 应 ≥ 最大半径 ${maxRadius.toFixed(4)} 的 45%（${(maxRadius * 0.45).toFixed(4)}）`,
+    ).toBeGreaterThanOrEqual(maxRadius * 0.45)
   })
 
   it('三角面数在预算内', () => {

@@ -36,6 +36,17 @@ function pickBuilder(mod: Record<string, unknown>): () => InsectModel {
   throw new Error('模块中没有找到 build* 导出')
 }
 
+/**
+ * 该物种的建模文件是否真的被打包进来了。
+ *
+ * import.meta.glob 在**构建期**解析，所以这个判断反映的是产物里到底有没有
+ * 这个模型。界面据此过滤，避免列出一个点开只会转圈的物种 —— 数据层和建模层
+ * 分别由不同的人/agent 推进，两边进度不同步是常态，不能指望它们永远一致。
+ */
+export function isKnownSpecies(id: string): boolean {
+  return id in LOADERS
+}
+
 /** 取得某物种的模型；重复调用返回同一个实例 */
 export async function loadInsectModel(id: string): Promise<InsectModel> {
   const hit = cache.get(id)
