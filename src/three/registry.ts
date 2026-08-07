@@ -5,6 +5,7 @@
  * 这里按 id 动态 import，Vite 会为每个物种切出独立 chunk，
  * 只在用户点到它时才下载并构建。构建结果按 id 缓存，切回来时瞬时。
  */
+import type * as THREE from 'three'
 import type { InsectModel } from './builders/kit'
 
 type Loader = () => Promise<Record<string, unknown>>
@@ -23,8 +24,45 @@ const LOADERS: Record<string, Loader> = Object.fromEntries(
     .filter(([id]) => id !== 'kit'),
 )
 
+/**
+ * 已构建模型的 LRU 缓存。
+ *
+ * 原先只进不出：逐只翻完 50 种（方向键就是这么用的），50 套几何体全部
+ * 留在显存里，每套约 2~3MB —— 桌面机无所谓，手机上是白占一百多兆。
+ * 上限取 12：当前那只、对比对象、hover 预热的邻居都稳稳落在「最近用过」里，
+ * 正在渲染的模型绝不会被清（它必然是最新触碰的）。
+ * 逐出时要手动 dispose —— three.js 的几何体与材质握着 GPU 资源，
+ * 不 dispose 只断引用，显存照样占着。
+ */
+const MAX_LIVE = 12
 const cache = new Map<string, InsectModel>()
 const inflight = new Map<string, Promise<InsectModel>>()
+
+/** Map 按插入序遍历；重新插入 = 挪到队尾（最近使用） */
+function touch(id: string, model: InsectModel): void {
+  cache.delete(id)
+  cache.set(id, model)
+}
+
+function evictStale(): void {
+  while (cache.size > MAX_LIVE) {
+    const oldest = cache.entries().next().value
+    if (!oldest) return
+    const [id, model] = oldest
+    cache.delete(id)
+    model.group.traverse((o) => {
+      const m = o as THREE.Mesh
+      if (!m.isMesh) return
+      m.geometry.dispose()
+      for (const mat of Array.isArray(m.material) ? m.material : [m.material]) mat.dispose()
+    })
+  }
+}
+
+/** 仅供测试观察缓存规模 */
+export function cacheStats(): { size: number; ids: string[] } {
+  return { size: cache.size, ids: [...cache.keys()] }
+}
 
 /** 从模块里挑出那个 buildXxx 函数 —— 各文件导出名不同，按前缀找 */
 function pickBuilder(mod: Record<string, unknown>): () => InsectModel {
@@ -61,7 +99,10 @@ export function knownSpecies(): string[] {
 /** 取得某物种的模型；重复调用返回同一个实例 */
 export async function loadInsectModel(id: string): Promise<InsectModel> {
   const hit = cache.get(id)
-  if (hit) return hit
+  if (hit) {
+    touch(id, hit)
+    return hit
+  }
 
   const pending = inflight.get(id)
   if (pending) return pending
@@ -73,6 +114,7 @@ export async function loadInsectModel(id: string): Promise<InsectModel> {
     .then((mod) => {
       const model = pickBuilder(mod)()
       cache.set(id, model)
+      evictStale()
       inflight.delete(id)
       return model
     })

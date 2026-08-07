@@ -84,12 +84,19 @@ export default function App() {
     }
   }, [])
 
+  /**
+   * 方向键在**可见列表**里走，不在全量列表里走 —— 筛到蜚蠊目还按全量翻，
+   * 一按 ↓ 就跳到鞘翅目去了，筛选等于白设（实测撞到过）。
+   * 当前物种被筛掉时，从列表第一/最后一项进入。
+   */
   const step = useCallback(
     (delta: number) => {
-      const idx = SPECIES.findIndex((i) => i.id === activeId)
-      select(SPECIES[(idx + delta + SPECIES.length) % SPECIES.length].id)
+      const pool = listed.length > 0 ? listed : SPECIES
+      const idx = pool.findIndex((i) => i.id === activeId)
+      const next = idx === -1 ? (delta > 0 ? 0 : pool.length - 1) : (idx + delta + pool.length) % pool.length
+      select(pool[next].id)
     },
-    [activeId, select],
+    [activeId, select, listed],
   )
 
   // 上下键翻图鉴。逐只看过去是这个产品的主要用法，不该每次都回去点列表。

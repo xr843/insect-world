@@ -96,7 +96,13 @@ export function TopBar({
   }, [insects])
 
   const q = query.trim().toLowerCase()
-  const hits = q
+  /**
+   * 两档匹配：名称/学名/目/雅称是第一档；第二档在总述与冷知识全文里找。
+   * 只有第一档时，搜「萤火虫」「甲虫」这类俗名会一无所获 ——
+   * 图鉴用的是「中华黄萤」这样的正式名，俗名只出现在正文里（实测撞到过）。
+   * 第二档排在后面并整体截断到 12 条，避免常见字把列表撑爆。
+   */
+  const primary = q
     ? insects.filter(
         (i) =>
           i.name.toLowerCase().includes(q) ||
@@ -105,6 +111,12 @@ export function TopBar({
           i.epithet.includes(q),
       )
     : []
+  const seen = new Set(primary.map((i) => i.id))
+  const secondary =
+    q.length >= 2
+      ? insects.filter((i) => !seen.has(i.id) && (i.summary.includes(q) || i.trivia.includes(q)))
+      : []
+  const hits = [...primary, ...secondary].slice(0, 12)
 
   return (
     <header className={s.bar}>
