@@ -325,3 +325,55 @@
 .avatarBtn:hover {
   opacity: 0.82;
 }
+
+
+/* ---------------------------------------------------------------- 手机顶栏 */
+
+@media (max-width: 900px) {
+  .bar {
+    flex-wrap: wrap;
+    height: auto;
+    padding: 12px 4px 10px;
+    gap: 8px 14px;
+  }
+
+  .brand {
+    order: 1;
+  }
+
+  .wordmark {
+    font-size: 25px;
+  }
+
+  .right {
+    order: 2;
+    margin-left: auto;
+  }
+
+  /* 导航整行下移并允许横向滑动 —— 五个入口一个都不裁掉 */
+  .nav {
+    order: 3;
+    width: 100%;
+    margin: 0;
+    padding: 0;
+    overflow-x: auto;
+    scrollbar-width: none;
+    justify-content: flex-start;
+  }
+
+  .nav::-webkit-scrollbar {
+    display: none;
+  }
+
+  .navItem {
+    padding: 8px 13px;
+    font-size: 13px;
+    flex-shrink: 0;
+  }
+
+  /* 滑动容器里居中定位会飘，改为贴左 */
+  .orderMenu {
+    left: 0;
+    transform: none;
+  }
+}

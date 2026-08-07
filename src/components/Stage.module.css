@@ -325,3 +325,55 @@
   height: 6px;
   border-radius: 999px;
 }
+
+
+/* ---------------------------------------------------------------- 手机展台 */
+
+@media (max-width: 640px) {
+  /* 便签写的是拖动/滚轮这类桌面操作，小屏上还挡住虫体 */
+  .note {
+    display: none;
+  }
+
+  .caption {
+    display: none;
+  }
+
+  /* 工具条横排贴底居中；标签收起只留图标（各按钮仍有 title） */
+  .rail {
+    top: auto;
+    bottom: 12px;
+    left: 50%;
+    transform: translateX(-50%);
+    flex-direction: row;
+    padding: 4px 5px;
+  }
+
+  .tool {
+    width: 42px;
+    padding: 8px 0 7px;
+  }
+
+  .toolLabel {
+    display: none;
+  }
+
+  .railSplit {
+    width: 1px;
+    height: 22px;
+    margin: auto 4px;
+  }
+
+  /* 让位给横排工具条 */
+  .autoRotate {
+    right: 12px;
+    bottom: 64px;
+    padding: 7px 10px 7px 12px;
+    font-size: 11px;
+  }
+
+  .orderTag {
+    left: 12px;
+    top: 12px;
+  }
+}

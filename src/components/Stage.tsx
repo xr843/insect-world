@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import type { Insect } from '../data/types'
 import { InsectCanvas, type ViewMode } from '../three/InsectCanvas'
 import { CompareBar } from './CompareBar'
@@ -48,6 +48,22 @@ export function Stage({
     error: null,
   })
 
+  /**
+   * 展台滚出视口就停掉渲染循环。
+   *
+   * 手机上整页竖排，用户在下面读图鉴数据时展台还在每帧画 —— 白烧 GPU，
+   * 滚动因此发涩。留 15% 的余量，刚露头就恢复，肉眼看不出启停。
+   */
+  const wrapRef = useRef<HTMLDivElement>(null)
+  const [inView, setInView] = useState(true)
+  useEffect(() => {
+    const el = wrapRef.current
+    if (!el || typeof IntersectionObserver === 'undefined') return
+    const ob = new IntersectionObserver(([e]) => setInView(e.isIntersecting), { threshold: 0.15 })
+    ob.observe(el)
+    return () => ob.disconnect()
+  }, [])
+
   // 换物种时收起上一只虫的标注卡
   useEffect(() => {
     setOpenHotspot(null)
@@ -76,8 +92,9 @@ export function Stage({
 
   return (
     <section className={`card stage-height ${s.stage}`}>
-      <div className={s.canvasWrap}>
+      <div className={s.canvasWrap} ref={wrapRef}>
         <InsectCanvas
+          active={inView}
           insect={insect}
           mode={mode}
           spin={spin}

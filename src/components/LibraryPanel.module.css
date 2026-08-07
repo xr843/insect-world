@@ -160,3 +160,49 @@
   line-height: 1.7;
   color: var(--muted);
 }
+
+
+/* ---------------------------------------------------------------- 手机横滑条 */
+
+@media (max-width: 900px) {
+  .list {
+    flex-direction: row;
+    overflow-x: auto;
+    overflow-y: hidden;
+    gap: 6px;
+    padding: 2px 2px 8px;
+    scrollbar-width: none;
+  }
+
+  .list::-webkit-scrollbar {
+    display: none;
+  }
+
+  .item {
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    width: 86px;
+    flex-shrink: 0;
+    padding: 9px 4px 8px;
+    text-align: center;
+  }
+
+  .name {
+    font-size: 12px;
+    max-width: 78px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  /* 竖排小卡里放不下目名与叶片标记，选中态靠底色分辨 */
+  .order,
+  .mark {
+    display: none;
+  }
+
+  .footer {
+    margin-top: 8px;
+  }
+}

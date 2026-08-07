@@ -170,6 +170,26 @@ button {
   .workbench {
     grid-template-columns: minmax(0, 1fr);
   }
+  /**
+   * 手机上第一眼必须是虫，不是名录。
+   * 竖排若按源码顺序（名录→展台→详情），用户要滑过一整屏列表才能看到
+   * 3D 展台 —— 产品的核心被藏在第二屏（真机截图验证过）。
+   * 名录同时被 LibraryPanel.module.css 改成横向滑条，贴在展台下面。
+   */
+  .workbench > section {
+    order: 1;
+  }
+  .workbench > .detail-left {
+    order: 2;
+    height: auto;
+  }
+  .workbench > .detail-panel {
+    order: 3;
+    height: auto;
+  }
+  .stage-height {
+    height: clamp(340px, 56vh, 560px);
+  }
 }
 
 .stage-height {

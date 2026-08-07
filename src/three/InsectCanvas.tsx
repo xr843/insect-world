@@ -15,6 +15,13 @@ import type { Insect } from '../data/types'
 import type { InsectModel } from './builders/kit'
 import { loadInsectModel } from './registry'
 
+/**
+ * 触屏设备一次性判定，用于渲染降配。
+ * 手机 GPU 扛不住桌面档的阴影贴图与像素密度 —— 用户实测「不够流畅」。
+ * pointer: coarse 比 UA 嗅探可靠：带鼠标的平板会取到 fine，按桌面走。
+ */
+const COARSE = typeof window !== 'undefined' && window.matchMedia('(pointer: coarse)').matches
+
 const TONE_HEX: Record<string, string> = {
   coral: '#eb7c6b',
   lavender: '#8d6bcc',
@@ -263,7 +270,7 @@ function StudioLights({ radius }: { radius: number }) {
         intensity={2.35}
         color="#fff6ea"
         castShadow
-        shadow-mapSize={[2048, 2048]}
+        shadow-mapSize={COARSE ? [1024, 1024] : [2048, 2048]}
         shadow-bias={-0.0006}
         shadow-normalBias={0.02}
       >
@@ -418,7 +425,7 @@ function Scene({
             opacity={0.44}
             blur={2.6}
             far={radius * 2.4}
-            resolution={512}
+            resolution={COARSE ? 256 : 512}
             color="#5c4630"
           />
         </>
@@ -450,6 +457,7 @@ export function InsectCanvas({
   zoomNonce,
   resetNonce,
   focusAnchor = null,
+  active = true,
   onStatus,
 }: {
   insect: Insect
@@ -461,6 +469,8 @@ export function InsectCanvas({
   resetNonce: number
   /** 由讲解弹窗下发的镜头指令，优先于工具条的聚焦模式 */
   focusAnchor?: string | null
+  /** 展台滚出视口时置 false，整个渲染循环停摆 —— 手机上省下的是真电量 */
+  active?: boolean
   onStatus: (s: { loading: boolean; error: string | null }) => void
 }) {
   const controls = useRef<OrbitControlsImpl>(null)
@@ -472,8 +482,9 @@ export function InsectCanvas({
   return (
     <Canvas
       shadows
-      dpr={[1, 2]}
-      gl={{ antialias: true, alpha: true, preserveDrawingBuffer: false }}
+      dpr={[1, COARSE ? 1.5 : 2]}
+      frameloop={active ? 'always' : 'never'}
+      gl={{ antialias: true, alpha: true, preserveDrawingBuffer: false, powerPreference: 'high-performance' }}
       camera={{ fov: 34, position: [2, 1, 3] }}
       onCreated={({ gl }) => {
         gl.toneMapping = THREE.ACESFilmicToneMapping
