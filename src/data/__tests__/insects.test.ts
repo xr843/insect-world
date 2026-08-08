@@ -69,6 +69,16 @@ const ALLOWED_ANCHORS: Record<string, string[]> = {
   'dead-leaf-butterfly': ['underwing', 'forewing', 'tail', 'antenna', 'eye', 'abdomen'],
   'hawk-moth': ['proboscis', 'forewing', 'hindwing', 'antenna', 'eye', 'abdomen'],
   'termite-soldier': ['head', 'mandible', 'abdomen', 'antenna', 'thorax', 'leg'],
+  'water-scavenger': ['palp', 'keel', 'elytra', 'eye', 'leg', 'antenna'],
+  'checkered-beetle': ['band', 'fuzz', 'elytra', 'eye', 'pronotum', 'leg'],
+  'shining-chafer': ['elytra', 'pronotum', 'clypeus', 'antenna', 'leg', 'eye'],
+  'assassin-bug': ['rostrum', 'foreleg', 'pronotum', 'eye', 'antenna', 'abdomen'],
+  bumblebee: ['fuzz', 'pollenBasket', 'wing', 'eye', 'antenna', 'abdomen'],
+  cricket: ['stridulator', 'cercus', 'hindleg', 'antenna', 'eye', 'head'],
+  'robber-fly': ['mystax', 'foreleg', 'wing', 'eye', 'haltere', 'abdomen'],
+  'crane-fly': ['haltere', 'leg', 'wing', 'thorax', 'abdomen', 'antenna'],
+  mantidfly: ['raptorialLeg', 'wing', 'pronotum', 'eye', 'antenna', 'abdomen'],
+  caddisfly: ['hairyWing', 'antenna', 'palp', 'eye', 'thorax', 'abdomen'],
 }
 
 const EXPECTED_IDS = [
@@ -122,13 +132,23 @@ const EXPECTED_IDS = [
   'dead-leaf-butterfly',
   'hawk-moth',
   'termite-soldier',
+  'water-scavenger',
+  'checkered-beetle',
+  'shining-chafer',
+  'assassin-bug',
+  'bumblebee',
+  'cricket',
+  'robber-fly',
+  'crane-fly',
+  'mantidfly',
+  'caddisfly',
 ]
 
 const HEX_COLOR = /^#[0-9a-fA-F]{6}$/
 
 describe('INSECTS 数据完整性', () => {
-  it('恰好包含 50 条记录', () => {
-    expect(INSECTS).toHaveLength(50)
+  it('恰好包含 60 条记录', () => {
+    expect(INSECTS).toHaveLength(60)
   })
 
   it('id 全部唯一且与规定列表一致（含顺序）', () => {
@@ -251,13 +271,13 @@ describe('INSECTS 数据完整性', () => {
     expect(new Set(accents).size).toBe(accents.length)
   })
 
-  it('order 覆盖了全部 13 个目', () => {
+  it('order 覆盖了全部 14 个目', () => {
     const orders = new Set(INSECTS.map(i => i.order))
-    expect(orders.size).toBe(13)
+    expect(orders.size).toBe(14)
   })
 
-  it('鞘翅目物种数为 25', () => {
+  it('鞘翅目物种数为 28', () => {
     const beetles = INSECTS.filter(i => i.order === '鞘翅目')
-    expect(beetles).toHaveLength(25)
+    expect(beetles).toHaveLength(28)
   })
 })

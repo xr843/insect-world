@@ -1,14 +1,14 @@
 # 昆虫世界
 
-可交互的 3D 昆虫图鉴 —— 旋转、缩放、点击标注点，认识 50 种昆虫的身体构造、生活史与生态角色。
+可交互的 3D 昆虫图鉴 —— 旋转、缩放、点击标注点，认识 60 种昆虫的身体构造、生活史与生态角色。
 
 **线上：https://insect-world.pages.dev**
 
 **每一只虫都是代码实时生成的，仓库里没有一个模型文件。**
 
-50 个物种覆盖 13 个目：鞘翅目 25、鳞翅目 5、膜翅目 4、半翅目 3、直翅目 3，蜻蜓目与螳螂目各 2，双翅目、脉翅目、革翅目、广翅目、蜚蠊目、䗛目各 1。
+60 个物种覆盖 14 个目：鞘翅目 28、鳞翅目 5、膜翅目 5、半翅目 4、直翅目 4、双翅目 3，蜻蜓目、螳螂目、脉翅目各 2，䗛目、革翅目、广翅目、蜚蠊目、毛翅目各 1。
 
-阶段目标 50 种已达成，长期 60 种，路线图见 [docs/roadmap.md](docs/roadmap.md)。
+**长期目标 60 种 / 14 目已达成**；物种史与打磨史见 [docs/roadmap.md](docs/roadmap.md) 与 [docs/polish-plan.md](docs/polish-plan.md)。
 
 ![图鉴总览](docs/screenshots/05-gallery-24.jpg)
 
@@ -20,7 +20,7 @@
 npm install
 npm run dev          # 主站      http://localhost:5178
                      # 模型调试台 http://localhost:5178/preview.html
-npm test             # 1384 个测试
+npm test             # 3004 个测试
 npm run build        # tsc --noEmit + vite build
 npm run deploy       # 构建并发布到 Cloudflare Pages（需先 npx wrangler login）
 ```
@@ -47,7 +47,7 @@ npm run deploy       # 构建并发布到 Cloudflare Pages（需先 npx wrangler
 
 这不只是妥协。昆虫的形态比内脏规律得多 —— 体分头/胸/腹三段，胸部生三对足、两对翅，附肢是分节的锥管，翅面由放射状翅脉支撑。这些结构参数化以后，加一个物种只需要写一份尺寸与配色的描述，而不是再买一个模型。代价是写实度不如三维扫描，换来的是零资产依赖、任意可扩展，以及每处形态都能在代码里追溯到形态学依据。
 
-单个物种 1.4 万~3.6 万三角面（最小是蠼螋 14,420，最大是柞蚕蛾 35,732），在浏览器里构建耗时 30~90 毫秒。生产构建首屏 331 KB，物种代码按需分包，点到谁才下载谁。
+单个物种 1.4 万~3.6 万三角面（最小是蠼螋 14,420，最大是柞蚕蛾 35,732），在浏览器里构建耗时 30~90 毫秒。生产构建首屏 JS gzip 约 424 KB（three 主导的 vendor 340 KB + 主包 84 KB），桌面后期管线 103 KB 为懒加载独立 chunk，手机不下载，物种代码按需分包，点到谁才下载谁。
 
 ![独角仙特写](docs/screenshots/02-beetle-closeup.jpg)
 
@@ -75,19 +75,23 @@ src/
   three/
     builders/
       kit.ts              建模工具箱 —— 所有物种的地基
+      surface.ts          程序生成表面微观贴图（刻点/纵沟/微颗粒，运行时 CanvasTexture）
+      eyes.ts             复眼六边形小眼面法线贴图
+      venation.ts         参数化翅脉网（纵脉+渐密横脉围出真翅室）
       <id>.ts             每个物种一个文件，导出 build<Name>(): InsectModel
-    registry.ts           按 id 动态加载物种模块（Vite 代码分割）
-    InsectCanvas.tsx      3D 展台：工作室光照、接触阴影、轨道控制、标注点
+    registry.ts           按 id 动态加载物种模块（Vite 代码分割 + LRU 显存回收）
+    InsectCanvas.tsx      3D 展台：工作室光照、按需渲染、触角微动、背面圆点淡出
+    PostFX.tsx            桌面后期（N8AO + Bloom + 链尾 ACES），懒加载独立 chunk
   components/
     TopBar / LibraryPanel / Stage / DetailPanel / BottomCards   三栏工作台
     Discovery.tsx         讲解弹窗（讲解 / 动态演示 / 小测 / 栖境 四个变体）
     CompareBar.tsx        展台底部的内联对比条
     Gallery.tsx           按目分组的全部物种总览
-    InsectGlyph.tsx       50 个手写 SVG 剪影
+    InsectGlyph.tsx       60 个手写 SVG 剪影
   data/
     types.ts              数据契约
-    insects.ts            50 种昆虫的图鉴数据
-    guides.ts             50 种的分步讲解与测验
+    insects.ts            60 种昆虫的图鉴数据
+    guides.ts             60 种的分步讲解与测验
   preview.tsx             模型调试台（/preview.html）
 ```
 
@@ -95,16 +99,16 @@ src/
 
 | 类别 | API |
 | --- | --- |
-| 放样核心 | `loft` `spindle` `segmentedAbdomen` |
+| 放样核心 | `loft` `spindle` `segmentedAbdomen`（默认节间凹槽）`segmentedAbdomenMembranes`（节间软膜环） |
 | 附肢 | `leg` `legPair` `antenna` `antennaPair` |
 | 翅 | `wing` `wingPair` `wingGeometry` `wingVeins` |
 | 头部器官 | `compoundEye` `compoundEyePair` `ocelli` `mandibles` `rostrum` |
-| 材质 | `chitin` `elytra` `membrane` |
+| 材质 | `chitin`（surface 刻点/纵沟/绒面、translucent 半透）`elytra`（iridescent 虹彩）`membrane`（薄膜虹彩） |
 | 收尾 | `finalize` `boundingRadius` `mirrorZ` |
 
 `loft` 是全部几何的地基：给一串椭圆截面，沿路径放样成封闭实体。它对退化输入（重合点、零半径、竖直路径）有专门的测试，因为这些情况一旦产生 NaN，整个模型会静默变成空白。
 
-物种文件只依赖 kit，彼此不依赖 —— 32 个物种是分批并行写出来的。
+物种文件只依赖 kit（与 surface/eyes/venation 三个工具模块），彼此不依赖 —— 60 个物种是六轮多 agent 并行写出来的。
 
 ### 坐标与数据的约定
 
@@ -139,7 +143,7 @@ src/
 
 **`legPair` 曾经不是镜像。** 原写法是「把 `base.z` 取负，再翻 `scale.z`」。但 `leg()` 内部算出的腿节方向 z 分量恒为正、不随 `base.z` 变号，于是左腿的基节被翻回右侧，整条腿从右侧根部斜穿过身体中线。三个物种作者独立报告了这个现象。几何完全合法、没有 NaN，只是长错了地方 —— 这类问题只能靠专门的对称性断言抓住（`__tests__/mirror.test.ts`）。
 
-**`wing()` 的 `spread` 语义与直觉相反。** 实际是 `0` = 完全侧展、`90` = 沿体轴向前。全部物种文件都是按这个实测行为标定的姿态，测试里钉住了它，别顺手「修正」。
+**`wing()` 的 `spread` 语义与直觉相反，且文档自己也错过一回。** 实测是 `180` = 向本侧完全展开、`90` = 沿体轴向前、`0` = 横穿身体伸向**对侧**。早期文档写成「0 = 侧展」，而当时的测试只比对了展开跨度 —— 0 与 180 的跨度一模一样、只是方向相反，于是错误文档被绿灯测试背书，先后坑了两位物种作者。现在 `mirror.test.ts` 连方向一起钉住了，别顺手「修正」实现。
 
 **`elytra()` 的清漆层调太高会整片过曝。** 原值 0.85 配 Environment 的面光源，正对光的角度会把固有色和隆起的体积感一起吃掉 —— 深栗褐的独角仙从正面看像两个白球。压到 0.55 才对。
 
@@ -157,18 +161,18 @@ src/
 npm test
 ```
 
-36 个文件、2488 个测试：
+39 个文件、3004 个测试：
 
 | 文件 | 数量 | 管什么 |
 | --- | --- | --- |
-| `data/__tests__/guides.test.ts` | 804 | 讲解与测验的结构、字数、anchor 逐物种校验 |
-| `data/__tests__/insects.test.ts` | 757 | 图鉴数据契约、anchor 白名单、trivia 不得复述 summary |
-| `components/__tests__/glyph.test.tsx` | 153 | 50 个剪影的结构与坐标越界 |
-| `three/__tests__/integration.test.ts` | 153 | 建模层 × 数据层的接缝 |
-| `__tests__/layers.test.ts` | 55 | 三层齐备性：每个物种都有模型、有专属剪影、剪影互不相同 |
-| `builders/__tests__/kit.test.ts` | 30 | 放样地基与退化输入（重合点、零半径、竖直路径） |
-| `builders/__tests__/*.test.ts`（其余 18 个） | 328 | 各物种的几何合法性、形态比例、面数预算、锚点完整性 |
-| `builders/__tests__/mirror.test.ts` | 12 | 成对附肢的对称性、`wing` 的 `spread` 语义与**方向** |
+| `data/__tests__/guides.test.ts` | 1026 | 讲解与测验的结构、字数、anchor 逐物种校验 |
+| `data/__tests__/insects.test.ts` | 907 | 图鉴数据契约、anchor 白名单、trivia 不得复述 summary |
+| `components/__tests__/glyph.test.tsx` | 183 | 60 个剪影的结构与坐标越界 |
+| `three/__tests__/integration.test.ts` | 183 | 建模层 × 数据层的接缝 |
+| `__tests__/layers.test.ts` | 65 | 三层齐备性 + 展示文案字符白名单 |
+| `builders/__tests__/kit.test.ts` | 30 | 放样地基与退化输入 |
+| `builders/__tests__/*.test.ts`（其余 31 个） | 598 | 各物种形态断言、表面材质落位、翅脉/节间膜/触角钩子普查 |
+| `builders/__tests__/mirror.test.ts` | 12 | 成对附肢对称性、`wing` 的 `spread` 语义与方向 |
 
 形态类断言写的时候有个自检标准：**把代码改回出问题的版本，这条断言会失败吗？** 不会就等于没写。
 
@@ -189,7 +193,7 @@ npm test
 
 ## 已知不足
 
-- 模型的写实度距离三维扫描仍有明显差距，尤其在体表纹理与细部绒毛上 —— 当前只有几何与材质，没有贴图。
+- 写实度上限仍低于三维扫描 —— 表面微观（刻点/沟纹/绒面/蜂窝复眼）已由程序贴图补足，但没有手绘贴图与真实绒毛物理；换来的是零资产文件与全库风格统一。
 - 观察笔记只存在浏览器本地（localStorage），换设备或清缓存就没了；
   头像菜单里的「复制为 Markdown」是目前唯一的带走方式。
 - 剖切与分层是通用实现（裁剪平面 / 降低外骨骼不透明度），没有按物种定制解剖层次。
