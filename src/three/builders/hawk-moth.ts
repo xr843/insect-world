@@ -235,7 +235,7 @@ function antennaHookTip(tip: THREE.Vector3, dir: THREE.Vector3, material: THREE.
 export function buildHawkMoth(): InsectModel {
   const g = new THREE.Group()
 
-  const bodyMat = chitin({ color: '#4c443a', gloss: 0.28, clearcoat: 0.08 })
+  const bodyMat = chitin({ color: '#4c443a', gloss: 0.28, clearcoat: 0.08, surface: 'velvet' }) // B轮绒面组：纺锤身躯干加绒面，翅不动
   const fuzzMat = chitin({ color: '#645a4a', gloss: 0.08 })
   const legMat = chitin({ color: '#3a3428', gloss: 0.26, clearcoat: 0.08 })
   const antennaMat = chitin({ color: '#241f18', gloss: 0.4, clearcoat: 0.15 })

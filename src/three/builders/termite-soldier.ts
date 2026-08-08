@@ -312,7 +312,7 @@ export function buildTermiteSoldier(): InsectModel {
   const mandibleColor = '#4a2c18' // 比头部更深（更高度骨化的天然观感），但同样避免近黑
 
   const headMat = chitin({ color: headColor, gloss: 0.66, clearcoat: 0.52 }) // 高度骨化：高光泽+清漆，圆角放样面上能看出高光渐变
-  const softMat = chitin({ color: softColor, gloss: 0.2, clearcoat: 0.03 }) // 柔软：低光泽、无清漆
+  const softMat = chitin({ color: softColor, gloss: 0.2, clearcoat: 0.03, translucent: true }) // 柔软：低光泽、无清漆；B 轮半透组定标：加 transmission，硬褐头×半透软腹的对比是本种全部看点（头部 headMat 不动）
   const legMat = chitin({ color: legColor, gloss: 0.34, clearcoat: 0.1 })
   const mandibleMat = chitin({ color: mandibleColor, gloss: 0.55, clearcoat: 0.38 }) // 有光泽但不过量：gloss/clearcoat 一旦太高，强曲面在单一主光源下会把整段高光糊成一片亮斑，紧挨着的暗部又被 ACES 压得发黑，两颚在渲染里就读成了一整片扁平的深色"瓢铲"而不是分开的圆润弯钩（返工时肉眼实测发现，见文件头注释）
   const dimpleMat = chitin({ color: '#372111', gloss: 0.06 }) // 眼点退化处的浅坑：颜色取头部本色的暗化版（而非独立的深色），读起来像"同一块头壳上的阴影凹陷"，不是"贴了一颗异色的球"；不给光泽，避免被误读成复眼

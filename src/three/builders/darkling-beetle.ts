@@ -105,6 +105,11 @@ export function buildDarklingBeetle(): InsectModel {
 
   // 全身统一哑光黑：低 gloss、零/极低 clearcoat，不用 elytra() 的釉质路线
   const matteBlack = chitin({ color: '#111110', gloss: 0.14, metal: 0.02, clearcoat: 0.03 })
+  // B3 刻点组：甲壳（愈合无缝的鞘翅硬壳，即 fusedElytra + 其纵向棱）单独
+  // 一份材质挂 punctate，哑光维持——gloss/metal/clearcoat 与 matteBlack
+  // 完全相同，只多一个 surface 选项；abdomen/pronotum/head 仍用不带纹理
+  // 的 matteBlack，不跟着牵动。
+  const shellMat = chitin({ color: '#111110', gloss: 0.14, metal: 0.02, clearcoat: 0.03, surface: 'punctate' })
   const legMat = chitin({ color: '#0d0c0b', gloss: 0.16, metal: 0.02, clearcoat: 0.04 })
   const antennaMat = chitin({ color: '#131211', gloss: 0.15 })
 
@@ -135,13 +140,14 @@ export function buildDarklingBeetle(): InsectModel {
     elytronCenters.push(c)
     elytronSections.push({ at: c, ry: Math.max(w * 0.44, 0.015), rz: Math.max(w * 0.53, 0.015) })
   }
-  const fusedElytra = new THREE.Mesh(loft(elytronSections, 34), matteBlack)
+  const fusedElytra = new THREE.Mesh(loft(elytronSections, 34), shellMat)
   fusedElytra.name = 'fusedElytra'
   g.add(fusedElytra)
 
-  // 3 条极轻纵向棱，双侧对称，材质与穹顶本体相同（不额外开高光材质）
+  // 3 条极轻纵向棱，双侧对称，材质与穹顶本体相同（同一份哑光黑参数，
+  // 仅多刻点纹理，不额外开高光材质）
   for (const theta of [22, 0, -22]) {
-    g.add(domeRidge(elytronSections, elytronCenters, theta, 0.1, 0.88, 0.012, matteBlack))
+    g.add(domeRidge(elytronSections, elytronCenters, theta, 0.1, 0.88, 0.012, shellMat))
   }
 
   // ---- 前胸背板：小而低调（不是本种视觉重点），衔接头与鞘翅前缘

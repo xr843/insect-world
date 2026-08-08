@@ -239,7 +239,7 @@ function abdomenDots(from: THREE.Vector3, to: THREE.Vector3, r0: number, r1: num
 export function buildMonarchButterfly(): InsectModel {
   const g = new THREE.Group()
 
-  const bodyMat = chitin({ color: '#171210', gloss: 0.35, clearcoat: 0.15 })
+  const bodyMat = chitin({ color: '#171210', gloss: 0.35, clearcoat: 0.15, surface: 'velvet' }) // B轮绒面组：只躯干加绒面，翅面不动
   const legMat = chitin({ color: '#110d0b', gloss: 0.3 })
   const proboscisMat = chitin({ color: '#3a2a12', gloss: 0.55, clearcoat: 0.3 })
   const dotMat = chitin({ color: '#f4efdd', gloss: 0.2 })

@@ -127,7 +127,11 @@ export function buildJewelBeetle(): InsectModel {
 
   // 虹彩鞘翅：高 metalness + 极低 roughness（gloss 0.96）打底，
   // 再手动补上 iridescence 三件套——chitin() 本身不设置这些。
-  const shellMat = chitin({ color: '#146b3f', gloss: 0.96, metal: 0.9, clearcoat: 0.5 })
+  // B 轮虹彩组铁律：虹彩本身已是一层强角度高光，与清漆叠满必过曝，手搓
+  // 材质要手动把 clearcoat 压到 ≤0.35（同 kit.elytra() 开虹彩时的内部
+  // 行为）——原先 0.5 超了，压下来；iridescence/IOR/厚度域已按本组的
+  // 强虹彩定标过，不动。
+  const shellMat = chitin({ color: '#146b3f', gloss: 0.96, metal: 0.9, clearcoat: 0.35 })
   shellMat.iridescence = 0.75
   shellMat.iridescenceIOR = 1.9
   shellMat.iridescenceThicknessRange = [200, 500]

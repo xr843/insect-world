@@ -141,7 +141,9 @@ export function buildDragonfly(): InsectModel {
   const headMat = chitin({ color: '#1c2a18', gloss: 0.5, clearcoat: 0.3 })
   const legMat = chitin({ color: '#171410', gloss: 0.35 })
   const eyeColor = '#3f8f86'
-  const wingFaceMat = membrane('#f0f7f2', 0.2)
+  // B 轮翅膜虹彩组定标：掠射角轻虹彩（强度由 kit MEMBRANE_IRIDESCENCE 常量控制，
+  // 保守档，只在翅面材质上开——翅痣 stigmaMat 与翅脉 veinMat 不动）
+  const wingFaceMat = membrane('#f0f7f2', 0.2, { iridescent: true })
   const veinMat = chitin({ color: '#241f16', gloss: 0.35, side: THREE.DoubleSide })
   const stigmaMat = chitin({ color: '#3a2a18', gloss: 0.5 })
 

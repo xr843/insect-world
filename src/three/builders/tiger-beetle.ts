@@ -136,7 +136,10 @@ export function buildTigerBeetle(): InsectModel {
   // 头胸翠绿带金属光泽；鞘翅深绿到紫铜色，clearcoat 不超过 elytra() 内定的
   // 0.55（见 kit 注释：更高会在正对光角度整片过曝成灰白，吃掉固有色）。
   const bodyMat = chitin({ color: '#0f8a4f', gloss: 0.82, metal: 0.6, clearcoat: 0.48 })
-  const shellMat = elytra('#3c5a2a', 0.55)
+  // B 轮：强虹彩，红绿撞色的招牌基色不动。iridescent:true 让 elytra()
+  // 把 clearcoat 自动压到 ≤0.35（虹彩本身已是强角度高光，叠清漆更容易
+  // 过曝），iridescence/IOR/厚度域用 kit 内定的强虹彩默认值。
+  const shellMat = elytra('#3c5a2a', 0.55, { iridescent: true })
   const markMat = chitin({ color: '#f2ecc9', gloss: 0.32, metal: 0.05 })
   const jawMat = chitin({ color: '#20140c', gloss: 0.68, metal: 0.28, clearcoat: 0.42 })
   const legMat = chitin({ color: '#123d2a', gloss: 0.56, metal: 0.32, clearcoat: 0.38 })

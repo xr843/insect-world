@@ -219,7 +219,11 @@ export function buildDamselfly(): InsectModel {
   // 加上翅脉硬编码半径 0.009 在这么窄的翅上完全盖过翅膜，四片翅渲染出来
   // 只剩一束翅脉线条。现在翅脉细了（见 slenderWingVeins），膜也要能读出
   // "四片有面积的膜"。
-  const wingFaceMat = membrane('#cddce2', 0.42)
+  // B 轮翅膜虹彩组：翅面积小，保持 kit 默认强度即可（不额外加强）。只挂在
+  // wingFaceMat（供下方 buildWing() 里 name='wingFace' 的翅膜面 mesh 使用）——
+  // 翅脉走的是下面单独的 veinMat（slenderWingVeins() 里 name='wingVein'），
+  // 两者是完全独立的材质对象，不会被误挂。
+  const wingFaceMat = membrane('#cddce2', 0.42, { iridescent: true })
   const veinMat = chitin({ color: '#20241f', gloss: 0.35, side: THREE.DoubleSide })
 
   // ---- 头：哑铃形——两颗复眼分居两端，中间一段细杆连接（不用

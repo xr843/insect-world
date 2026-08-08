@@ -198,7 +198,8 @@ export function buildBombardierBeetle(): InsectModel {
   // 且用 kit.elytra() 的釉质路线（与本种的"金属光泽"描述一致，goliath-
   // beetle.ts 反而要刻意避开这条路线，两者是两回事，不要混用）。
   const headPronotumMat = chitin({ color: '#7a3c05', gloss: 0.48, metal: 0.04, clearcoat: 0.26 })
-  const elytraMat = elytra('#080a12', 0.3)
+  // B3 纵沟组：'striate'，默认档（条数/深度不额外调）
+  const elytraMat = elytra('#080a12', 0.3, { surface: 'striate' })
   const striaeMat = chitin({ color: '#03040a', gloss: 0.8, metal: 0.22, clearcoat: 0.5 })
   const spotMat = chitin({ color: '#6e4c04', gloss: 0.34, clearcoat: 0.12 })
   const legMat = chitin({ color: '#100f0d', gloss: 0.46, metal: 0.08, clearcoat: 0.24 })

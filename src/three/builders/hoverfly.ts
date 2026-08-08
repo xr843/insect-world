@@ -127,7 +127,10 @@ export function buildHoverfly(): InsectModel {
   const eyeColor = '#5c2f18'
   const haltereMat = chitin({ color: '#caa156', gloss: 0.4 })
   const haltereBallMat = chitin({ color: '#e8c477', gloss: 0.55, clearcoat: 0.3 })
-  const wingFaceMat = membrane('#f2f5ef', 0.22)
+  // B 轮翅膜虹彩组：极轻档。kit.MembraneOptions 只暴露 iridescent 布尔开关，
+  // 强度由 kit 内部 MEMBRANE_IRIDESCENCE 常量统一控制，本文件无法单独再调低
+  // ——若目视比预期更显闹，需回 kit.ts 加强度参数，见本文件报告。
+  const wingFaceMat = membrane('#f2f5ef', 0.22, { iridescent: true, iridescenceStrength: 0.25 })
   const veinMat = chitin({ color: '#2c281f', gloss: 0.3, side: THREE.DoubleSide })
 
   // ---- 头：小，几乎被复眼盖满

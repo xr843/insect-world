@@ -174,7 +174,10 @@ export function buildGroundBeetle(): InsectModel {
   // 黑底泛铜绿/紫铜：base color 压暗，iridescence 强度克制（0.4，远低于
   // jewel-beetle 的 0.75），厚度区间取偏厚的一段让干涉色落在绿→铜→
   // 紫红，只在特定角度才"泛"出来，不是吉丁那种全角度虹彩。
-  const shellMat = chitin({ color: '#12160f', gloss: 0.72, metal: 0.58, clearcoat: 0.52 })
+  // B3 纵沟组：surface:'striate' 只加程序化细纹理，不动手模的三条主脊/
+  // 瘤突（elytraRidge/elytraTubercle，"雕刻纵脊是招牌"仍是这条几何在
+  // 撑）；金色星点（虹彩）三行不动。
+  const shellMat = chitin({ color: '#12160f', gloss: 0.72, metal: 0.58, clearcoat: 0.52, surface: 'striate' })
   shellMat.iridescence = 0.4
   shellMat.iridescenceIOR = 1.9
   shellMat.iridescenceThicknessRange = [260, 460]

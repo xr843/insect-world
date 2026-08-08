@@ -35,6 +35,7 @@ import {
   type InsectModel,
   type Section,
 } from './kit'
+import { punctateMaps } from './surface'
 
 // ---------------------------------------------------------------- 局部辅助
 
@@ -99,6 +100,18 @@ export function buildLadybird(): InsectModel {
   const g = new THREE.Group()
 
   const elytraMat = elytra('#e2382a', 0.12) // 明快朱红鞘翅（原 #d0342c 偏暗偏酒红），强清漆光泽，金属感克制
+  // B3 刻点组定标：细密刻点。elytra() 的 surface 枚举只给默认密度
+  // （260/0.016，见 surface.ts），本种鞘翅是 loft() 单管拼出的"倒扣的
+  // 碗"（见文件头注释）——u 坐标环绕整根管子一圈，却只有朝上的大半段
+  // 能看见，可见密度天生打对折（surface.ts 头注释的"已知坑"）。这里
+  // 手动调高密度、调小坑径，做出"细密"而非默认档的"粗大"；不开浏览器
+  // 无法目视定标，数值先按这个方向给——真机偏粗/偏细回这两个参数调
+  // （深度/法线强度是 surface.ts 内部常量，不在物种文件能调的范围）。
+  const elytraPunctate = punctateMaps(420, 0.011)
+  if (elytraPunctate) {
+    elytraMat.normalMap = elytraPunctate.normal
+    elytraMat.roughnessMap = elytraPunctate.roughness
+  }
   const spotMat = chitin({ color: '#15110f', gloss: 0.72, clearcoat: 0.65 })
   const sutureMat = chitin({ color: '#231a17', gloss: 0.5, clearcoat: 0.4 })
   const pronotumMat = chitin({ color: '#181410', gloss: 0.68, clearcoat: 0.5 })

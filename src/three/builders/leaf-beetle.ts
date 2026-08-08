@@ -109,7 +109,10 @@ export function buildLeafBeetle(): InsectModel {
   // 子。现提到一个实测能明确读出蓝绿的档位（仍比直觉上"已经够蓝绿"的
   // 色值更深一些，金属材质需要一点余量防止高光整片过曝）。刻点构造与
   // "只比底色略深"的相对关系都不动。
-  const elytraMat = elytra('#1c8a8f', 0.5)
+  // B 轮：中虹彩蓝绿底（叠在已有金属底色之上），档位同 flower-chafer——
+  // iridescence 手动降到 0.5，IOR/厚度域仍用 kit 默认。刻点几何/贴面不动。
+  const elytraMat = elytra('#1c8a8f', 0.5, { iridescent: true })
+  elytraMat.iridescence = 0.5
   const punctureMat = chitin({ color: '#062527', gloss: 0.6, metal: 0.35, clearcoat: 0.4 }) // 刻点：只比底色略深
   // 前胸背板改偏黄褐的自然色调：原 #c9791a 饱和度过高，与深色鞘翅并置
   // 观感像塑料件；现降饱和度、略调整明度，读出昆虫外骨骼该有的哑光

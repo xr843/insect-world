@@ -123,7 +123,7 @@ export function buildHornet(): InsectModel {
 
   const headMat = chitin({ color: '#e8901c', gloss: 0.5, clearcoat: 0.26 })
   const mandibleMat = chitin({ color: '#171310', gloss: 0.7, clearcoat: 0.4 })
-  const thoraxMat = chitin({ color: '#2a1c12', gloss: 0.48, clearcoat: 0.22 })
+  const thoraxMat = chitin({ color: '#2a1c12', gloss: 0.48, clearcoat: 0.22, surface: 'velvet' }) // B轮绒面组：胸部绒毛区加绒面
   const waistMat = chitin({ color: '#241610', gloss: 0.5, clearcoat: 0.24 })
   const legMat = chitin({ color: '#241812', gloss: 0.42, clearcoat: 0.18 })
   const antennaMat = chitin({ color: '#201510', gloss: 0.4, clearcoat: 0.16 })
@@ -236,7 +236,7 @@ export function buildHornet(): InsectModel {
   const foreWingLength = 2.3
   const foreWings = wingPair(
     { base: [1.1, 0.22, 0.32], length: foreWingLength, width: 1.05, spread: 270 + 8 - 76, tilt: -6, sweep: 8, thickness: 0.012 },
-    membrane('#e0b878', 0.34),
+    membrane('#e0b878', 0.34, { iridescent: true }),
     veinMat,
     7,
   )
@@ -244,7 +244,7 @@ export function buildHornet(): InsectModel {
   g.add(
     wingPair(
       { base: [0.75, 0.16, 0.28], length: 1.6, width: 0.75, spread: 270 + 12 - 68, tilt: -4, sweep: 12, thickness: 0.012 },
-      membrane('#e0b878', 0.34),
+      membrane('#e0b878', 0.34, { iridescent: true }),
       veinMat,
       6,
     ),

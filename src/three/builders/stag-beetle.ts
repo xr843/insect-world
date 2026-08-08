@@ -33,6 +33,7 @@ import {
   type LegSpec,
   type Section,
 } from './kit'
+import { striateMaps } from './surface'
 
 // ---------------------------------------------------------------- 局部工具
 
@@ -138,6 +139,13 @@ export function buildStagBeetle(): InsectModel {
   // 鞘翅比独角仙更光滑更亮：不用 elytra()（gloss 固定 0.74），
   // 直接 chitin() 把 gloss 提到 0.88；clearcoat 仍压在 0.55 的安全上限
   const shellMat = chitin({ color: '#050506', gloss: 0.88, metal: 0.12, clearcoat: 0.55 })
+  // B3 纵沟组：轻档——条数维持默认间距（9）不动，法线深度压到默认 1.5
+  // 的约 0.85/1.5，比 ground-beetle/bombardier-beetle 的默认档更收敛。
+  const shellStriate = striateMaps(9, 0.85)
+  if (shellStriate) {
+    shellMat.normalMap = shellStriate.normal
+    shellMat.roughnessMap = shellStriate.roughness
+  }
   const mandibleMat = chitin({ color: '#08080a', gloss: 0.72, metal: 0.16, clearcoat: 0.44 })
   const legMat = chitin({ color: '#0a0a0b', gloss: 0.58, metal: 0.1, clearcoat: 0.36 })
 

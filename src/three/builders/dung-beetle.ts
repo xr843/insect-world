@@ -161,8 +161,8 @@ export function buildDungBeetle(): InsectModel {
 
   // 通体乌黑，clearcoat 压得比独角仙(0.34)/锹甲(0.55上限)都低——
   // 蜣螂表壳偏哑光微光，不是吉丁那种镜面。
-  const bodyMat = chitin({ color: '#0b0b0c', gloss: 0.42, clearcoat: 0.22 })
-  const shellMat = elytra('#111113', 0.16)
+  const bodyMat = chitin({ color: '#0b0b0c', gloss: 0.42, clearcoat: 0.22, surface: 'punctate' }) // B轮绒面组：不用 velvet，甲壳换粗刻点+保持哑光
+  const shellMat = elytra('#111113', 0.16, { surface: 'punctate' })
   const hornMat = chitin({ color: '#0a0a0b', gloss: 0.55, clearcoat: 0.38 })
   const legMat = chitin({ color: '#0b0b0c', gloss: 0.4, clearcoat: 0.2 })
   const toothMat = chitin({ color: '#050506', gloss: 0.46, clearcoat: 0.26 })

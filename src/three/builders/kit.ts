@@ -185,6 +185,11 @@ export function elytra(
 export interface MembraneOptions {
   /** 极轻薄膜虹彩：掠射角下的淡彩流转（豆娘/蜻蜓翅膜在真实世界就有）。默认关 */
   iridescent?: boolean
+  /**
+   * 虹彩强度覆写（0~1）。缺省用 MEMBRANE_IRIDESCENCE(0.45) —— 蜻蜓定标档；
+   * 小翅昆虫（食蚜蝇）满档会显闹，B 轮实测需要一个更轻的档位。
+   */
+  iridescenceStrength?: number
 }
 
 /** 膜翅：半透明、双面、极薄 */
@@ -199,7 +204,7 @@ export function membrane(
   m.ior = 1.33
   m.roughness = 0.22
   if (opts.iridescent) {
-    m.iridescence = MEMBRANE_IRIDESCENCE
+    m.iridescence = opts.iridescenceStrength ?? MEMBRANE_IRIDESCENCE
     m.iridescenceIOR = MEMBRANE_IRIDESCENCE_IOR
     m.iridescenceThicknessRange = [...MEMBRANE_IRIDESCENCE_THICKNESS]
   }

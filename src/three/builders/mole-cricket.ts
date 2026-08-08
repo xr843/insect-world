@@ -131,13 +131,13 @@ export const FORE_BASE: [number, number, number] = [1.55, -0.08, 0.3]
 export function buildMoleCricket(): InsectModel {
   const g = new THREE.Group()
 
-  const bodyMat = chitin({ color: '#8a6a3c', gloss: 0.14, clearcoat: 0.04 }) // 高 roughness，天鹅绒质感
-  const darkMat = chitin({ color: '#4a3620', gloss: 0.22 })
+  const bodyMat = chitin({ color: '#8a6a3c', gloss: 0.14, clearcoat: 0.04, surface: 'velvet' }) // 高 roughness，天鹅绒质感；B轮绒面组：通体天鹅绒
+  const darkMat = chitin({ color: '#4a3620', gloss: 0.22, surface: 'velvet' })
   const toothMat = chitin({ color: '#3f2d1a', gloss: 0.35 })
-  const legMat = chitin({ color: '#7a5c34', gloss: 0.2 })
+  const legMat = chitin({ color: '#7a5c34', gloss: 0.2, surface: 'velvet' })
   const fuzzMat = chitin({ color: '#a4835a', gloss: 0.06 })
   const eyeColor = '#241a10'
-  const wingMat = chitin({ color: '#5c4526', gloss: 0.3, clearcoat: 0.1 })
+  const wingMat = chitin({ color: '#5c4526', gloss: 0.3, clearcoat: 0.1, surface: 'velvet' })
   const veinMat = chitin({ color: '#3a2a16', gloss: 0.25 })
 
   // ---- 头部：小，大半会被前胸背板盾片盖住

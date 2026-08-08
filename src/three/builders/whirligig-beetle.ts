@@ -110,10 +110,14 @@ export function buildWhirligigBeetle(): InsectModel {
   // 乌黑带蓝紫金属反光：高 metalness + 极低 roughness 打底，
   // 补一点 iridescence 做出"角度一转会泛蓝紫"的克制虹彩（不像
   // jewel-beetle 那样大幅漂移，豉甲的虹彩要含蓄得多）。
-  const shellMat = chitin({ color: '#0a0a10', gloss: 0.95, metal: 0.62, clearcoat: 0.54 })
+  // B 轮虹彩组铁律：clearcoat 原 0.54 超过上限（虹彩+清漆两层角度高光
+  // 叠满必过曝，≤0.35），压下来；豉甲鞘翅底子本身 gloss 0.95/metal 0.62
+  // 已经很热，弱虹彩档再把厚度域收窄到 [150,300]，避免在已经很闪的底子
+  // 上又叠一层抢戏的彩虹反光。
+  const shellMat = chitin({ color: '#0a0a10', gloss: 0.95, metal: 0.62, clearcoat: 0.35 })
   shellMat.iridescence = 0.28
   shellMat.iridescenceIOR = 1.35
-  shellMat.iridescenceThicknessRange = [180, 320]
+  shellMat.iridescenceThicknessRange = [150, 300]
 
   const bodyMat = chitin({ color: '#0d0d13', gloss: 0.86, metal: 0.5, clearcoat: 0.46 })
   const legMat = chitin({ color: '#111117', gloss: 0.62, metal: 0.32, clearcoat: 0.32 })

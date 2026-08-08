@@ -140,6 +140,9 @@ export function buildHoneybee(): InsectModel {
   const g = new THREE.Group()
 
   const cuticleMat = chitin({ color: '#241a0e', gloss: 0.45, clearcoat: 0.25 })
+  // B轮绒面组：胸部绒毛区单独开一份材质加 velvet——cuticleMat 本身仍供头/单眼使用、
+  // 保持不变，不能直接在 cuticleMat 上加 velvet（那样会连带把绒面铺到头部）。
+  const thoraxMat = chitin({ color: '#241a0e', gloss: 0.45, clearcoat: 0.25, surface: 'velvet' })
   const fuzzMat = chitin({ color: '#c99a52', gloss: 0.1 })
   const legMat = chitin({ color: '#1c130a', gloss: 0.35 })
   const pollenMat = chitin({ color: '#f0b429', gloss: 0.28 })
@@ -157,7 +160,7 @@ export function buildHoneybee(): InsectModel {
   const thoraxCenter = new THREE.Vector3(0.23, 0.09, 0)
   const thorax = new THREE.Mesh(
     spindle([0.05, 0, 0], [0.42, 0.02, 0], 0.13, { bulge: 0.45, flat: 1.05, taperStart: 0.55, taperEnd: 0.6 }),
-    cuticleMat,
+    thoraxMat,
   )
   g.add(thorax)
   g.add(thoraxFuzz(thoraxCenter, new THREE.Vector3(0.2, 0.13, 0.14), 170, fuzzMat))
@@ -220,7 +223,7 @@ export function buildHoneybee(): InsectModel {
   const foreWingLength = 0.62
   const foreWings = wingPair(
     { base: [0.28, 0.1, 0.09], length: foreWingLength, width: 0.34, spread: 198, tilt: -5, sweep: 6, thickness: 0.006 },
-    membrane('#eef1ee', 0.34),
+    membrane('#eef1ee', 0.34, { iridescent: true }),
     veinMat,
     6,
   )
@@ -228,7 +231,7 @@ export function buildHoneybee(): InsectModel {
   g.add(
     wingPair(
       { base: [0.12, 0.08, 0.085], length: 0.4, width: 0.22, spread: 210, tilt: -3, sweep: 10, thickness: 0.006 },
-      membrane('#eef1ee', 0.34),
+      membrane('#eef1ee', 0.34, { iridescent: true }),
       veinMat,
       5,
     ),

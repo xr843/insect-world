@@ -157,9 +157,14 @@ export function buildLacewing(): InsectModel {
   const g = new THREE.Group()
 
   const bodyMat = chitin({ color: '#8fc25a', gloss: 0.28, clearcoat: 0.06 })
+  // B 轮半透组：腹部轻半透。bodyMat 被 head/thorax/abdomen 三处共用，直接加
+  // translucent 会连头胸一起变透——单独分一份同色同光泽的 abdomenMat，只挂给
+  // 腹部那一个 mesh，头/胸仍用原 bodyMat 不受影响。
+  const abdomenMat = chitin({ color: '#8fc25a', gloss: 0.28, clearcoat: 0.06, translucent: true })
   const legMat = chitin({ color: '#7cb04d', gloss: 0.24 })
   const antennaMat = chitin({ color: '#79a848', gloss: 0.26 })
-  const wingFaceMat = membrane('#eef7e0', 0.1)
+  // B 轮翅膜虹彩组：草蛉翅本来就带虹，加极轻掠射角虹彩（强度由 kit 常量控制）
+  const wingFaceMat = membrane('#eef7e0', 0.1, { iridescent: true })
   const veinMat = chitin({ color: '#4f7a34', gloss: 0.3, side: THREE.DoubleSide })
   const eyeDomeMat = chitin({ color: '#c9a23c', gloss: 0.9, metal: 0.68, clearcoat: 0.4 })
   const eyeFacetMat = chitin({ color: '#e0c060', gloss: 0.82, metal: 0.6, clearcoat: 0.3, opacity: 0.82 })
@@ -185,7 +190,7 @@ export function buildLacewing(): InsectModel {
         groove: 0.16,
         bulge: 0.25,
       }),
-      bodyMat,
+      abdomenMat,
     ),
   )
 

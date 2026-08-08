@@ -34,7 +34,6 @@ import {
   antennaPair,
   chitin,
   compoundEyePair,
-  elytra,
   finalize,
   legPair,
   loft,
@@ -173,9 +172,19 @@ export function buildHerculesBeetle(): InsectModel {
 
   // 头胸漆黑，鞘翅橄榄黄绿——强对比是本种最直观的配色特征
   const bodyMat = chitin({ color: '#111010', gloss: 0.62, clearcoat: 0.42 })
-  const shellMat = elytra('#93a247', 0.15)
+  // B3 组：鞘翅保持光滑——显式声明 surface:'smooth'，连默认的极轻微
+  // 颗粒都不挂，釉面高光是本种仅次于双角的第二招牌。不走 elytra() 是
+  // 因为 ElytraOptions.surface 的类型只收 'punctate'|'striate'（kit.ts
+  // 只读，不能扩类型），这里手动摊开 elytra() 内部同一组参数——
+  // gloss 0.74、clearcoat 0.55，无虹彩时与原来的 elytra('#93a247', 0.15)
+  // 完全等价，只多了显式的 surface 声明。
+  const shellMat = chitin({ color: '#93a247', gloss: 0.74, metal: 0.15, clearcoat: 0.55, surface: 'smooth' })
   const spotMat = chitin({ color: '#171512', gloss: 0.42, clearcoat: 0.3 })
   const hornMat = chitin({ color: '#0c0b0a', gloss: 0.72, clearcoat: 0.5 })
+  // 头胸角单独一份材质：'punctate' 只给这对"钳子"（thoracicHorn/
+  // headHorn），绒毛（thoracicHornBristles）与鳃叶状触角仍用不带纹理的
+  // hornMat——触角不在本轮分配范围内。
+  const hornSurfaceMat = chitin({ color: '#0c0b0a', gloss: 0.72, clearcoat: 0.5, surface: 'punctate' })
   const legMat = chitin({ color: '#121110', gloss: 0.56, clearcoat: 0.36 })
 
   // ---- 腹面体躯：躯干（不含角）主轴，从尾端一路延伸到头前缘附近
@@ -251,7 +260,7 @@ export function buildHerculesBeetle(): InsectModel {
   // 长度取躯干（trunk，belly∪pronotum∪head 的并集 X 跨度，约 7.45）的
   // 1.28 倍——真实大个体的胸角本就能与身体等长甚至更长，这不是随手
   // 夸张出的数字。
-  const thoracicRaw = beetleHorn(new THREE.Vector3(2.2, 1.18, 0), 9.55, hornMat, {
+  const thoracicRaw = beetleHorn(new THREE.Vector3(2.2, 1.18, 0), 9.55, hornSurfaceMat, {
     pitch: 7,
     curve: -0.185,
     thickness: 0.34,
@@ -264,7 +273,7 @@ export function buildHerculesBeetle(): InsectModel {
   g.add(thoracicHornBristles(thoracicRaw.path, thoracicRaw.radii, 22, hornMat))
 
   // ---- 头角：短得多，前伸后明显上翘，与胸角上下相对合成钳子
-  const headRaw = beetleHorn(new THREE.Vector3(3.0, 0.74, 0), 4.3, hornMat, {
+  const headRaw = beetleHorn(new THREE.Vector3(3.0, 0.74, 0), 4.3, hornSurfaceMat, {
     pitch: 14,
     curve: 0.16,
     thickness: 0.25,

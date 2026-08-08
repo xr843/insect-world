@@ -142,7 +142,8 @@ export function buildIchneumonWasp(): InsectModel {
   const darkMat = chitin({ color: '#241708', gloss: 0.5, clearcoat: 0.22 })
   const legMat = chitin({ color: '#b8823c', gloss: 0.42, clearcoat: 0.1 })
   const antennaMat = chitin({ color: '#2a1c10', gloss: 0.38 })
-  const wingFaceMat = membrane('#ecdfc0', 0.26)
+  // B 轮翅膜虹彩组：掠射角轻虹彩，产卵器（sheathMat/trueOvipositorMat）不动
+  const wingFaceMat = membrane('#ecdfc0', 0.26, { iridescent: true })
   const veinMat = chitin({ color: '#4a3520', gloss: 0.3, side: THREE.DoubleSide })
   const sheathMat = chitin({ color: '#171006', gloss: 0.62, clearcoat: 0.3 })
   const trueOvipositorMat = chitin({ color: '#0f0a03', gloss: 0.55 })

@@ -54,11 +54,14 @@ export function buildFirefly(): InsectModel {
   const legMat = chitin({ color: '#2e2319', gloss: 0.35 })
   const eyeMat = { color: '#171310' }
   // 发光器：乳白偏黄，强自发光；emissive 与底色都选浅黄绿，让"灯泡感"更足
+  // B 轮半透组：加 translucent，发光器区读出"光透过软组织"的生物学质感；
+  // emissive/emissiveIntensity 原样不动。腹部其余部分共用 bodyMat，不碰。
   const lanternMat = chitin({
     color: '#eef7c8',
     gloss: 0.35,
     emissive: '#c8ff8a',
     emissiveIntensity: 3.2,
+    translucent: true,
   })
 
   // ---- 头部：藏在盾片下方，仅体型学占位，实际几乎不可见

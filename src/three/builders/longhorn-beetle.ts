@@ -185,7 +185,12 @@ export function buildLonghornBeetle(): InsectModel {
   const g = new THREE.Group()
 
   const bodyMat = chitin({ color: '#0d0d0f', gloss: 0.5, clearcoat: 0.35 })
-  const shellMat = elytra('#08080a', 0.12) // 漆黑高光，金属感很弱，天牛鞘翅不像金龟子那样带铜绿
+  // 漆黑高光，金属感很弱，天牛鞘翅不像金龟子那样带铜绿。
+  // B3 刻点组：'punctate' 默认档——星天牛鞘翅基部真实存在颗粒区；
+  // surface 系统按整片 UV 铺贴图，做不出"只在基部"的空间局限（会动到
+  // surface.ts 才行，本文件只加选项），这里退而求其次整片鞘翅一起挂，
+  // 白星斑（spotMat）不动。
+  const shellMat = elytra('#08080a', 0.12, { surface: 'punctate' })
   const spotMat = chitin({ color: '#f0f1ec', gloss: 0.3 })
   const antennaBlack = chitin({ color: '#0c0c0e', gloss: 0.6, clearcoat: 0.4 })
   const antennaBand = chitin({ color: '#c9d3d8', gloss: 0.28 })

@@ -45,6 +45,7 @@ import {
   type InsectModel,
   type Section,
 } from './kit'
+import { punctateMaps } from './surface'
 
 // ---------------------------------------------------------------- 局部辅助
 
@@ -198,6 +199,17 @@ export function buildDivingBeetle(): InsectModel {
 
   const bodyMat = chitin({ color: '#22301a', gloss: 0.5, clearcoat: 0.3 })
   const shellMat = elytra('#283c20', 0.14)
+  // B3 刻点组：'punctate' 极轻——本种造型哲学通篇是"整颗压扁的橄榄"、
+  // 全身连续光滑、任何突起都增加水中阻力（见文件头注释），是本组风险
+  // 最高的一只。密度压到默认的约 1/5、坑径也收小，做成只有近观才看得
+  // 出的稀疏细麻点（真实龙虱鞘翅确有极细的刻点列，不算失真）。不开
+  // 浏览器无法目视确认，这组参数是保守估计——观感若仍偏"生锈感"，删掉
+  // 下面这 4 行、只留 elytra() 默认微颗粒即是任务里给的退路。
+  const shellPunctate = punctateMaps(48, 0.009)
+  if (shellPunctate) {
+    shellMat.normalMap = shellPunctate.normal
+    shellMat.roughnessMap = shellPunctate.roughness
+  }
   const rimMat = chitin({ color: '#e2b93a', gloss: 0.62, clearcoat: 0.35 })
   const legMat = chitin({ color: '#28361d', gloss: 0.42, clearcoat: 0.22 })
   const hairMat = chitin({ color: '#3c4a2a', gloss: 0.3 })

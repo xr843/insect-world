@@ -201,7 +201,10 @@ export function buildBuryingBeetle(): InsectModel {
   const g = new THREE.Group()
 
   const bodyMat = chitin({ color: '#141110', gloss: 0.6, metal: 0.15, clearcoat: 0.35 })
-  const elytraMat = elytra('#100d0c', 0.15) // 乌黑鞘翅底色；clearcoat 由 elytra() 内定 0.55，不手动加高
+  // B3 刻点组：'punctate' 默认档。乌黑鞘翅底色；clearcoat 由 elytra() 内定
+  // 0.55，不手动加高。⚠️下面的 bandMat（橙红横带）与色值三次返工才校准，
+  // 本轮绝对不碰。
+  const elytraMat = elytra('#100d0c', 0.15, { surface: 'punctate' })
   // 橙红横带：DoubleSide 防止 surfaceStripe() 的三角形环绕方向偶尔算反导致背面消隐。
   // 基色钉在饱和橙红~砖红（H≈17°，参照真实 Nicrophorus 的 #d95a1e~#c94a20），
   // 且把 metalness/clearcoat 都压得比原来更低——旧值 metal=0.08+clearcoat=0.3

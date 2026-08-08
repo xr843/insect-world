@@ -144,7 +144,11 @@ export function buildRoveBeetle(): InsectModel {
 
   const headMat = chitin({ color: '#120e0b', gloss: 0.58, clearcoat: 0.34 })
   const pronotumMat = chitin({ color: '#c8481c', gloss: 0.46, clearcoat: 0.22 })
-  const elytraMat = elytra('#131a2e', 0.42)
+  // B 轮：鞘翅弱蓝黑虹彩，只动这一小截材质，红黑警戒配色（下面几种
+  // 材质）不动。iridescence 手动降到 0.3（同豉甲 0.28 一档），IOR/厚度域
+  // 用 kit 默认。
+  const elytraMat = elytra('#131a2e', 0.42, { iridescent: true })
+  elytraMat.iridescence = 0.3
   const abdomenOrangeMat = chitin({ color: '#cf4e1f', gloss: 0.35, clearcoat: 0.1 })
   const abdomenBlackMat = chitin({ color: '#0d0b09', gloss: 0.35, clearcoat: 0.1 })
   const legMat = chitin({ color: '#5a3820', gloss: 0.36, clearcoat: 0.14 }) // fuscipes = 「暗足的」

@@ -258,8 +258,12 @@ export function buildGoliathBeetle(): InsectModel {
   // 白斑（pronotumSpotMat：#f2ede0/gloss 0.5/clearcoat 0.28）已实机验证
   // 过的亮度与清漆量级。bodyMat 顺带对齐 #1a1512 这个统一近黑参照值。
   const bodyMat = chitin({ color: '#1a1512', gloss: 0.24, metal: 0, clearcoat: 0.06 })
-  const shellMat = chitin({ color: '#4a2415', gloss: 0.2, metal: 0, clearcoat: 0.04 })
-  const stripeMat = chitin({ color: '#f0e6d2', gloss: 0.5, clearcoat: 0.3 }) // 蜡质白斑已改走"高光提亮"路线：同 ladybird.ts pronotumSpotMat 配方，靠 gloss/clearcoat 而非基色本身读出「白」
+  // B轮绒面组本组定标：前胸背板深色底单独开一份材质加 velvet——bodyMat 本身仍供
+  // belly/scutellum/head 使用、保持不变，不能直接在 bodyMat 上加 velvet（那样会
+  // 连带把绒面铺到 belly/头部，超出"前胸+鞘翅"的分配范围）。
+  const pronotumMat = chitin({ color: '#1a1512', gloss: 0.24, metal: 0, clearcoat: 0.06, surface: 'velvet' })
+  const shellMat = chitin({ color: '#4a2415', gloss: 0.2, metal: 0, clearcoat: 0.04, surface: 'velvet' }) // B轮绒面组：鞘翅深色底加绒面
+  const stripeMat = chitin({ color: '#f0e6d2', gloss: 0.5, clearcoat: 0.3 }) // 蜡质白斑已改走"高光提亮"路线：同 ladybird.ts pronotumSpotMat 配方，靠 gloss/clearcoat 而非基色本身读出「白」——B轮绒面组明确不动，纵条对比是本种的命
   const hornMat = chitin({ color: '#0c0a08', gloss: 0.32, metal: 0.04, clearcoat: 0.1 })
   const legMat = chitin({ color: '#100e0c', gloss: 0.3, metal: 0.04, clearcoat: 0.08 })
   const antennaMat = chitin({ color: '#141210', gloss: 0.26 })
@@ -321,7 +325,7 @@ export function buildGoliathBeetle(): InsectModel {
     pronotumCenters.push(c)
     pronotumSections.push({ at: c, ry: Math.max(1.0 * wFrac * 0.34, 0.02), rz: Math.max(1.0 * wFrac * 0.98, 0.02) })
   }
-  const pronotumMesh = new THREE.Mesh(loft(pronotumSections, 30), bodyMat)
+  const pronotumMesh = new THREE.Mesh(loft(pronotumSections, 30), pronotumMat)
   pronotumMesh.name = 'pronotum'
   g.add(pronotumMesh)
 

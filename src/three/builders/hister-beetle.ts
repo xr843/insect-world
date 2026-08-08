@@ -42,6 +42,7 @@
  */
 import * as THREE from 'three'
 import { chitin, compoundEyePair, finalize, loft, type InsectModel, type Section } from './kit'
+import { punctateMaps } from './surface'
 
 // ---------------------------------------------------------------- 局部辅助：方砖体块
 
@@ -190,6 +191,19 @@ export function buildHisterBeetle(): InsectModel {
   const legMat = chitin({ color: '#100e0c', gloss: 0.7, clearcoat: 0.4 })
   const antennaMat = chitin({ color: '#0a0908', gloss: 0.8, clearcoat: 0.4 })
   const eyeColor = '#050403'
+
+  // B3 刻点组：稀疏大刻点——阎甲科真实体表是大而疏的刻点，不是密集细砂，
+  // 默认密度 260/0.016 偏密偏小，手动调低密度、放大坑径；高光泽维持，
+  // 这里只挂 normalMap/roughnessMap，不碰上面四份材质已经调好的
+  // gloss/clearcoat。头/前胸/鞘翅/腹末四段拼起来读成"一整块黑玉"
+  // （文件头注释），因此四份材质共用同一张贴图（全局缓存本就该这么用）。
+  const dorsalPunctate = punctateMaps(70, 0.028)
+  if (dorsalPunctate) {
+    for (const m of [headMat, pronotumMat, elytraMat, abdomenMat]) {
+      m.normalMap = dorsalPunctate.normal
+      m.roughnessMap = dorsalPunctate.roughness
+    }
+  }
 
   const halfHeight = 0.11 // 全身共用的半高，拼起来读成一整块方砖
   const halfWidth = 0.25

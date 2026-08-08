@@ -196,13 +196,13 @@ function buildWing(spec: WingSpec, mats: WingMats, veinCount: number, eyeAt: [nu
 export function buildSilkMoth(): InsectModel {
   const g = new THREE.Group()
 
-  const bodyMat = chitin({ color: '#5c3d22', gloss: 0.32, clearcoat: 0.08 })
+  const bodyMat = chitin({ color: '#5c3d22', gloss: 0.32, clearcoat: 0.08, surface: 'velvet' }) // B轮绒面组：全身是绒的，躯干加绒面
   const fuzzMat = chitin({ color: '#8a6236', gloss: 0.1 })
   const legMat = chitin({ color: '#4a3018', gloss: 0.3, clearcoat: 0.1 })
   const antennaMat = chitin({ color: '#2e1c10', gloss: 0.45, clearcoat: 0.18 })
 
   const wingMats: WingMats = {
-    face: chitin({ color: '#b8843f', gloss: 0.2, clearcoat: 0.04, side: THREE.DoubleSide }),
+    face: chitin({ color: '#b8843f', gloss: 0.2, clearcoat: 0.04, side: THREE.DoubleSide, surface: 'velvet' }), // B轮绒面组：翅面底材质加绒面
     vein: chitin({ color: '#3a2312', gloss: 0.18, side: THREE.DoubleSide }),
     border: chitin({ color: '#5c3418', gloss: 0.2, side: THREE.DoubleSide }),
     eyeDark: chitin({ color: '#241408', gloss: 0.3 }),

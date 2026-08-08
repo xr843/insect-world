@@ -258,7 +258,7 @@ function buildWing(spec: WingSpec, mats: WingMats, opts: { veinCount: number; ta
 export function buildSwallowtail(): InsectModel {
   const g = new THREE.Group()
 
-  const bodyMat = chitin({ color: '#0e0c0c', gloss: 0.32, clearcoat: 0.12 })
+  const bodyMat = chitin({ color: '#0e0c0c', gloss: 0.32, clearcoat: 0.12, surface: 'velvet' }) // B轮绒面组：只躯干加绒面，翅面不动
   const legMat = chitin({ color: '#0b0a0a', gloss: 0.3 })
   const proboscisMat = chitin({ color: '#2a1f10', gloss: 0.55, clearcoat: 0.3 })
 

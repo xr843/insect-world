@@ -98,7 +98,12 @@ export function buildFlowerChafer(): InsectModel {
   const g = new THREE.Group()
 
   const bodyMat = chitin({ color: '#4a5a24', gloss: 0.68, metal: 0.42, clearcoat: 0.4 })
-  const shellMat = elytra('#4f5f27', 0.4)
+  // B 轮：中虹彩铜绿底。iridescent:true 后 iridescence 手动降到
+  // 0.5——弱于强虹彩档（吉丁 0.75、虎甲用 kit 默认 1），强于弱虹彩档
+  // （豉甲 0.28、隐翅虫 0.3），IOR/厚度域仍用 kit 默认。白斑走独立的
+  // spotMat，不受影响，保持哑光。
+  const shellMat = elytra('#4f5f27', 0.4, { iridescent: true })
+  shellMat.iridescence = 0.5
   const spotMat = chitin({ color: '#efe8d4', gloss: 0.18 }) // 蜡质哑光白斑，不是光泽
   const legMat = chitin({ color: '#3a4420', gloss: 0.5, metal: 0.26, clearcoat: 0.24 })
   const antennaMat = chitin({ color: '#241f10', gloss: 0.4 })
