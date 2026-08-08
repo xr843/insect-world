@@ -33,6 +33,8 @@ import {
   loft,
   mirrorZ,
   segmentedAbdomen,
+  segmentedAbdomenMembranes,
+  type SegmentedAbdomenOptions,
   spindle,
   wingPair,
   type InsectModel,
@@ -198,21 +200,19 @@ export function buildMantis(): InsectModel {
   g.add(thorax)
 
   // ---- 腹部：分节，左右略扁（背腹压扁），基部粗、向后收细成尖
-  g.add(
-    new THREE.Mesh(
-      segmentedAbdomen({
-        from: [abdomenFrontX, 0.46, 0],
-        to: [abdomenTipX, 0.05, 0],
-        r0: 0.32,
-        r1: 0.04,
-        segments: 8,
-        groove: 0.18,
-        flat: 1.35,
-        bulge: 0.22,
-      }),
-      abdomenMat,
-    ),
-  )
+  const mantisAbdomenOpts: SegmentedAbdomenOptions = {
+    from: [abdomenFrontX, 0.46, 0],
+    to: [abdomenTipX, 0.05, 0],
+    r0: 0.32,
+    r1: 0.04,
+    segments: 8,
+    groove: 0.18,
+    flat: 1.35,
+    bulge: 0.22,
+  }
+  const mantisAbdomenMesh = new THREE.Mesh(segmentedAbdomen(mantisAbdomenOpts), abdomenMat)
+  mantisAbdomenMesh.add(...segmentedAbdomenMembranes(mantisAbdomenOpts))
+  g.add(mantisAbdomenMesh)
 
   // ---- 捕捉足：胸前"祈祷"折叠。base 靠近前胸最前端，紧贴头后，
   // 两侧腿节前伸时天然带一点向内收拢的趋势，形成"双手合十"的观感

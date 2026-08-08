@@ -26,6 +26,8 @@ import {
   mandibles,
   membrane,
   segmentedAbdomen,
+  segmentedAbdomenMembranes,
+  type SegmentedAbdomenOptions,
   spindle,
   wingPair,
   type InsectModel,
@@ -247,21 +249,19 @@ export function buildLocust(): InsectModel {
   g.add(new THREE.Mesh(spindle([0.72, 0.07, 0], [0.92, 0.1, 0], 0.3, { bulge: 0.5, flat: 1.0 }), bodyMat))
 
   // ---- 腹部：细长圆柱、多节，是直翅目区别于圆胖鞘翅目的体型标志
-  g.add(
-    new THREE.Mesh(
-      segmentedAbdomen({
-        from: [0.72, -0.02, 0],
-        to: [-2.55, 0.06, 0],
-        r0: 0.32,
-        r1: 0.045,
-        segments: 9,
-        groove: 0.13,
-        flat: 0.95,
-        bulge: 0.12,
-      }),
-      bodyMat,
-    ),
-  )
+  const locustAbdomenOpts: SegmentedAbdomenOptions = {
+    from: [0.72, -0.02, 0],
+    to: [-2.55, 0.06, 0],
+    r0: 0.32,
+    r1: 0.045,
+    segments: 9,
+    groove: 0.13,
+    flat: 0.95,
+    bulge: 0.12,
+  }
+  const locustAbdomenMesh = new THREE.Mesh(segmentedAbdomen(locustAbdomenOpts), bodyMat)
+  locustAbdomenMesh.add(...segmentedAbdomenMembranes(locustAbdomenOpts))
+  g.add(locustAbdomenMesh)
 
   // ---- 听器（鼓膜）：腹部第一节侧面一片圆形薄膜凹陷
   for (const side of [1, -1]) {

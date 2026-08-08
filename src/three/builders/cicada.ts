@@ -25,6 +25,8 @@ import {
   ocelli,
   rostrum,
   segmentedAbdomen,
+  segmentedAbdomenMembranes,
+  type SegmentedAbdomenOptions,
   spindle,
   wingPair,
   type InsectModel,
@@ -92,19 +94,18 @@ export function buildCicada(): InsectModel {
   g.add(collar)
 
   // ---- 腹部：短锥形，前粗后尖（bulge 很靠前），是"楔形"轮廓的收尾
-  const abdomen = new THREE.Mesh(
-    segmentedAbdomen({
-      from: [0.0, -0.02, 0],
-      to: [-2.6, 0.05, 0],
-      r0: 0.5,
-      r1: 0.05,
-      segments: 6,
-      groove: 0.15,
-      flat: 1.05,
-      bulge: 0.1,
-    }),
-    bodyMat,
-  )
+  const cicadaAbdomenOpts: SegmentedAbdomenOptions = {
+  from: [0.0, -0.02, 0],
+  to: [-2.6, 0.05, 0],
+  r0: 0.5,
+  r1: 0.05,
+  segments: 6,
+  groove: 0.15,
+  flat: 1.05,
+  bulge: 0.1,
+  }
+  const abdomen = new THREE.Mesh(segmentedAbdomen(cicadaAbdomenOpts), bodyMat)
+  abdomen.add(...segmentedAbdomenMembranes(cicadaAbdomenOpts))
   g.add(abdomen)
 
   // ---- 鸣器（tymbal）：雄蝉发声器，腹基两侧一对椭圆鼓膜盖片，颜色浅于体色

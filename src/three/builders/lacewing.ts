@@ -2,12 +2,12 @@
  * 中华草蛉 Chrysoperla sinica（脉翅目 Neuroptera，本项目第一个脉翅目物种）
  *
  * 造型要点：
- * - 脉翅目的定义特征是翅脉"密集成网"：kit.wingVeins() 只生成约 7 条纵脉
- *   加两道横脉，稀疏得像蜻蜓/蝉的翅，读不出"网状/蕾丝感"。本文件自写
- *   `netVeins()`：更多纵脉（9 条）从翅基放射，每两条相邻纵脉之间再插
- *   5 排横脉把它们连成网格，翅脉半径也按 spec.width 缩放（否则和其它
- *   大翅物种一样会细到看不见）。所有翅脉网格统一命名 `vein`，供测试
- *   直接清点数量，而不是回头重新构造一遍再数。
+ * - 脉翅目的定义特征是翅脉"密集成网"——草蛉的网翅正是它中文名的来源。
+ *   C 轮起翅脉走 venation.ts 的参数化翅脉网，本种给全项目最高密度档
+ *   （纵脉 9、横脉密度 20，高于蜻蜓的 16）：纵脉扇形放射、横脉向翅尖
+ *   渐密围出封闭翅室，读出"蕾丝"而不是"扇骨"。脉粗按 spec.width 缩放
+ *   （否则和其它大翅物种一样会细到看不见）。所有翅脉网格统一命名
+ *   `vein`，供测试直接清点数量，而不是回头重新构造一遍再数。
  * - 金绿色复眼：kit.compoundEye() 内部把 metalness 写死成 0.1，做不出
  *   草蛉复眼那种强烈的金属金铜色反光。kit.ts 是只读的共享文件，不能为
  *   这一个物种改公共默认值，因此本文件放弃 compoundEye()，改用
@@ -27,78 +27,16 @@ import {
   chitin,
   finalize,
   legPair,
-  loft,
   membrane,
   segmentedAbdomen,
   spindle,
   wingGeometry,
   type InsectModel,
-  type Section,
   type WingSpec,
 } from './kit'
+import { venation } from './venation'
 
 // ---------------------------------------------------------------- 局部辅助
-
-/**
- * 网状翅脉：longCount 条纵脉从翅基放射到翅缘，每两条相邻纵脉之间再插
- * crossRows 排横脉——这才是"网"而不是"扇"。半径按 spec.width 缩放
- * （kit.wingVeins() 写死的 0.009 绝对值在这个尺寸下也偏细，缩放后更
- * 清晰）。每根脉都命名 `vein`，供测试直接 traverse 清点。
- */
-function netVeins(spec: WingSpec, material: THREE.Material, longCount: number, crossRows: number): THREE.Group {
-  const g = new THREE.Group()
-  const halfW = spec.width * 0.5
-  const baseR = spec.width * 0.017
-  const veinY = (t: number) => THREE.MathUtils.lerp(halfW * 0.82, -halfW * 0.55, t)
-  const veinEndX = (t: number) => spec.length * THREE.MathUtils.lerp(0.55, 0.98, Math.sin(t * Math.PI))
-
-  const paths: THREE.Vector2[][] = []
-  for (let i = 0; i < longCount; i++) {
-    const t = i / (longCount - 1)
-    const endY = veinY(t)
-    const endX = veinEndX(t)
-    const steps = 8
-    const pts: THREE.Vector2[] = []
-    const sections: Section[] = []
-    for (let k = 0; k <= steps; k++) {
-      const s = k / steps
-      const x = spec.length * 0.02 + (endX - spec.length * 0.02) * s
-      const y = THREE.MathUtils.lerp(0, endY, Math.pow(s, 0.8))
-      pts.push(new THREE.Vector2(x, y))
-      const r = Math.max(baseR * (1 - s * 0.5), 0.0022)
-      sections.push({ at: new THREE.Vector3(x, 0.0011, y), ry: r, rz: r })
-    }
-    paths.push(pts)
-    const vein = new THREE.Mesh(loft(sections, 6), material)
-    vein.name = 'vein'
-    g.add(vein)
-  }
-
-  // 密集横脉：每两条相邻纵脉之间取 crossRows 排连线，织成网格状的蕾丝感
-  for (let i = 0; i < longCount - 1; i++) {
-    const a = paths[i]
-    const b = paths[i + 1]
-    for (let r = 1; r <= crossRows; r++) {
-      const frac = r / (crossRows + 1)
-      const idx = Math.min(a.length - 1, Math.max(1, Math.round(frac * (a.length - 1))))
-      const pa = a[idx]
-      const pb = b[Math.min(b.length - 1, idx)]
-      const cross = new THREE.Mesh(
-        loft(
-          [
-            { at: new THREE.Vector3(pa.x, 0.0011, pa.y), ry: baseR * 0.42, rz: baseR * 0.42 },
-            { at: new THREE.Vector3(pb.x, 0.0011, pb.y), ry: baseR * 0.42, rz: baseR * 0.42 },
-          ],
-          6,
-        ),
-        material,
-      )
-      cross.name = 'vein'
-      g.add(cross)
-    }
-  }
-  return g
-}
 
 interface WingAssembly {
   pivot: THREE.Group
@@ -113,11 +51,22 @@ interface WingAssembly {
  * tilt，让偏移量在"大幅朝尾 + 下沉 + 外扬"这个象限，翅从近背中线的
  * 翅基向后下方外扫，两翅相合形成屋顶。
  */
-function buildWing(spec: WingSpec, faceMat: THREE.Material, veinMat: THREE.Material, veinCounts: [number, number], side: 1 | -1): WingAssembly {
+function buildWing(spec: WingSpec, faceMat: THREE.Material, veinMat: THREE.Material, side: 1 | -1): WingAssembly {
   const pivot = new THREE.Group()
   const blade = new THREE.Group()
   blade.add(new THREE.Mesh(wingGeometry(spec), faceMat))
-  blade.add(netVeins(spec, veinMat, veinCounts[0], veinCounts[1]))
+  // 翅脉 2.0：全项目最高密度档（脉翅目招牌）。草蛉无醒目翅痣，开关不开。
+  const veins = venation({
+    length: spec.length,
+    width: spec.width,
+    outline: spec.outline,
+    longitudinal: 9,
+    crossDensity: 20,
+    veinScale: 0.015,
+    material: veinMat,
+    name: 'vein',
+  })
+  if (veins) blade.add(veins)
   pivot.add(blade)
 
   pivot.position.set(spec.base[0], spec.base[1], spec.base[2] * side)
@@ -239,8 +188,8 @@ export function buildLacewing(): InsectModel {
 
   let foreRight: WingAssembly | null = null
   for (const side of [1, -1] as const) {
-    const fw = buildWing(foreSpec, wingFaceMat, veinMat, [9, 5], side)
-    const hw = buildWing(hindSpec, wingFaceMat, veinMat, [9, 5], side)
+    const fw = buildWing(foreSpec, wingFaceMat, veinMat, side)
+    const hw = buildWing(hindSpec, wingFaceMat, veinMat, side)
     g.add(fw.pivot, hw.pivot)
     if (side === 1) foreRight = fw
   }

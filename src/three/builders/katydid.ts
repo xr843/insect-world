@@ -29,6 +29,8 @@ import {
   membrane,
   mirrorZ,
   segmentedAbdomen,
+  segmentedAbdomenMembranes,
+  type SegmentedAbdomenOptions,
   spindle,
   wingGeometry,
   type InsectModel,
@@ -283,19 +285,21 @@ export function buildKatydid(): InsectModel {
 
   // ---- 腹部：分节，前粗后细，尾端接产卵器
   const abdomenTipX = -1.55
+  const katydidAbdomenOpts: SegmentedAbdomenOptions = {
+    from: [0.82, 0.06, 0],
+    to: [abdomenTipX, 0.1, 0],
+    r0: 0.42,
+    r1: 0.11,
+    segments: 8,
+    groove: 0.14,
+    flat: 1.02,
+    bulge: 0.14,
+  }
   const abdomenMesh = new THREE.Mesh(
-    segmentedAbdomen({
-      from: [0.82, 0.06, 0],
-      to: [abdomenTipX, 0.1, 0],
-      r0: 0.42,
-      r1: 0.11,
-      segments: 8,
-      groove: 0.14,
-      flat: 1.02,
-      bulge: 0.14,
-    }),
+    segmentedAbdomen(katydidAbdomenOpts),
     bodyMat,
   )
+  abdomenMesh.add(...segmentedAbdomenMembranes(katydidAbdomenOpts))
   abdomenMesh.name = 'katydid-body-core'
   g.add(abdomenMesh)
 

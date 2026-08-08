@@ -7,9 +7,13 @@
  *   （静止时翅收拢贴背）的根本区别，本文件把姿态锁死在接近 90°而不
  *   是像其他物种那样半展开。
  * - 蜻蜓翅脉是所有昆虫里最密的网状脉序（古翅类特征，翅脉不像新翅类
- *   那样退化简化），所以翅脉纵脉数刻意调到 13，配合 kit.wingVeins
- *   自带的横脉连线撑出致密网格；前缘近端还有一枚深色翅痣（pterostigma，
- *   飞行时的配重结构），本文件自写 `pterostigma()` 在轮廓前缘插一枚小方片。
+ *   那样退化简化）。C 轮起翅脉走 venation.ts 的参数化翅脉网（本种是
+ *   翅脉 2.0 的定标物种）：纵脉 13/12 条扇形发出、前缘脉最粗，横脉
+ *   密度给 16 的高档并向翅尖渐密，围出「基部大格、端部小格」的封闭
+ *   翅室——蜻蜓翅「越靠翅尖越碎」的质感即来于此；前缘近端还有一枚
+ *   深色翅痣（pterostigma，飞行时的配重结构），本文件自写
+ *   `pterostigma()` 在轮廓前缘插一枚小方片，因此 venation 的翅痣
+ *   开关保持关闭（避免两枚翅痣重叠）。
  * - 复眼硕大到左右几乎在头顶相接（holoptic，"接眼式"）——蜻蜓科
  *   （Aeshnidae）视觉几乎占满整个头部，这是蜻蜓辨识度最高的单一特征，
  *   本文件把复眼半径放到远超常规头部比例，两眼在背中线上主动重叠。
@@ -27,11 +31,11 @@ import {
   membrane,
   spindle,
   wingGeometry,
-  wingVeins,
   type InsectModel,
   type Section,
   type WingSpec,
 } from './kit'
+import { venation } from './venation'
 
 // ---------------------------------------------------------------- 局部辅助
 
@@ -106,7 +110,7 @@ function pterostigma(spec: WingSpec, material: THREE.Material): THREE.Mesh {
   return mesh
 }
 
-/** 一片完整的蜻蜓翅（翅面+密网翅脉+翅痣），按 spread/tilt 摆位；复刻 kit.wing() 的枢轴装配方式。 */
+/** 一片完整的蜻蜓翅（翅面+翅室网翅脉+翅痣），按 spread/tilt 摆位；复刻 kit.wing() 的枢轴装配方式。 */
 function dragonflyWing(
   spec: WingSpec,
   faceMat: THREE.Material,
@@ -118,7 +122,20 @@ function dragonflyWing(
   const pivot = new THREE.Group()
   const blade = new THREE.Group()
   blade.add(new THREE.Mesh(wingGeometry(spec), faceMat))
-  blade.add(wingVeins(spec, veinMat, veinCount))
+  // 翅脉 2.0：纵脉扇 + 向翅尖渐密的横脉围出封闭翅室。脉粗是相对翅宽的
+  // 比例值（不再是 kit.wingVeins 的硬编码 0.009）；翅痣本文件自带，
+  // venation 的 pterostigma 开关保持关闭。
+  const veins = venation({
+    length: spec.length,
+    width: spec.width,
+    outline: spec.outline,
+    longitudinal: veinCount,
+    crossDensity: 16,
+    veinScale: 0.009,
+    material: veinMat,
+    name: 'vein',
+  })
+  if (veins) blade.add(veins)
   blade.add(pterostigma(spec, stigmaMat))
   pivot.add(blade)
 

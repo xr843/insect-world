@@ -15,12 +15,12 @@
  *   `mandibleAt()` 取点定位（做法呼应 hornet.ts 复刻 kit.mandibles()
  *   路径公式加齿的思路，但这里路径本就是本文件自己的函数，不必二次
  *   复刻）。
- * - 巨大网状翅脉：kit.wingVeins() 的翅脉半径硬编码绝对值 0.009，本种
- *   翅长 4.8~5.4 远超"超过 3 单位就细到看不见"的阈值（kit.ts 注释已
- *   钉住这一点），因此自写 `scaledVeins()`——半径按 spec.width 缩放，
- *   纵脉 7 条 + 每两条纵脉间 3 排横脉织成网格，密度不必像 lacewing.ts
- *   的中华草蛉那样夸张到蕾丝感（那是脉翅目的极端案例），但仍要读出
- *   "网"而不是"扇"。四片翅共 100 条脉，远超测试要求的 30 条下限。
+ * - 巨大网状翅脉：C 轮起走 venation.ts 的参数化翅脉网（脉粗按翅宽
+ *   缩放，不沾 kit.wingVeins() 硬编码 0.009 的老坑）。密度取中档
+ *   （纵脉 9、横脉密度 9）：不必像 lacewing.ts 的中华草蛉那样夸张到
+ *   蕾丝感（那是脉翅目的极端案例），但横脉向翅尖渐密围出封闭翅室，
+ *   读出"网"而不是"扇"。每根脉命名 `vein`，四片翅的脉数远超测试
+ *   要求的 30 条下限。
  * - 停息时翅呈屋脊状盖在腹背：姿态推导与 lacewing.ts 顶部一致（结论：
  *   spread 取较小的 φ 配合较大的正 tilt，让翅从近背中线的翅基向后
  *   下方外扫），此处不重复整段证明，只按同一推导结果标定角度，φ/tilt
@@ -47,6 +47,7 @@ import {
   type Section,
   type WingSpec,
 } from './kit'
+import { venation } from './venation'
 
 // ---------------------------------------------------------------- 局部辅助
 
@@ -115,65 +116,6 @@ function mandibleTeeth(spec: MandibleSpec, side: 1 | -1, material: THREE.Materia
   return g
 }
 
-/**
- * 网状翅脉，半径按 spec.width 缩放（做法同 lacewing.ts 的 netVeins()，
- * 本文件独立实现一份，密度按本种翅型调整，不跨文件导入其它物种）。
- * 纵脉从翅基放射，每两条相邻纵脉间再插 crossRows 排横脉织成网格。
- */
-function scaledVeins(spec: WingSpec, material: THREE.Material, longCount: number, crossRows: number): THREE.Group {
-  const g = new THREE.Group()
-  const halfW = spec.width * 0.5
-  const baseR = spec.width * 0.014
-  const veinY = (t: number) => THREE.MathUtils.lerp(halfW * 0.84, -halfW * 0.55, t)
-  const veinEndX = (t: number) => spec.length * THREE.MathUtils.lerp(0.6, 0.97, Math.sin(t * Math.PI))
-
-  const paths: THREE.Vector2[][] = []
-  for (let i = 0; i < longCount; i++) {
-    const t = i / (longCount - 1)
-    const endY = veinY(t)
-    const endX = veinEndX(t)
-    const steps = 8
-    const pts: THREE.Vector2[] = []
-    const sections: Section[] = []
-    for (let k = 0; k <= steps; k++) {
-      const s = k / steps
-      const x = spec.length * 0.02 + (endX - spec.length * 0.02) * s
-      const y = THREE.MathUtils.lerp(0, endY, Math.pow(s, 0.8))
-      pts.push(new THREE.Vector2(x, y))
-      const r = Math.max(baseR * (1 - s * 0.55), 0.0025)
-      sections.push({ at: new THREE.Vector3(x, 0.0011, y), ry: r, rz: r })
-    }
-    paths.push(pts)
-    const vein = new THREE.Mesh(loft(sections, 6), material)
-    vein.name = 'vein'
-    g.add(vein)
-  }
-
-  for (let i = 0; i < longCount - 1; i++) {
-    const a = paths[i]
-    const b = paths[i + 1]
-    for (let r = 1; r <= crossRows; r++) {
-      const frac = r / (crossRows + 1)
-      const idx = Math.min(a.length - 1, Math.max(1, Math.round(frac * (a.length - 1))))
-      const pa = a[idx]
-      const pb = b[Math.min(b.length - 1, idx)]
-      const cross = new THREE.Mesh(
-        loft(
-          [
-            { at: new THREE.Vector3(pa.x, 0.0011, pa.y), ry: baseR * 0.4, rz: baseR * 0.4 },
-            { at: new THREE.Vector3(pb.x, 0.0011, pb.y), ry: baseR * 0.4, rz: baseR * 0.4 },
-          ],
-          5,
-        ),
-        material,
-      )
-      cross.name = 'vein'
-      g.add(cross)
-    }
-  }
-  return g
-}
-
 /** 翅面上零散的浅色斑点：xFrac/yFrac 是翅长方向/半翅宽方向的归一化坐标。 */
 function wingSpots(spec: WingSpec, material: THREE.Material, points: [number, number][]): THREE.Group {
   const g = new THREE.Group()
@@ -208,7 +150,18 @@ function buildWing(
   const pivot = new THREE.Group()
   const blade = new THREE.Group()
   blade.add(new THREE.Mesh(wingGeometry(spec), faceMat))
-  blade.add(scaledVeins(spec, veinMat, 7, 3))
+  // 翅脉 2.0：中档密度（见文件头）。齿蛉无醒目翅痣，开关不开。
+  const veins = venation({
+    length: spec.length,
+    width: spec.width,
+    outline: spec.outline,
+    longitudinal: 9,
+    crossDensity: 9,
+    veinScale: 0.012,
+    material: veinMat,
+    name: 'vein',
+  })
+  if (veins) blade.add(veins)
   blade.add(
     wingSpots(spec, spotMat, [
       [0.32, 0.32],

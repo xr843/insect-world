@@ -139,7 +139,7 @@ describe('建模层不该有孤儿', () => {
    * - surface：程序化表面微观贴图（刻点/纵沟/微颗粒），kit 材质函数的下层
    * - eyes：复眼小眼面材质，待主线接入 compoundEye()
    */
-  const TOOLBOX_MODULES = new Set(['surface', 'eyes'])
+  const TOOLBOX_MODULES = new Set(['surface', 'eyes', 'venation'])
 
   /**
    * 反方向：模型做好了，图鉴数据却没跟上。线上不会出错（界面按数据渲染），

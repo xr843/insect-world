@@ -23,7 +23,7 @@ const MODULES = import.meta.glob('./builders/*.ts') as Record<string, Loader>
  * 否则它会被当成「幽灵物种」注册进来，layers.test.ts 的孤儿检查会立刻抓住
  * （surface.ts / eyes.ts 落地当天就被抓过一次）。
  */
-const UTILITY_MODULES = new Set(['kit', 'surface', 'eyes'])
+const UTILITY_MODULES = new Set(['kit', 'surface', 'eyes', 'venation'])
 
 const LOADERS: Record<string, Loader> = Object.fromEntries(
   Object.entries(MODULES)

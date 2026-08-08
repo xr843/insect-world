@@ -24,6 +24,7 @@ import {
   legPair,
   loft,
   segmentedAbdomen,
+  segmentedAbdomenMembranes,
   spindle,
   type InsectModel,
   type LegSpec,
@@ -64,11 +65,11 @@ export function buildEarwig(): InsectModel {
   const legMat = chitin({ color: '#231610', gloss: 0.55, metal: 0.1, clearcoat: 0.35 })
 
   // ---- 腹部：分节清晰可见（未被鞘翅覆盖的部分正是本种与甲虫最直观的区别）
-  const abdomenMesh = new THREE.Mesh(
-    segmentedAbdomen({ from: [0.3, 0.0, 0], to: [-1.05, -0.02, 0], r0: 0.2, r1: 0.185, segments: 8, groove: 0.24, flat: 1.4, bulge: 0.15 }),
-    bodyMat,
-  )
+  const abdomenOpts = { from: [0.3, 0.0, 0] as [number, number, number], to: [-1.05, -0.02, 0] as [number, number, number], r0: 0.2, r1: 0.185, segments: 8, groove: 0.24, flat: 1.4, bulge: 0.15 }
+  const abdomenMesh = new THREE.Mesh(segmentedAbdomen(abdomenOpts), bodyMat)
   abdomenMesh.name = 'abdomen'
+  // 节间膜环挂在腹部 mesh 下，继承同一变换（C2 的环是 opt-in，见 kit）
+  abdomenMesh.add(...segmentedAbdomenMembranes(abdomenOpts))
   g.add(abdomenMesh)
 
   // ---- 尾铗：一对，粗壮、上翘、内弯，长度约体长的 15%

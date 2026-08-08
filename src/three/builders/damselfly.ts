@@ -44,8 +44,12 @@
  *   outline（沿翅长 0~1 的半宽控制点），本文件因此没有复用 kit 默认的
  *   卵圆轮廓，而是自写 STALK_OUTLINE：前 17% 半宽压得很窄，此后才
  *   放宽成主翅面。
- * - 翅脉比蜻蜓稀疏：dragonfly.ts 纵脉数给到 12~13（还原古翅类最密网状
- *   脉序），本文件只给 5（束翅亚目翅脉相对简化）。
+ * - 翅脉比蜻蜓稀疏：dragonfly.ts 走 venation.ts 时纵脉 13、横脉密度 16
+ *   （还原古翅类最密网状脉序），本文件只给纵脉 6、横脉密度 6（束翅亚目
+ *   翅脉相对简化）；脉粗同样是按翅宽缩放的相对值。venation 在纵脉几乎
+ *   贴拢的区段自动不搭横脉，翅柄（petiole）段因此天然是「集束无横脉」
+ *   ——恰好是真实蟌翅翅柄的样子。翅痣蟌科很醒目，本文件没自带，
+ *   由 venation 的 pterostigma 开关补上。
  *
  * 体色蓝绿金属配黑环纹：bandedAbdomen 的双色交替材质一份走金属蓝绿、
  * 一份走近黑，天然读出"环纹"节律。⚠️ 提醒自己：kit.ts 强调 ACES 色调
@@ -67,6 +71,7 @@ import {
   type Section,
   type WingSpec,
 } from './kit'
+import { venation } from './venation'
 
 // ---------------------------------------------------------------- 局部辅助
 
@@ -91,69 +96,38 @@ const STALK_OUTLINE: [number, number][] = [
 ]
 
 /**
- * 按翅宽缩放半径的翅脉：kit.wingVeins() 的翅脉半径硬编码绝对值 0.009，
- * 蟌科的翅很窄（翅长 1.7 量级、翅宽仅 0.34~0.36），这个绝对值相对翅面
- * 粗到把翅膜整片盖住——渲染出来变成"一束黑线"而不是"翅膜上的纹理"。
- * 这里半径按 spec.width 缩放，且从翅柄放宽处（而非翅基最窄的柄部）才
- * 开始生长，避免翅脉在细窄的翅柄段比翅柄本身还粗。
+ * 一片完整的翅（翅面 + 翅室网翅脉 + 翅痣），已按 spread/tilt/sweep 摆好
+ * 姿态——手动复刻 kit.wing() 的装配逻辑（不改 kit.ts），翅脉走
+ * venation.ts（脉粗按翅宽缩放；纵脉 6、横脉密度 6 的稀疏档还原束翅
+ * 亚目的简化脉序；翅柄集束段自动无横脉）。翅面命名 wingFace、翅脉命名
+ * wingVein，供测试量取"翅膜远大于翅脉"与虹彩防泄漏。
  */
-function slenderWingVeins(spec: WingSpec, material: THREE.Material, count = 5): THREE.Group {
-  const g = new THREE.Group()
-  const halfW = spec.width * 0.5
-  const baseR = spec.width * 0.013 // 明显细于 kit 硬编码的 0.009 绝对值（本种翅宽仅 0.34~0.36）
-  const startFrac = 0.2 // 从翅柄放宽之后再生长翅脉，避免比翅柄本身还粗
-  for (let i = 0; i < count; i++) {
-    const t = i / (count - 1)
-    const endY = THREE.MathUtils.lerp(halfW * 0.8, -halfW * 0.5, t)
-    const endX = spec.length * THREE.MathUtils.lerp(0.6, 0.95, Math.sin(t * Math.PI))
-    const steps = 10
-    const sections: Section[] = []
-    for (let k = 0; k <= steps; k++) {
-      const s = k / steps
-      const x = spec.length * startFrac + (endX - spec.length * startFrac) * s
-      const y = THREE.MathUtils.lerp(0, endY, Math.pow(s, 0.75))
-      const r = Math.max(baseR * (1 - s * 0.72) * (i === 0 ? 1.3 : 1), baseR * 0.22)
-      sections.push({ at: new THREE.Vector3(x, 0.0012, y), ry: r, rz: r })
-    }
-    const vein = new THREE.Mesh(loft(sections, 6), material)
-    vein.name = 'wingVein'
-    g.add(vein)
-  }
-  // 少量横脉，读出"网状"但保持稀疏（束翅亚目翅脉本就比差翅亚目简化）
-  for (let i = 0; i < count - 1; i++) {
-    const t0 = i / (count - 1)
-    const t1 = (i + 1) / (count - 1)
-    const y0 = THREE.MathUtils.lerp(halfW * 0.8, -halfW * 0.5, t0) * 0.5
-    const y1 = THREE.MathUtils.lerp(halfW * 0.8, -halfW * 0.5, t1) * 0.5
-    const x = spec.length * 0.55
-    const cross = new THREE.Mesh(
-      loft(
-        [
-          { at: new THREE.Vector3(x, 0.001, y0), ry: baseR * 0.3, rz: baseR * 0.3 },
-          { at: new THREE.Vector3(x * 1.05, 0.001, y1), ry: baseR * 0.3, rz: baseR * 0.3 },
-        ],
-        5,
-      ),
-      material,
-    )
-    cross.name = 'wingVein'
-    g.add(cross)
-  }
-  return g
-}
-
-/**
- * 一片完整的翅（翅面 + 细翅脉），已按 spread/tilt/sweep 摆好姿态——手动
- * 复刻 kit.wing() 的装配逻辑（不改 kit.ts），只把翅脉换成上面按翅宽
- * 缩放的版本。翅面命名 wingFace，供测试量取"翅膜远大于翅脉"。
- */
-function buildWing(spec: WingSpec, faceMat: THREE.Material, veinMat: THREE.Material, side: 1 | -1, veinCount: number): THREE.Group {
+function buildWing(
+  spec: WingSpec,
+  faceMat: THREE.Material,
+  veinMat: THREE.Material,
+  stigmaMat: THREE.Material,
+  side: 1 | -1,
+  veinCount: number,
+): THREE.Group {
   const pivot = new THREE.Group()
   const blade = new THREE.Group()
   const face = new THREE.Mesh(wingGeometry(spec), faceMat)
   face.name = 'wingFace'
   blade.add(face)
-  blade.add(slenderWingVeins(spec, veinMat, veinCount))
+  const veins = venation({
+    length: spec.length,
+    width: spec.width,
+    outline: spec.outline,
+    longitudinal: veinCount,
+    crossDensity: 6,
+    veinScale: 0.01,
+    material: veinMat,
+    name: 'wingVein',
+    pterostigma: true, // 蟌科翅痣醒目，本文件没有自带翅痣，由生成器补上
+    pterostigmaMaterial: stigmaMat,
+  })
+  if (veins) blade.add(veins)
   pivot.add(blade)
 
   pivot.position.set(spec.base[0], spec.base[1], spec.base[2] * side)
@@ -216,15 +190,16 @@ export function buildDamselfly(): InsectModel {
   const legMat = chitin({ color: '#141210', gloss: 0.35 })
   const eyeColor = '#3f6fa0'
   // 翅膜：淡烟灰/淡蓝的半透明质感，opacity 从 0.22 提到 0.42——原值太透，
-  // 加上翅脉硬编码半径 0.009 在这么窄的翅上完全盖过翅膜，四片翅渲染出来
-  // 只剩一束翅脉线条。现在翅脉细了（见 slenderWingVeins），膜也要能读出
-  // "四片有面积的膜"。
+  // 翅脉又曾粗到盖过翅膜（kit 硬编码 0.009 的历史问题），膜要能读出
+  // "四片有面积的膜"。现在翅脉走 venation.ts，脉粗按翅宽缩放。
   // B 轮翅膜虹彩组：翅面积小，保持 kit 默认强度即可（不额外加强）。只挂在
   // wingFaceMat（供下方 buildWing() 里 name='wingFace' 的翅膜面 mesh 使用）——
-  // 翅脉走的是下面单独的 veinMat（slenderWingVeins() 里 name='wingVein'），
-  // 两者是完全独立的材质对象，不会被误挂。
+  // 翅脉走的是下面单独的 veinMat（venation() 里 name='wingVein'），
+  // 两者是完全独立的材质对象，不会被误挂。翅痣单独一份深蓝黑 stigmaMat，
+  // 同样与翅膜材质分离。
   const wingFaceMat = membrane('#cddce2', 0.42, { iridescent: true })
   const veinMat = chitin({ color: '#20241f', gloss: 0.35, side: THREE.DoubleSide })
+  const stigmaMat = chitin({ color: '#16222e', gloss: 0.5 })
 
   // ---- 头：哑铃形——两颗复眼分居两端，中间一段细杆连接（不用
   // compoundEyePair()，因为它只是左右镜像，没有"中间连杆+眼球探出杆端"
@@ -285,7 +260,7 @@ export function buildDamselfly(): InsectModel {
   )
 
   // ---- 四片翅：翅基有柄（STALK_OUTLINE），竖立合拢于背方（spread=270,
-  // tilt=90，见文件头注释的探针实测结论），翅脉稀疏（veinCount=5）
+  // tilt=90，见文件头注释的探针实测结论），翅脉稀疏（纵脉 6 含前缘脉）
   const foreSpec: WingSpec = {
     base: [0.74, 0.22, 0.05],
     length: 1.7,
@@ -309,10 +284,10 @@ export function buildDamselfly(): InsectModel {
 
   let wingAnchorPivot: THREE.Group | null = null
   for (const side of [1, -1] as const) {
-    const fw = buildWing(foreSpec, wingFaceMat, veinMat, side, 5)
+    const fw = buildWing(foreSpec, wingFaceMat, veinMat, stigmaMat, side, 6)
     fw.name = 'wing'
     g.add(fw)
-    const hw = buildWing(hindSpec, wingFaceMat, veinMat, side, 5)
+    const hw = buildWing(hindSpec, wingFaceMat, veinMat, stigmaMat, side, 6)
     hw.name = 'wing'
     g.add(hw)
     if (side === 1) wingAnchorPivot = fw

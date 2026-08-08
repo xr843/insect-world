@@ -57,6 +57,19 @@ const MEMBRANE_IRIDESCENCE_IOR = 1.25
 const MEMBRANE_IRIDESCENCE_THICKNESS: readonly [number, number] = [140, 380]
 
 /**
+ * C 轮·体节间膜（intersegment membrane）默认档——硬甲片之间露出的一圈软组织。
+ * 与上面的翅膜虹彩常量是两回事，别混：这组管的是 segmentedAbdomen() 节间环。
+ */
+/** 节间膜半径相对该处体节包络半径的收缩比例：0.8 = 陷进去约 20%，「略缩」而非挖穿 */
+const MEMBRANE_RING_RATIO = 0.8
+/** 节间膜材质光泽：≤0.2 读作「哑光软组织」，明显低于甲片默认 gloss 0.45（见 ChitinOptions.gloss 注释） */
+const MEMBRANE_RING_GLOSS = 0.12
+/** membraneColor/color 都未给时的通用深色兜底——多数昆虫节间膜实际都偏暗棕黑，不依赖具体物种色 */
+const MEMBRANE_RING_FALLBACK_COLOR = '#231e1b'
+/** membraneColor 缺省但给了 color（体节基色）时：压暗 ~35% 的推导系数（乘法而非 HSL 偏移，深色基色也不会算漂） */
+const MEMBRANE_RING_DARKEN = 0.65
+
+/**
  * 表面微观结构档位：
  * - `undefined`（缺省）= 挂一张极轻的微颗粒粗糙度图，只打破「整片均匀」的
  *   塑料高光，强度低到不改变已逐只验收过的观感（旋钮见 surface.ts）；
@@ -347,11 +360,7 @@ export function spindle(
   return loft(sections, 28)
 }
 
-/**
- * 分节腹部：一串逐渐收细的体节，节间有环沟。
- * 这是昆虫（尤其蜂、蚁、蜻蜓）腹部辨识度最高的特征。
- */
-export function segmentedAbdomen(opts: {
+export interface SegmentedAbdomenOptions {
   from: [number, number, number]
   to: [number, number, number]
   /** 起始处半径 */
@@ -366,7 +375,49 @@ export function segmentedAbdomen(opts: {
   flat?: number
   /** 最粗处位置 0~1，默认 0.3（多数昆虫腹基部粗） */
   bulge?: number
-}): THREE.BufferGeometry {
+  /**
+   * C 轮新增：是否在相邻体节交界处插入节间膜（陷进去一点 + 独立深色哑光材质，
+   * 见 segmentedAbdomenMembranes）。默认 true——全员受益的默认升级，
+   * 不想要就显式传 false（比如某物种腹部本就该看起来是一整块硬壳）。
+   * 只影响 segmentedAbdomen() 自身的一圈很窄的局部收缩（不加顶点、不改体节数/包络/长度），
+   * 真正带独立材质的膜环网格由 segmentedAbdomenMembranes() 另外生成。
+   */
+  membrane?: boolean
+  /** 节间膜陷入比例，覆盖 MEMBRANE_RING_RATIO（0.8）。同时控制 body 上的局部收缩幅度与膜环半径。 */
+  membraneRatio?: number
+  /** 节间膜颜色，覆盖自动推导（见 segmentedAbdomenMembranes 顶部注释）。只被 segmentedAbdomenMembranes 使用，body geometry 本身不含材质。 */
+  membraneColor?: THREE.ColorRepresentation
+  /**
+   * 体节材质基色（可选，仅用于推导 membraneColor 的默认深色：压暗 ~35%）。
+   * 只读取数值派生一个新 THREE.Color，绝不 mutate 调用方传入的材质/颜色对象——
+   * 有物种给腹部挂了 B 轮半透/绒面材质（白蚁/草蛉等），那个材质对象必须原样不动。
+   */
+  color?: THREE.ColorRepresentation
+}
+
+/**
+ * 分节腹部沿全长的半径包络（不含节内起伏）：从 r0 鼓到最大再收到 r1。
+ * segmentedAbdomen() 与 segmentedAbdomenMembranes() 共用同一份，保证膜环与体节表面对齐；
+ * 也解了 ant.ts 曾经的痛点（那里为了算这条包络，自己抄了一遍这个公式，见该文件顶部注释）。
+ */
+export function abdomenEnvelope(t: number, r0: number, r1: number, bulge = 0.3): number {
+  const peak = Math.max(r0, r1) * 1.06
+  return t < bulge
+    ? THREE.MathUtils.lerp(r0, peak, smooth(t / bulge))
+    : THREE.MathUtils.lerp(peak, r1, smooth((t - bulge) / (1 - bulge)))
+}
+
+/**
+ * 分节腹部：一串逐渐收细的体节，节间有环沟。
+ * 这是昆虫（尤其蜂、蚁、蜻蜓）腹部辨识度最高的特征。
+ *
+ * 返回值只是几何体（历来如此，调用方自己套 material）——C 轮加入的节间膜因此拆成两半：
+ * 这里只做「陷进去一点」的纯几何局部收缩（默认开启，不加顶点、不改变长度/包络，
+ * 50 个已有调用点零改动即可拿到），真正带独立深色哑光材质的膜环网格是
+ * 下面 segmentedAbdomenMembranes() 的活——它按需要额外 new THREE.Mesh，
+ * 调用方要拿到膜环必须显式调它并把返回的 mesh 加进自己的 group。
+ */
+export function segmentedAbdomen(opts: SegmentedAbdomenOptions): THREE.BufferGeometry {
   const a = new THREE.Vector3(...opts.from)
   const b = new THREE.Vector3(...opts.to)
   const segs = opts.segments ?? 7
@@ -374,19 +425,22 @@ export function segmentedAbdomen(opts: {
   const flat = opts.flat ?? 1
   const bulge = opts.bulge ?? 0.3
   const perSeg = 5 // 每节采样数，够画出鼓起与收缩
+  const membraneOn = opts.membrane !== false
+  const membraneRatio = THREE.MathUtils.clamp(opts.membraneRatio ?? MEMBRANE_RING_RATIO, 0.05, 0.98)
 
   const sections: Section[] = []
   const total = segs * perSeg
   for (let i = 0; i <= total; i++) {
     const t = i / total
     // 沿全长的包络：从 r0 鼓到最大再收到 r1
-    const env =
-      t < bulge
-        ? THREE.MathUtils.lerp(opts.r0, Math.max(opts.r0, opts.r1) * 1.06, smooth(t / bulge))
-        : THREE.MathUtils.lerp(Math.max(opts.r0, opts.r1) * 1.06, opts.r1, smooth((t - bulge) / (1 - bulge)))
+    const env = abdomenEnvelope(t, opts.r0, opts.r1, bulge)
     // 节内起伏：每节前段鼓、节末收（环沟）
     const local = (i % perSeg) / perSeg
-    const ripple = 1 - groove * Math.pow(Math.sin(local * Math.PI), 6) * 0 - groove * smoothstepDip(local)
+    // 节间膜：只在体节真正的交界采样点（每节起点，且不是腹部本身的头尾两端）
+    // 额外收一口——不加采样点、不碰长度和包络，50 个既有调用点零改动就直接吃到这个效果。
+    const atInternalJoint = membraneOn && i % perSeg === 0 && i !== 0 && i !== total
+    const ripple =
+      1 - groove * Math.pow(Math.sin(local * Math.PI), 6) * 0 - groove * smoothstepDip(local) - (atInternalJoint ? 1 - membraneRatio : 0)
     const r = Math.max(env * ripple, 1e-4)
     sections.push({
       at: new THREE.Vector3().lerpVectors(a, b, t),
@@ -395,6 +449,62 @@ export function segmentedAbdomen(opts: {
     })
   }
   return loft(sections, 26)
+}
+
+/**
+ * 节间膜环：C 轮新增，与 segmentedAbdomen() 共用同一套 from/to/r0/r1/segments/flat/bulge，
+ * 在每个体节交界处（内部 segments-1 个，不含腹部本身的头尾两端）另外生成一圈很窄的
+ * 独立几何——深色哑光材质（基色压暗 ~35%、gloss ≤ 0.2、无 clearcoat），
+ * 视觉上是「硬甲片之间露出的一圈软组织」。
+ *
+ * opts.membrane === false 或体节数 < 2 时返回空数组（没有节间可言）。
+ * 面数很省：每环只有 2 段 loft（3 个截面、20 个径向分段、不封口），约数十个三角形。
+ *
+ * 不会改动调用方传入的任何材质/颜色对象——membraneColor 缺省时只读取 opts.color 的
+ * 数值派生一个新 THREE.Color；同一批膜环共享一个新建的 chitin() 材质实例，
+ * 与 body 用的材质完全独立（这也是为什么白蚁/草蛉那些腹部挂了 B 轮半透/绒面材质的
+ * 物种，即便将来接入这个函数，原本的材质对象也不会被这里碰一下）。
+ *
+ * 目前没有任何物种文件调用它（50 个既有调用点保持零改动）——这是它还没被接入
+ * 具体物种前，kit 层面独立可用、独立测试的新能力；接入需要各物种文件自己加一行
+ * `g.add(...segmentedAbdomenMembranes(sameOpts))`，不在本轮范围内。
+ */
+export function segmentedAbdomenMembranes(opts: SegmentedAbdomenOptions): THREE.Mesh[] {
+  const segs = opts.segments ?? 7
+  if (opts.membrane === false || segs < 2) return []
+
+  const a = new THREE.Vector3(...opts.from)
+  const b = new THREE.Vector3(...opts.to)
+  const flat = opts.flat ?? 1
+  const bulge = opts.bulge ?? 0.3
+  const membraneRatio = THREE.MathUtils.clamp(opts.membraneRatio ?? MEMBRANE_RING_RATIO, 0.05, 0.98)
+  const perSeg = 5 // 与 segmentedAbdomen() 的采样密度对齐，环宽取半个采样间隔，肉眼是一条窄带而非宽带
+  const halfWidth = 1 / (segs * perSeg) / 2
+
+  const color = opts.membraneColor ?? deriveMembraneColor(opts.color)
+  const material = chitin({ color, gloss: MEMBRANE_RING_GLOSS, clearcoat: 0 })
+
+  const rings: THREE.Mesh[] = []
+  for (let j = 1; j < segs; j++) {
+    const t = j / segs
+    const env = abdomenEnvelope(t, opts.r0, opts.r1, bulge)
+    const r = Math.max(env * membraneRatio, 1e-4)
+    const sections: Section[] = [
+      { at: new THREE.Vector3().lerpVectors(a, b, Math.max(t - halfWidth, 0)), ry: r / flat, rz: r * flat },
+      { at: new THREE.Vector3().lerpVectors(a, b, t), ry: r / flat, rz: r * flat },
+      { at: new THREE.Vector3().lerpVectors(a, b, Math.min(t + halfWidth, 1)), ry: r / flat, rz: r * flat },
+    ]
+    const mesh = new THREE.Mesh(loft(sections, 20, false), material)
+    mesh.name = 'membrane-ring'
+    rings.push(mesh)
+  }
+  return rings
+}
+
+/** membraneColor 缺省时的推导：有 color 就压暗 ~35%，否则退到通用深色兜底。只读，绝不 mutate 传入的 color。 */
+function deriveMembraneColor(base: THREE.ColorRepresentation | undefined): THREE.Color {
+  if (base === undefined) return new THREE.Color(MEMBRANE_RING_FALLBACK_COLOR)
+  return new THREE.Color(base).multiplyScalar(MEMBRANE_RING_DARKEN)
 }
 
 function smooth(t: number): number {
