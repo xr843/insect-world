@@ -34,8 +34,8 @@ describe('触角组的微动钩子', () => {
       })
       return n
     }
-    const a = antenna({ base: [0.5, 0.1, 0.1], length: 0.8, kind: 'clubbed' }, mat)
-    const b = antenna({ base: [0.5, 0.1, 0.1], length: 0.8, kind: 'clubbed' }, mat)
+    const a = antenna({ base: [0.5, 0.1, 0.1], length: 0.8, kind: 'lamellate' }, mat)
+    const b = antenna({ base: [0.5, 0.1, 0.1], length: 0.8, kind: 'lamellate' }, mat)
     expect(count(a)).toBeGreaterThan(0)
     expect(count(a)).toBe(count(b))
   })
