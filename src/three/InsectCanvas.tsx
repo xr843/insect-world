@@ -44,6 +44,7 @@ function InsectMesh({
   model,
   mode,
   spin,
+  pauseUntil,
   onReady,
   children,
   groupRef,
@@ -54,6 +55,8 @@ function InsectMesh({
   model: InsectModel
   mode: ViewMode
   spin: boolean
+  /** 交互后的「让转」截止时刻（performance.now() 基准） */
+  pauseUntil: React.MutableRefObject<number>
   onReady: (box: THREE.Box3) => void
 }) {
   const ref = groupRef
@@ -91,15 +94,26 @@ function InsectMesh({
     })
   }, [model, mode])
 
-  useFrame((_, dt) => {
+  useFrame(({ invalidate }, dt) => {
     const g = ref.current
     if (!g) return
     born.current = Math.min(1, born.current + dt * 2.6)
-    const t = 1 - Math.pow(1 - born.current, 3) // easeOutCubic
-    g.scale.setScalar(0.82 + 0.18 * t)
-    // 0.20 rad/s ≈ 转一圈 31 秒。博物馆标本的节奏，比原来的 22 秒沉一些，
-    // 慢到能让人看清转过来的结构，又不至于像卡住
-    if (spin) g.rotation.y += dt * 0.2
+    // back.out：末尾轻微过冲 ~3% 再落回，标本「放上台面」的弹性（参考站的入场手感）
+    const u = born.current - 1
+    const t = 1 + 2.2 * u * u * u + 1.2 * u * u
+    g.scale.setScalar(0.8 + 0.2 * t)
+    /**
+     * 三种情况让自转停一停（都来自参考实现的相处之道）：
+     * 用户正在拖 —— 转台跟人抢方向盘；松手后 3 秒内 —— 刚摆好的视角马上被带走；
+     * 有说明卡开着 —— 读着读着字跟着虫跑了。
+     */
+    const paused = performance.now() < pauseUntil.current
+    // 0.14 rad/s ≈ 45 秒一圈。第三次应用户要求调慢（0.28→0.20→0.14）：
+    // 有了「拖动让转 + 背面圆点淡出」之后，转速不再承担「快点转到正面」的职责，
+    // 可以慢到纯粹当展柜的节奏
+    if (spin && !paused) g.rotation.y += dt * 0.14
+    // 按需渲染下自己续帧：还在转、还没长完，都得有下一帧
+    if ((spin && !paused) || born.current < 1) invalidate()
   })
 
   return (
@@ -119,6 +133,7 @@ function Hotspot({
   tone,
   open,
   onToggle,
+  groupRef,
 }: {
   position: THREE.Vector3
   label: string
@@ -126,11 +141,46 @@ function Hotspot({
   tone: string
   open: boolean
   onToggle: () => void
+  groupRef: React.MutableRefObject<THREE.Group | null>
 }) {
   const color = TONE_HEX[tone] ?? TONE_HEX.coral
+  const wrap = useRef<HTMLDivElement>(null)
+  const fade = useRef(1)
+  const scratch = useRef({ world: new THREE.Vector3(), center: new THREE.Vector3(), toCam: new THREE.Vector3() })
+
+  /**
+   * 转到背面的标注点要淡出（参考实现的 facing 测试，搬到 DOM 上）。
+   *
+   * 圆点是 DOM 元素，深度缓冲管不到它 —— 虫转过去后圆点仍浮在轮廓上，
+   * 看起来像贴在玻璃罩外面。按「锚点相对虫心的朝向 · 视线方向」的点积
+   * 平滑淡出，指数趋近避免闪烁；展开着的那颗压到最低 0.85，
+   * 正在读的说明不能因为一点余转就消失。淡出后同时收掉点击。
+   */
+  useFrame(({ camera, invalidate }, dt) => {
+    const el = wrap.current
+    const g = groupRef.current
+    if (!el || !g) return
+    const { world, center, toCam } = scratch.current
+    world.copy(position).applyMatrix4(g.matrixWorld)
+    g.getWorldPosition(center)
+    toCam.copy(camera.position).sub(world).normalize()
+    world.sub(center)
+    const r = world.length()
+    const facing = r > 1e-4 ? world.divideScalar(r).dot(toCam) : 1
+    let target = THREE.MathUtils.smoothstep(facing, -0.05, 0.3)
+    if (open) target = Math.max(target, 0.85)
+    const eased = fade.current + (target - fade.current) * (1 - Math.exp(-dt * 12))
+    if (Math.abs(eased - fade.current) > 0.002) {
+      fade.current = eased
+      el.style.opacity = eased.toFixed(3)
+      el.dataset.behind = eased < 0.35 ? 'true' : 'false'
+    }
+    if (Math.abs(target - fade.current) > 0.004) invalidate()
+  })
+
   return (
     <Html position={position} center zIndexRange={[30, 10]} style={{ pointerEvents: 'none' }}>
-      <div className="hotspot" data-open={open}>
+      <div className="hotspot" data-open={open} ref={wrap}>
         <button
           className="hotspot-dot"
           style={{ '--tone': color } as React.CSSProperties}
@@ -224,10 +274,11 @@ function Framing({
     }
   }, [focus, controls, radius, camera, groupRef])
 
-  useFrame((_, dt) => {
+  useFrame(({ invalidate }, dt) => {
     const c = controls.current
     const g = goal.current
     if (!c || !g) return
+    invalidate()
     const k = 1 - Math.pow(0.0015, dt) // 与帧率无关的指数趋近
     c.target.lerp(g.target, k)
     const dir = new THREE.Vector3().subVectors(camera.position, c.target)
@@ -328,8 +379,38 @@ function Scene({
 }) {
   const [model, setModel] = useState<InsectModel | null>(null)
   const [box, setBox] = useState<THREE.Box3 | null>(null)
+  /** 上一只虫的离场动画：0.24s 缩小后卸下（参考站换器官的手感） */
+  const [leaving, setLeaving] = useState<InsectModel | null>(null)
+  const leavingGroup = useRef<THREE.Group | null>(null)
+  const leavingT = useRef(0)
   const spinGroup = useRef<THREE.Group | null>(null)
-  const { gl } = useThree()
+  /** 拖动后 3 秒内自转让位；由 OrbitControls 的 start 事件续期 */
+  const pauseUntil = useRef(0)
+  const { gl, invalidate } = useThree()
+
+  // 用户一碰相机就让转 3 秒，松手后再自然接管
+  useEffect(() => {
+    const c = controls.current
+    if (!c) return
+    const onStart = () => {
+      pauseUntil.current = performance.now() + 3000
+    }
+    c.addEventListener('start', onStart)
+    return () => c.removeEventListener('start', onStart)
+  }, [controls, model])
+
+  // 离场缩小：模型对象是 LRU 缓存里的共享实例，动完必须把 scale 归位
+  useFrame((_, dt) => {
+    if (!leaving) return
+    leavingT.current += dt
+    const k = Math.min(1, leavingT.current / 0.24)
+    leavingGroup.current?.scale.setScalar(1 - 0.34 * k * k)
+    if (k >= 1) {
+      leavingGroup.current?.scale.setScalar(1)
+      setLeaving(null)
+    }
+    invalidate()
+  })
 
   // 剖切要求渲染器开启局部裁剪
   useEffect(() => {
@@ -346,7 +427,13 @@ function Scene({
 
   useEffect(() => {
     let alive = true
-    setModel(null)
+    setModel((cur) => {
+      if (cur) {
+        leavingT.current = 0
+        setLeaving(cur)
+      }
+      return null
+    })
     loadInsectModel(insect.id)
       .then((m) => {
         if (!alive) return
@@ -391,6 +478,12 @@ function Scene({
         groupRef={spinGroup}
       />
 
+      {leaving && leaving !== model && (
+        <group ref={leavingGroup}>
+          <primitive object={leaving.group} />
+        </group>
+      )}
+
       {model && (
         <>
           {/* 聚焦某个部位时停转：镜头锁在一点上而虫还在转，那个部位会自己溜走 */}
@@ -398,6 +491,7 @@ function Scene({
             model={model}
             mode={mode}
             spin={spin && !focus}
+            pauseUntil={pauseUntil}
             onReady={setBox}
             groupRef={spinGroup}
           >
@@ -409,6 +503,7 @@ function Scene({
                   <Hotspot
                     key={h.id}
                     position={p}
+                    groupRef={spinGroup}
                     label={h.label}
                     note={h.note}
                     tone={h.tone}
@@ -483,6 +578,13 @@ export function InsectCanvas({
     <Canvas
       shadows
       dpr={[1, COARSE ? 1.5 : 2]}
+      /**
+       * TODO(demand)：参考站是 dirty-flag 按需出帧，r3f 等价物 frameloop='demand'
+       * 已在各 useFrame 里备好自续帧（invalidate），但按需模式必须有人盯着屏幕
+       * 验过「拖动余摆不冻帧、切物种不冻帧」才能开 —— 上一次想验时 Chrome 窗口
+       * 整晚不可见，全部浏览器探针都在撒谎（见项目记忆）。在那之前先用 always，
+       * 离屏停摆（'never'）已经拿走了大头收益。
+       */
       frameloop={active ? 'always' : 'never'}
       gl={{ antialias: true, alpha: true, preserveDrawingBuffer: false, powerPreference: 'high-performance' }}
       camera={{ fov: 34, position: [2, 1, 3] }}

@@ -240,3 +240,27 @@
   text-align: right;
   line-height: 1.5;
 }
+
+
+/* ------------------------------------------------------- 切换物种的错峰入场 */
+
+/**
+ * 根元素带 key={insect.id}，每次换物种整棵重挂，这组动画就会重播。
+ * 逐块 35ms 的错峰（参考站用 gsap stagger 做的效果，这里纯 CSS）：
+ * 视线自然从名字读到数据再到生态，页面跟着这个节奏铺开，
+ * 而不是整版内容「啪」地同时换掉。
+ */
+.panel > * {
+  animation: fade-up 0.4s ease both;
+}
+
+.panel > *:nth-child(1) { animation-delay: 0ms; }
+.panel > *:nth-child(2) { animation-delay: 35ms; }
+.panel > *:nth-child(3) { animation-delay: 70ms; }
+.panel > *:nth-child(4) { animation-delay: 105ms; }
+.panel > *:nth-child(5) { animation-delay: 140ms; }
+.panel > *:nth-child(6) { animation-delay: 175ms; }
+.panel > *:nth-child(7) { animation-delay: 210ms; }
+.panel > *:nth-child(8) { animation-delay: 245ms; }
+.panel > *:nth-child(9) { animation-delay: 280ms; }
+.panel > *:nth-child(n + 10) { animation-delay: 315ms; }

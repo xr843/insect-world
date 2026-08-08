@@ -298,6 +298,11 @@ button {
   transform: scale(1.28);
 }
 
+/* 转到背面淡出的点不该还能点到（透明度由 InsectCanvas 逐帧写入） */
+.hotspot[data-behind='true'] .hotspot-dot {
+  pointer-events: none;
+}
+
 .hotspot[data-open='true'] .hotspot-dot {
   transform: scale(1.32);
 }

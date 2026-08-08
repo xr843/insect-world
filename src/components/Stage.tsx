@@ -92,7 +92,14 @@ export function Stage({
 
   return (
     <section className={`card stage-height ${s.stage}`}>
-      <div className={s.canvasWrap} ref={wrapRef}>
+      {/* 无障碍名挂在包装层：r3f v8 的 Canvas 会把未知 props 当 root 配置吞掉，
+          挂上去整个 3D 子树都不渲染（实测踩过） */}
+      <div
+        className={s.canvasWrap}
+        ref={wrapRef}
+        role="img"
+        aria-label={`${insect.name}的可交互三维标本：拖动旋转，滚轮缩放，点击彩色圆点认识部位`}
+      >
         <InsectCanvas
           active={inView}
           insect={insect}
