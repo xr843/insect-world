@@ -8,6 +8,8 @@
  * 单位约定：1 = 1cm（真实体长），最终由 InsectModel.radius 归一化取景。
  */
 import * as THREE from 'three'
+import { microRoughnessMap, punctateMaps, striateMaps } from './surface'
+import { facetNormalMap } from './eyes'
 
 // ---------------------------------------------------------------- 类型契约
 
@@ -36,6 +38,35 @@ export interface Section {
 
 // ---------------------------------------------------------------- 材质
 
+// 绒面 / 虹彩的默认档 —— 目视验收时的调节旋钮（贴图侧的旋钮在 surface.ts 顶部）。
+/** 绒面 sheen 的粗糙度：0.55 是「细密短绒」，往 0.7 走会更像蓬松长毛 */
+const VELVET_SHEEN_ROUGHNESS = 0.55
+/** 绒面 sheenColor 相对基色的提亮量（HSL 的 L 偏移）：绒毛边缘散射比基色亮一档 */
+const VELVET_SHEEN_LIGHTEN = 0.1
+/** 鞘翅薄膜干涉：低 IOR + 宽厚度区间 = 随视角在绿金紫间缓慢流转，不闪成肥皂泡 */
+const ELYTRA_IRIDESCENCE_IOR = 1.3
+const ELYTRA_IRIDESCENCE_THICKNESS: readonly [number, number] = [120, 420]
+/**
+ * 开虹彩时清漆的上限。虹彩与清漆是两层叠加的角度高光，同满档必过曝——
+ * 这条从属于本项目铁律：elytra 清漆上限 0.55，ACES 下颜色宁深勿浅。
+ */
+const ELYTRA_IRIDESCENT_CLEARCOAT = 0.35
+/** 翅膜虹彩：强度刻意压低，只在掠射角泛出一点淡彩（真实豆娘/蜻蜓翅膜即如此） */
+const MEMBRANE_IRIDESCENCE = 0.45
+const MEMBRANE_IRIDESCENCE_IOR = 1.25
+const MEMBRANE_IRIDESCENCE_THICKNESS: readonly [number, number] = [140, 380]
+
+/**
+ * 表面微观结构档位：
+ * - `undefined`（缺省）= 挂一张极轻的微颗粒粗糙度图，只打破「整片均匀」的
+ *   塑料高光，强度低到不改变已逐只验收过的观感（旋钮见 surface.ts）；
+ * - `'smooth'` = 什么都不挂，留给真正光学级光滑的表面；
+ * - `'punctate'` = 刻点：随机圆坑法线 + 坑内更糙的粗糙度图（甲虫头 / 前胸背板）；
+ * - `'striate'` = 鞘翅纵沟纹；
+ * - `'velvet'` = 绒面 sheen（大王花金龟前胸、蛾蝶体毛）。
+ */
+export type ChitinSurface = 'smooth' | 'punctate' | 'striate' | 'velvet'
+
 export interface ChitinOptions {
   /** 基色 */
   color: THREE.ColorRepresentation
@@ -47,8 +78,10 @@ export interface ChitinOptions {
   clearcoat?: number
   /** 半透明（膜翅、蝉翼）。默认 1 = 不透明 */
   opacity?: number
-  /** 次表面透光感（薄翅、幼虫体壁） */
+  /** 次表面透光感（薄翅、幼虫体壁、白蚁软腹） */
   translucent?: boolean
+  /** 表面微观结构，档位含义见 ChitinSurface。node 测试环境无 Canvas，贴图为 null 时静默跳过 */
+  surface?: ChitinSurface
   /** 自发光（萤火虫发光器） */
   emissive?: THREE.ColorRepresentation
   emissiveIntensity?: number
@@ -70,6 +103,8 @@ export function chitin(o: ChitinOptions): THREE.MeshPhysicalMaterial {
     depthWrite: !transparent,
   })
   if (o.translucent) {
+    // transmission 走 three 的透射渲染通道，不依赖 transparent 排序；
+    // depthWrite 保持 true（除非显式 opacity<1），否则体节会互相看穿、排序打架。
     m.transmission = 0.35
     m.thickness = 0.6
     m.ior = 1.42
@@ -78,7 +113,45 @@ export function chitin(o: ChitinOptions): THREE.MeshPhysicalMaterial {
     m.emissive = new THREE.Color(o.emissive)
     m.emissiveIntensity = o.emissiveIntensity ?? 1
   }
+  applySurface(m, o.surface)
   return m
+}
+
+/**
+ * 把表面微观层落到材质上。生成器在 node（vitest）下返回 null——
+ * 那就什么都不挂，材质的标量参数不受影响，测试照常可断言。
+ * 贴图是全局共享缓存（见 surface.ts 头注释），这里只挂引用，绝不 dispose。
+ */
+function applySurface(m: THREE.MeshPhysicalMaterial, surface: ChitinSurface | undefined): void {
+  if (surface === 'smooth') return
+  if (surface === 'punctate' || surface === 'striate') {
+    const maps = surface === 'punctate' ? punctateMaps() : striateMaps()
+    if (maps) {
+      m.normalMap = maps.normal
+      m.roughnessMap = maps.roughness
+    }
+    return
+  }
+  if (surface === 'velvet') {
+    m.sheen = 1
+    m.sheenRoughness = VELVET_SHEEN_ROUGHNESS
+    // 绒毛的边缘散射比基色亮一档：取基色提亮而不另配色，保持已验收的色相
+    m.sheenColor.copy(m.color).offsetHSL(0, 0, VELVET_SHEEN_LIGHTEN)
+  }
+  // 缺省与 velvet 都挂极轻微颗粒图：绒面同样不该有「整片均匀」的高光
+  const micro = microRoughnessMap()
+  if (micro) m.roughnessMap = micro
+}
+
+export interface ElytraOptions {
+  /** 表面微观结构：刻点或纵沟（含配套粗糙度图），档位含义见 ChitinSurface */
+  surface?: 'punctate' | 'striate'
+  /**
+   * 薄膜干涉结构色（吉丁、铜绿丽金龟、金属叶甲）：随视角在色相间流转。
+   * 开启时清漆自动压到 ELYTRA_IRIDESCENT_CLEARCOAT（≤0.35）——
+   * 虹彩本身就是一层强角度高光，与满档清漆叠加必过曝。
+   */
+  iridescent?: boolean
 }
 
 /**
@@ -86,22 +159,50 @@ export function chitin(o: ChitinOptions): THREE.MeshPhysicalMaterial {
  *
  * 清漆强度刻意压在 0.55：更高的值配上 Environment 的面光源后，
  * 正对光源的角度会整片过曝成灰白，把固有色和隆起的体积感一起吃掉
- * （深褐的独角仙曾因此从正面看像两个白球）。
+ * （深褐的独角仙曾因此从正面看像两个白球）。开虹彩时进一步压到 0.35，
+ * 理由同上——两层角度高光不可叠满。铁律不变：上限 0.55，ACES 下宁深勿浅。
  */
-export function elytra(color: THREE.ColorRepresentation, metal = 0.25): THREE.MeshPhysicalMaterial {
-  return chitin({ color, gloss: 0.74, metal, clearcoat: 0.55 })
+export function elytra(
+  color: THREE.ColorRepresentation,
+  metal = 0.25,
+  opts: ElytraOptions = {},
+): THREE.MeshPhysicalMaterial {
+  const m = chitin({
+    color,
+    gloss: 0.74,
+    metal,
+    clearcoat: opts.iridescent ? ELYTRA_IRIDESCENT_CLEARCOAT : 0.55,
+    surface: opts.surface,
+  })
+  if (opts.iridescent) {
+    m.iridescence = 1
+    m.iridescenceIOR = ELYTRA_IRIDESCENCE_IOR
+    m.iridescenceThicknessRange = [...ELYTRA_IRIDESCENCE_THICKNESS] // 拷贝：数组是引用，别让多份材质共享可变范围
+  }
+  return m
+}
+
+export interface MembraneOptions {
+  /** 极轻薄膜虹彩：掠射角下的淡彩流转（豆娘/蜻蜓翅膜在真实世界就有）。默认关 */
+  iridescent?: boolean
 }
 
 /** 膜翅：半透明、双面、极薄 */
 export function membrane(
   color: THREE.ColorRepresentation = '#eef1f4',
   opacity = 0.32,
+  opts: MembraneOptions = {},
 ): THREE.MeshPhysicalMaterial {
   const m = chitin({ color, gloss: 0.7, opacity, side: THREE.DoubleSide })
   m.transmission = 0.55
   m.thickness = 0.05
   m.ior = 1.33
   m.roughness = 0.22
+  if (opts.iridescent) {
+    m.iridescence = MEMBRANE_IRIDESCENCE
+    m.iridescenceIOR = MEMBRANE_IRIDESCENCE_IOR
+    m.iridescenceThicknessRange = [...MEMBRANE_IRIDESCENCE_THICKNESS]
+  }
   return m
 }
 
@@ -718,13 +819,28 @@ export function compoundEye(opts: {
     clearcoat: 1,
     clearcoatRoughness: 0.05,
   })
+  /**
+   * 小眼面：六边形蜂窝法线贴图（eyes.ts，程序生成、全局缓存）。
+   * 只挂法线，不换材质 —— 各物种传进来的眼色是逐只目视校准过的，
+   * eyes.facetedEyeMaterial 自带的压色逻辑在这里反而会破坏既有观感。
+   * node 测试环境无 Canvas 时返回 null，静默跳过，观感回到光滑球。
+   */
+  const facetMap = facetNormalMap()
+  if (facetMap) {
+    mat.normalMap = facetMap
+    mat.normalScale.set(0.6, 0.6)
+  }
   const dome = new THREE.Mesh(new THREE.SphereGeometry(opts.radius, 32, 24), mat)
   dome.scale.set(opts.stretch ?? 1, opts.flatten ?? 0.82, 1)
   dome.position.set(...opts.at)
   g.add(dome)
 
   if (opts.facets) {
-    // 用一层略大的低模球做出小眼面的多边形折面
+    /**
+     * 旧的「低模折面叠加层」：法线贴图版小眼面落地后基本可退休（贴图更细、
+     * 面数为零），但个别大眼物种（蜻蜓/豆娘）的折面剪影感仍靠它。
+     * 保留原行为，透明度略降 —— 两层小眼面叠满会闪。
+     */
     const facetMat = new THREE.MeshPhysicalMaterial({
       color: new THREE.Color(color).clone().offsetHSL(0, 0, 0.06),
       roughness: 0.22,
@@ -732,7 +848,7 @@ export function compoundEye(opts: {
       clearcoat: 0.9,
       flatShading: true,
       transparent: true,
-      opacity: 0.55,
+      opacity: 0.4,
     })
     const facets = new THREE.Mesh(new THREE.IcosahedronGeometry(opts.radius * 1.015, 3), facetMat)
     facets.scale.copy(dome.scale)

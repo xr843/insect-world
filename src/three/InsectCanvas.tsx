@@ -6,7 +6,7 @@
  * 甲虫的鞘翅靠 Environment 里的几片 lightformer 出高光，没有它们
  * clearcoat 材质会显得像塑料。
  */
-import { Suspense, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
+import { Suspense, lazy, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { Canvas, useFrame, useThree } from '@react-three/fiber'
 import { ContactShadows, Environment, Html, Lightformer, OrbitControls } from '@react-three/drei'
 import * as THREE from 'three'
@@ -14,6 +14,9 @@ import type { OrbitControls as OrbitControlsImpl } from 'three-stdlib'
 import type { Insect } from '../data/types'
 import type { InsectModel } from './builders/kit'
 import { loadInsectModel } from './registry'
+
+/** 后期管线懒加载：+103KB gzip 的 postprocessing 只让真正会用它的桌面端下载（详见 PostFX.tsx 头注释） */
+const PostFX = lazy(() => import('./PostFX'))
 
 /**
  * 触屏设备一次性判定，用于渲染降配。
@@ -337,13 +340,18 @@ function StudioLights({ radius }: { radius: number }) {
 
       {/* 反射环境：甲壳与膜翅的高光全靠这几片面光源。
           必须包在自己的 Suspense 里 —— 它挂起时会连带同一边界内的
-          模型和灯光一起不渲染，表现为「canvas 正常、无报错、画面全空」。 */}
+          模型和灯光一起不渲染，表现为「canvas 正常、无报错、画面全空」。
+          resolution 只在桌面提到 512：这张 cubemap 只烘一次（frames={1}），
+          手机维持 256 别多花那份烘图开销。 */}
       <Suspense fallback={null}>
-        <Environment resolution={256} frames={1}>
+        <Environment resolution={COARSE ? 256 : 512} frames={1}>
           <Lightformer form="rect" intensity={2.6} color="#fffaf2" position={[0, 4, 2]} scale={[8, 3, 1]} rotation={[-Math.PI / 3, 0, 0]} />
           <Lightformer form="rect" intensity={1.5} color="#e8f0ff" position={[-4, 1, -2]} scale={[5, 4, 1]} rotation={[0, Math.PI / 2.4, 0]} />
           <Lightformer form="rect" intensity={1.1} color="#ffeeda" position={[4, 0.5, -1.5]} scale={[4, 3, 1]} rotation={[0, -Math.PI / 2.6, 0]} />
           <Lightformer form="ring" intensity={0.8} color="#fff" position={[0, -3, 0]} scale={6} rotation={[Math.PI / 2, 0, 0]} />
+          {/* 地面反弹：暖色、低强度、从台面往上返一点光，专治鞘翅下缘/腹面死黑 ——
+              前 4 片全在侧上方，虫体朝下的那些面没有任何一片够得着。 */}
+          <Lightformer form="rect" intensity={0.6} color="#e8b483" position={[0, -2.4, 0.6]} scale={[7, 7, 1]} rotation={[Math.PI / 2, 0, 0]} />
         </Environment>
       </Suspense>
     </>
@@ -477,6 +485,12 @@ function Scene({
         focus={focus}
         groupRef={spinGroup}
       />
+      {/* 手机端整段不挂载（不是挂载后禁用）：连这个 chunk 都不会去下载 */}
+      {!COARSE && (
+        <Suspense fallback={null}>
+          <PostFX radius={radius} />
+        </Suspense>
+      )}
 
       {leaving && leaving !== model && (
         <group ref={leavingGroup}>
@@ -586,7 +600,10 @@ export function InsectCanvas({
        * 离屏停摆（'never'）已经拿走了大头收益。
        */
       frameloop={active ? 'always' : 'never'}
-      gl={{ antialias: true, alpha: true, preserveDrawingBuffer: false, powerPreference: 'high-performance' }}
+      // antialias 只在手机开：桌面走 EffectComposer 后，画面经由它的离屏渲染目标
+      // 合成，canvas 自己的 MSAA 缓冲已经用不上（抗锯齿改由 PostFX 的
+      // multisampling={8} 负责），留 true 只是白占一份显存。
+      gl={{ antialias: COARSE, alpha: true, preserveDrawingBuffer: false, powerPreference: 'high-performance' }}
       camera={{ fov: 34, position: [2, 1, 3] }}
       onCreated={({ gl }) => {
         gl.toneMapping = THREE.ACESFilmicToneMapping

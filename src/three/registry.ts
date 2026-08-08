@@ -17,11 +17,19 @@ type Loader = () => Promise<Record<string, unknown>>
  */
 const MODULES = import.meta.glob('./builders/*.ts') as Record<string, Loader>
 
+/**
+ * 工具模块：与物种文件同住 builders/ 目录，但不是物种。
+ * glob 分不出这两类，全靠这份名单 —— 新增工具文件必须在此登记，
+ * 否则它会被当成「幽灵物种」注册进来，layers.test.ts 的孤儿检查会立刻抓住
+ * （surface.ts / eyes.ts 落地当天就被抓过一次）。
+ */
+const UTILITY_MODULES = new Set(['kit', 'surface', 'eyes'])
+
 const LOADERS: Record<string, Loader> = Object.fromEntries(
   Object.entries(MODULES)
     .map(([path, load]) => [path.replace('./builders/', '').replace(/\.ts$/, ''), load] as const)
-    // kit 是工具箱不是物种；__tests__ 不会被上面的 glob 匹配到
-    .filter(([id]) => id !== 'kit'),
+    // __tests__ 不会被上面的 glob 匹配到
+    .filter(([id]) => !UTILITY_MODULES.has(id)),
 )
 
 /**

@@ -133,12 +133,21 @@ describe('展示文案里没有混进异文字', () => {
 
 describe('建模层不该有孤儿', () => {
   /**
+   * builders/ 里的非物种工具模块。registry 的 glob 把目录里每个文件都当物种
+   * （只滤掉 kit），这里跟着滤 —— 新增工具模块必须显式登记，否则本测试红给你看，
+   * 逼一次「这真是工具不是忘了配数据的物种」的确认。
+   * - surface：程序化表面微观贴图（刻点/纵沟/微颗粒），kit 材质函数的下层
+   * - eyes：复眼小眼面材质，待主线接入 compoundEye()
+   */
+  const TOOLBOX_MODULES = new Set(['surface', 'eyes'])
+
+  /**
    * 反方向：模型做好了，图鉴数据却没跟上。线上不会出错（界面按数据渲染），
    * 但那个模型谁也看不到，等于白做 —— 一轮里同时加十种时最容易漏掉一条。
    */
   it('没有有模型却没有图鉴数据的物种', () => {
     const dataIds = new Set(INSECTS.map((i) => i.id))
-    const orphans = knownSpecies().filter((id) => !dataIds.has(id))
+    const orphans = knownSpecies().filter((id) => !dataIds.has(id) && !TOOLBOX_MODULES.has(id))
     expect(
       orphans,
       `这些建模文件没有对应的图鉴数据，做了也没人看得到：${orphans.join('、')}`,
