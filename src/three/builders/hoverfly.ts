@@ -99,6 +99,9 @@ function haltere(base: THREE.Vector3, side: 1 | -1, stalkMat: THREE.Material, ba
 /** 极短触角：三节短锥 + 一根更细的末端芒毛（arista），双翅目区别于蜂类长触角的关键。 */
 function aristateAntenna(base: THREE.Vector3, side: 1 | -1, mat: THREE.Material, aristaMat: THREE.Material): THREE.Group {
   const g = new THREE.Group()
+  g.name = 'antenna'
+  g.userData.base = [base.x, base.y, base.z]
+  g.userData.phase = side >= 0 ? 0 : Math.PI * 0.62 // 左右错相位（此类自写触角常左右共用 base，不能按 z 符号判）
   const dir = new THREE.Vector3(0.85, 0.3, side * 0.45).normalize()
   const stalkLen = 0.07
   const sections: Section[] = []

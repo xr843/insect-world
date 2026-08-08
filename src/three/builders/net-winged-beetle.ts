@@ -150,6 +150,9 @@ function ridgeCross(
  * 的 serrateAntenna，kit 没有现成的"锯齿"类型，见文件头注释）。 */
 function serrateAntenna(base: THREE.Vector3, side: 1 | -1, length: number, thickness: number, material: THREE.Material): THREE.Group {
   const g = new THREE.Group()
+  g.name = 'antenna'
+  g.userData.base = [base.x, base.y, base.z]
+  g.userData.phase = side >= 0 ? 0 : Math.PI * 0.62 // 左右错相位（此类自写触角常左右共用 base，不能按 z 符号判）
   const segs = 11
   const pitch = THREE.MathUtils.degToRad(24)
   const yaw = side * THREE.MathUtils.degToRad(34)

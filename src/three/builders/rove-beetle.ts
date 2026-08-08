@@ -112,6 +112,9 @@ function mandiblePoint(at: [number, number, number], length: number, spread: num
 /** 念珠状（moniliform）触角一侧：每节都是独立小球，球间细杆相连，逐节渐细并略下垂。 */
 function moniliformAntenna(base: THREE.Vector3, side: 1 | -1, length: number, beadR: number, beads: number, material: THREE.Material): THREE.Group {
   const g = new THREE.Group()
+  g.name = 'antenna'
+  g.userData.base = [base.x, base.y, base.z]
+  g.userData.phase = side >= 0 ? 0 : Math.PI * 0.62 // 左右错相位（此类自写触角常左右共用 base，不能按 z 符号判）
   const pitch = THREE.MathUtils.degToRad(22)
   const yaw = side * THREE.MathUtils.degToRad(36)
   const dir = new THREE.Vector3(Math.cos(pitch) * Math.cos(yaw), Math.sin(pitch), Math.cos(pitch) * Math.sin(yaw))

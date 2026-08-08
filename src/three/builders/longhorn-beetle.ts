@@ -107,6 +107,9 @@ function longhornAntenna(
   bandMat: THREE.Material,
 ): THREE.Group {
   const g = new THREE.Group()
+  g.name = 'antenna'
+  g.userData.base = [base.x, base.y, base.z]
+  g.userData.phase = side >= 0 ? 0 : Math.PI * 0.62 // 左右错相位（此类自写触角常左右共用 base，不能按 z 符号判）
 
   // 每节占全长比例：柄节短粗、梗节极短，鞭小节渐长后趋于稳定
   const lenFracRaw = [0.05, 0.03, 0.065, 0.08, 0.09, 0.095, 0.1, 0.1, 0.1, 0.1, 0.1]

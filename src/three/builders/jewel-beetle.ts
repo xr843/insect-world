@@ -83,6 +83,9 @@ function surfaceStripe(
 /** 短锯齿状触角：渐细主干 + 每节朝外侧凸出的一枚小尖齿。 */
 function serrateAntenna(base: THREE.Vector3, side: 1 | -1, length: number, thickness: number, material: THREE.Material): THREE.Group {
   const g = new THREE.Group()
+  g.name = 'antenna'
+  g.userData.base = [base.x, base.y, base.z]
+  g.userData.phase = side >= 0 ? 0 : Math.PI * 0.62 // 左右错相位（此类自写触角常左右共用 base，不能按 z 符号判）
   const segs = 9
   const pitch = THREE.MathUtils.degToRad(26)
   const yaw = side * THREE.MathUtils.degToRad(30)

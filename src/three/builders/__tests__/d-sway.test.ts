@@ -40,3 +40,35 @@ describe('触角组的微动钩子', () => {
     expect(count(a)).toBe(count(b))
   })
 })
+
+describe('每个物种的触角都接上了微动钩子', () => {
+  /**
+   * 这条是用户实测抓出来的返工：9 只自写触角的物种（星天牛为首——触角恰是
+   * 它的招牌）没有钩子，触角安静地不动，而我在验收单里没验证就点名
+   * 「天牛最明显」。静默降级 + 未验证的承诺，两个错叠在一起。
+   * 现在全量普查：除显式豁免（真的没有触角的物种）外，每只虫的模型里
+   * 必须至少有一个带 base 的 antenna 组。
+   */
+  const EXEMPT = new Set([
+    'tortoise-beetle', // 甘薯腊龟甲：头缩在前胸下，本就无外露触角（连 antenna anchor 都没有）
+  ])
+
+  it('除豁免名单外，50 只虫都有可摆动的触角组', async () => {
+    const { INSECTS } = await import('../../../data/insects')
+    const { loadInsectModel } = await import('../../registry')
+    const dead: string[] = []
+    for (const insect of INSECTS) {
+      if (EXEMPT.has(insect.id)) continue
+      const model = await loadInsectModel(insect.id)
+      let hooks = 0
+      model.group.traverse((o) => {
+        if (o.name === 'antenna' && Array.isArray(o.userData?.base)) hooks++
+      })
+      if (hooks === 0) dead.push(`${insect.name}(${insect.id})`)
+    }
+    expect(
+      dead,
+      `这些物种的触角没有微动钩子，展台上会安静地不动（自写触角函数记得设 name='antenna' 与 userData.base）：\n${dead.join('、')}`,
+    ).toEqual([])
+  })
+})

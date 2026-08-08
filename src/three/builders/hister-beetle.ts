@@ -147,6 +147,9 @@ function tuckedLeg(
 /** 膝状+球状端锤触角：柄节直伸，折肘后再接短段，末端扣一颗紧实小球 */
 function histerAntenna(base: THREE.Vector3, side: 1 | -1, scapeLen: number, clubLen: number, thickness: number, material: THREE.Material): THREE.Group {
   const g = new THREE.Group()
+  g.name = 'antenna'
+  g.userData.base = [base.x, base.y, base.z]
+  g.userData.phase = side >= 0 ? 0 : Math.PI * 0.62 // 左右错相位（此类自写触角常左右共用 base，不能按 z 符号判）
   const pitch = THREE.MathUtils.degToRad(24)
   const yaw = side * THREE.MathUtils.degToRad(38)
   const dir1 = new THREE.Vector3(Math.cos(pitch) * Math.cos(yaw), Math.sin(pitch), Math.cos(pitch) * Math.sin(yaw))

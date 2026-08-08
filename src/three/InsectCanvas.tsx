@@ -98,7 +98,9 @@ function InsectMesh({
         const pivot = new THREE.Group()
         pivot.name = 'antenna-pivot'
         pivot.position.set(base[0], base[1], base[2])
-        pivot.userData.phase = base[2] >= 0 ? 0 : Math.PI * 0.62
+        // 自写触角常左右共用同一 base（如食蚜蝇），z 符号分不出边——钩子可自带 phase 覆写
+        pivot.userData.phase =
+          (node.userData.phase as number | undefined) ?? (base[2] >= 0 ? 0 : Math.PI * 0.62)
         node.parent?.add(pivot)
         pivot.attach(node)
         pivots.push(pivot)

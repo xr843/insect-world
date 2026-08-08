@@ -261,6 +261,8 @@ function beadedAntenna(
   material: THREE.Material,
 ): THREE.Group {
   const g = new THREE.Group()
+  g.name = 'antenna'
+  g.userData.base = [base.x, base.y, base.z]
   const pitch = THREE.MathUtils.degToRad(opts.pitchDeg)
   const yaw = THREE.MathUtils.degToRad(opts.yawDeg)
   const dir = new THREE.Vector3(Math.cos(pitch) * Math.cos(yaw), Math.sin(pitch), Math.cos(pitch) * Math.sin(yaw))
