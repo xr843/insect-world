@@ -24,6 +24,9 @@ const PostFX = lazy(() => import('./PostFX'))
  * pointer: coarse 比 UA 嗅探可靠：带鼠标的平板会取到 fine，按桌面走。
  */
 const COARSE = typeof window !== 'undefined' && window.matchMedia('(pointer: coarse)').matches
+/** 系统「减少动态效果」：CSS 那侧有全局规则兜底，JS 驱动的触角微动在这里问一次 */
+const REDUCED_MOTION =
+  typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches
 
 const TONE_HEX: Record<string, string> = {
   coral: '#eb7c6b',
@@ -64,11 +67,45 @@ function InsectMesh({
 }) {
   const ref = groupRef
   const born = useRef(0)
+  /** 触角枢轴列表（D 轮微动）；随模型重建 */
+  const antennae = useRef<THREE.Group[]>([])
+  const swayT = useRef(0)
 
   // 切换物种时从略小的尺度弹入，避免生硬替换
   useLayoutEffect(() => {
     born.current = 0
     if (ref.current) ref.current.scale.setScalar(0.001)
+
+    /**
+     * 触角微动的一次性重锚（幂等，模型是 LRU 共享实例）。
+     *
+     * kit 的触角几何在组内是**绝对坐标**、组原点在模型原点——直接转组会绕
+     * 模型中心抡大圈。按 userData.base 立一个枢轴组，再用 attach()（保世界
+     * 变换）把触角挂过去，旋转就落在基部了。左右天线用基点 z 的符号错开
+     * 相位，摆起来才像活物不像钟摆。
+     */
+    const pivots: THREE.Group[] = []
+    model.group.traverse((o) => {
+      if (o.name === 'antenna-pivot') pivots.push(o as THREE.Group)
+    })
+    if (pivots.length === 0) {
+      const raw: THREE.Group[] = []
+      model.group.traverse((o) => {
+        if (o.name === 'antenna' && Array.isArray(o.userData.base)) raw.push(o as THREE.Group)
+      })
+      for (const node of raw) {
+        const base = node.userData.base as [number, number, number]
+        const pivot = new THREE.Group()
+        pivot.name = 'antenna-pivot'
+        pivot.position.set(base[0], base[1], base[2])
+        pivot.userData.phase = base[2] >= 0 ? 0 : Math.PI * 0.62
+        node.parent?.add(pivot)
+        pivot.attach(node)
+        pivots.push(pivot)
+      }
+    }
+    antennae.current = pivots
+
     const box = new THREE.Box3().setFromObject(model.group)
     onReady(box)
   }, [model, onReady])
@@ -111,12 +148,28 @@ function InsectMesh({
      * 有说明卡开着 —— 读着读着字跟着虫跑了。
      */
     const paused = performance.now() < pauseUntil.current
+    const live = spin && !paused
     // 0.14 rad/s ≈ 45 秒一圈。第三次应用户要求调慢（0.28→0.20→0.14）：
     // 有了「拖动让转 + 背面圆点淡出」之后，转速不再承担「快点转到正面」的职责，
     // 可以慢到纯粹当展柜的节奏
-    if (spin && !paused) g.rotation.y += dt * 0.14
+    if (live) g.rotation.y += dt * 0.14
+    /**
+     * 触角微动（D 轮）：两个不可通约频率叠加，避免读出机械钟摆感；
+     * 幅度 ~2.5°。跟随 live 同一开关——自转让位（拖动/读卡/关自转）时
+     * 触角也静止，按需渲染才有真正歇着的时刻；系统声明减少动效时不动。
+     */
+    if (live && !REDUCED_MOTION && antennae.current.length > 0) {
+      swayT.current += dt
+      const t = swayT.current
+      for (const pivot of antennae.current) {
+        const phase = (pivot.userData.phase as number) ?? 0
+        const s = Math.sin(t * 1.9 + phase) * 0.032 + Math.sin(t * 3.3 + phase * 1.7) * 0.012
+        pivot.rotation.y = s
+        pivot.rotation.x = s * 0.45
+      }
+    }
     // 按需渲染下自己续帧：还在转、还没长完，都得有下一帧
-    if ((spin && !paused) || born.current < 1) invalidate()
+    if (live || born.current < 1) invalidate()
   })
 
   return (
@@ -593,13 +646,13 @@ export function InsectCanvas({
       shadows
       dpr={[1, COARSE ? 1.5 : 2]}
       /**
-       * TODO(demand)：参考站是 dirty-flag 按需出帧，r3f 等价物 frameloop='demand'
-       * 已在各 useFrame 里备好自续帧（invalidate），但按需模式必须有人盯着屏幕
-       * 验过「拖动余摆不冻帧、切物种不冻帧」才能开 —— 上一次想验时 Chrome 窗口
-       * 整晚不可见，全部浏览器探针都在撒谎（见项目记忆）。在那之前先用 always，
-       * 离屏停摆（'never'）已经拿走了大头收益。
+       * demand：没有动静就不出帧（参考站 dirty-flag 循环的 r3f 等价物）。
+       * 自转/触角微动/进出场/镜头趋近/圆点淡出各自在 useFrame 里自续帧；
+       * React 提交与 OrbitControls 的 change（含阻尼余摆）由 r3f/drei 补帧。
+       * 「停转读说明」这个最常见的静止场景，GPU 从此真正歇着。
+       * （D 轮启用；验收点=拖动松手余摆顺滑、切物种动画完整、静止画面不冻帧）
        */
-      frameloop={active ? 'always' : 'never'}
+      frameloop={active ? 'demand' : 'never'}
       // antialias 只在手机开：桌面走 EffectComposer 后，画面经由它的离屏渲染目标
       // 合成，canvas 自己的 MSAA 缓冲已经用不上（抗锯齿改由 PostFX 的
       // multisampling={8} 负责），留 true 只是白占一份显存。

@@ -670,6 +670,13 @@ export interface AntennaSpec {
 /** 触角：按类型生成不同末端形态，这是分目最直观的特征之一 */
 export function antenna(spec: AntennaSpec, material: THREE.Material): THREE.Group {
   const g = new THREE.Group()
+  /**
+   * 命名 + 基点坐标是给展台的「触角微动」用的钩子（D 轮）：
+   * 几何在组内是绝对坐标，展台要想绕基部摆动，得先按 userData.base 重新
+   * 挂枢轴。这里只留信息，不改任何几何行为。
+   */
+  g.name = 'antenna'
+  g.userData.base = [...spec.base]
   const th = spec.thickness ?? 0.028
   const pitch = THREE.MathUtils.degToRad(spec.pitch ?? 32)
   const yaw = THREE.MathUtils.degToRad(spec.yaw ?? 22)

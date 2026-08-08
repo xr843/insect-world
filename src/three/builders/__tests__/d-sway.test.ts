@@ -1,0 +1,42 @@
+/**
+ * D 轮触角微动的 kit 侧钩子。
+ *
+ * 摆动本体在 InsectCanvas 里（r3f 运行时，node 测不了），这里钉住它赖以工作的
+ * 两个前提：触角组有名字可寻、基点坐标可用 —— 任一断掉，展台那边不会报错，
+ * 触角只是安静地不动（静默降级，正是最难发现的那种）。
+ */
+import { describe, expect, it } from 'vitest'
+import * as THREE from 'three'
+import { antenna, antennaPair, chitin } from '../kit'
+
+const mat = chitin({ color: '#333' })
+
+describe('触角组的微动钩子', () => {
+  it('antenna() 的组名为 antenna，userData.base 是三元数组', () => {
+    const a = antenna({ base: [1, 0.2, 0.15], length: 1, kind: 'filiform', yaw: 25 }, mat)
+    expect(a.name).toBe('antenna')
+    expect(a.userData.base).toEqual([1, 0.2, 0.15])
+  })
+
+  it('antennaPair() 两侧都带钩子，且基点 z 符号相反（相位错开的依据）', () => {
+    const pair = antennaPair({ base: [1, 0.2, 0.15], length: 1, kind: 'filiform', yaw: 25 }, mat)
+    const bases = pair.children.map((c) => c.userData.base as [number, number, number])
+    expect(pair.children.every((c) => c.name === 'antenna')).toBe(true)
+    expect(Math.sign(bases[0][2])).toBe(-Math.sign(bases[1][2]))
+  })
+
+  it('钩子不改几何：挂名前后顶点数一致（与历史快照对比的替代——同参数两次构建一致）', () => {
+    const count = (g: THREE.Group) => {
+      let n = 0
+      g.traverse((o) => {
+        const m = o as THREE.Mesh
+        if (m.isMesh) n += m.geometry.getAttribute('position').count
+      })
+      return n
+    }
+    const a = antenna({ base: [0.5, 0.1, 0.1], length: 0.8, kind: 'clubbed' }, mat)
+    const b = antenna({ base: [0.5, 0.1, 0.1], length: 0.8, kind: 'clubbed' }, mat)
+    expect(count(a)).toBeGreaterThan(0)
+    expect(count(a)).toBe(count(b))
+  })
+})
