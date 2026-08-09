@@ -30,21 +30,21 @@ trap 'rm -rf "$TMP"' EXIT
 # 叶片：纯色 SVG（渐变交给 IM），尺寸对齐圆盘
 cat > "$TMP/leaf.svg" <<'SVG'
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="300" height="300">
-  <path transform="translate(12 12.4) scale(0.72) translate(-12 -13.4)" fill="#fffaf3"
+  <path transform="translate(12 12.4) scale(0.72) translate(-12 -13.4)" fill="#f7f8f4"
     d="M4.2 20.2c-.5-7.8 4.6-13.3 15.6-13.6.5 8.9-4.4 13.6-12.4 13.6h-2c1.9-3.4 4.6-5.8 8.2-7.4-4.1 1.1-7.2 3.6-9.4 7.4Z"/>
 </svg>
 SVG
 convert -background none "$TMP/leaf.svg" "$TMP/leaf.png"
 
-# 圆盘：珊瑚径向渐变 + 圆形遮罩（对应浅色主题的 accent，与 favicon 同色系）
-convert -size 300x300 radial-gradient:'#f0937f'-'#d9614f' "$TMP/disc-fill.png"
+# 圆盘：青铜径向渐变 + 圆形遮罩（两套主题共同的身份色，与 favicon 同源）
+convert -size 300x300 radial-gradient:'#a9873f'-'#6f5622' "$TMP/disc-fill.png"
 convert -size 300x300 xc:none -fill white -draw 'circle 150,150 150,0' "$TMP/disc-mask.png"
 convert "$TMP/disc-fill.png" "$TMP/disc-mask.png" \
   -alpha off -compose CopyOpacity -composite "$TMP/disc.png"
 composite "$TMP/leaf.png" "$TMP/disc.png" "$TMP/badge.png"
 
-# 纸感底：左上偏白、右下偏暖，与站点 body 的两层径向渐变同调
-convert -size 1200x630 gradient:'#fffdf9'-'#f2e7d8' -rotate 0 "$TMP/bg.png"
+# 档案衬板底：左上偏亮、右下偏沉，与站点 body 的两层径向渐变同调
+convert -size 1200x630 gradient:'#f6f8f2'-'#e0e5da' -rotate 0 "$TMP/bg.png"
 convert "$TMP/bg.png" \
   \( -size 1200x630 radial-gradient:'#fffefb'-'#f7f0e7' -alpha set -channel A \
      -evaluate multiply 0.55 +channel \) -composite "$TMP/canvas.png"
@@ -55,12 +55,12 @@ convert "$TMP/bg.png" \
 # -depth 8 同样不是可选项：默认 16 位让这张图 850KB（原版 245KB）。
 convert "$TMP/canvas.png" \
   "$TMP/badge.png" -geometry +96+165 -composite \
-  -font "$SERIF" -pointsize 96 -fill '#2f2a27' -stroke '#2f2a27' -strokewidth 1.1 \
+  -font "$SERIF" -pointsize 96 -fill '#23282a' -stroke '#23282a' -strokewidth 1.1 \
   -annotate +452+270 "$TITLE" \
   -stroke none \
-  -font "$SANS" -pointsize 38 -fill '#4a423c' \
+  -font "$SANS" -pointsize 38 -fill '#3c4446' \
   -annotate +452+352 "$SUBTITLE" \
-  -font "$SANS" -pointsize 27 -fill '#7455b5' \
+  -font "$SANS" -pointsize 27 -fill '#3f5199' \
   -annotate +452+430 "$TAGLINE" \
   -depth 8 -strip public/og.png
 

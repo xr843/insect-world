@@ -2,7 +2,7 @@
  * 设计系统 —— 双主题：博物馆之夜（默认暗色）× 纸感图鉴（浅色）
  *
  * v2（2026-08-09）自研的暗色展柜语言：展厅黑做底、黄铜做骨、标本牌米白做字，
- * 标本靠聚光灯锥与光池从暗场里托出。浅色主题保留 v1 的奶油纸面观感，
+ * 标本靠聚光灯锥与光池从暗场里托出。浅色「标本台」是它的白昼同胞，
  * 供白天阅读；两套共用同一结构（布局/圆角/操作台位置），只换颜色与光。
  *
  * 主题机制：`:root` 定义暗色全量 token，`:root[data-theme='light']` 整组覆写；
@@ -70,50 +70,63 @@
   --gap: 16px;
 }
 
-/* 纸感图鉴（v1 浅色）：奶油纸底 + 珊瑚主accent，黄铜降为深铜以过 AA */
+/**
+ * 标本台（浅色，自研）—— 「博物馆之夜」的白昼同胞。
+ *
+ * 概念：昆虫标本抽屉里的那块**档案衬板** —— 冷灰绿的纸、青铜色的标签铭牌、
+ * 标本标签上那套印刷墨色（砖红 / 靛蓝 / 苔绿 / 赭黄）。青铜作身份色与暗色
+ * 主题同源（那边是黄铜，这边压深一档），两套主题因此是同一个馆的日与夜。
+ *
+ * ⚠️ 这套值是自己定的，不是量来的。早期版本的浅色配色（奶油纸底 #f7f0e7 +
+ * 珊瑚 #eb7c6b）是从参考站页面实测取值复刻的，随仓库转公开一并替换掉了 ——
+ * 换皮不是为了好看，是为了这个项目的外观能算自己的。别把旧值改回来。
+ *
+ * 全部色值经 WCAG 实算后才写进来（见 styles/__tests__/contrast.test.ts），
+ * 最紧的一处是选中态 4.53:1。
+ */
 :root[data-theme='light'] {
-  --ink: #2f2a27;
-  --muted: #71685f;
-  --canvas: #f7f0e7;
-  --paper: #fffbf4d1;
-  --paper-solid: #fffbf4;
-  --line: #755b462e;
-  --line-strong: #755b4647;
+  --ink: #23282a;
+  --muted: #5c6566;
+  --canvas: #e9ebe4;
+  --paper: #f7f8f4d6;
+  --paper-solid: #f7f8f4;
+  --line: #3d4a3f2b;
+  --line-strong: #3d4a3f4d;
 
-  /* 两个值都是按 WCAG 实算钉住的，别凭眼睛回调（2026-08-09 补算发现
-     v1 传下来的选中态只有 3.46:1）：--brass 压在页面底上 4.58:1，
-     --active-fg 压在 12% 珊瑚选中底上 4.54:1，均为最坏背景下的小字档。 */
-  --brass: #876832;
-  --brass-bright: #a5824c;
+  /* 青铜：暗色主题黄铜 #b08d57 的白昼版，压深到能当 10.5px 小字用 */
+  --brass: #7d6128;
+  --brass-bright: #9c7c3c;
 
-  --coral: #eb7c6b;
-  --lavender: #7455b5;
-  --sage: #769d74;
-  --amber: #c8944a;
+  /* 标本标签的印刷墨色四分类 */
+  --coral: #b0402c; /* 砖红 */
+  --lavender: #3f5199; /* 靛蓝 */
+  --sage: #3f7047; /* 苔绿 */
+  --amber: #8a6318; /* 赭黄 */
 
-  --shadow: 0 18px 48px #573e2b0f;
-  --shadow-lift: 0 22px 56px #573e2b1c;
-  --shadow-inset: inset 0 1px 0 #ffffff8c;
-  --soft-shadow: 0 2px 10px #573e2b14;
+  --shadow: 0 18px 48px #2b332c14;
+  --shadow-lift: 0 22px 56px #2b332c26;
+  --shadow-inset: inset 0 1px 0 #ffffff9c;
+  --soft-shadow: 0 2px 10px #2b332c1a;
 
-  --raise: #fffcf6;
-  --chip: #fffbf4;
-  --field: #fffbf480;
-  --tint: #755b4614;
-  --active-bg: #eb7c6b1f;
-  --active-fg: #a94939;
-  --primary-a: #ef8674;
-  --primary-b: #e26e5c;
-  --on-primary: #fffaf5;
-  --glyph-base: #fffdf9;
-  --on-tone: #fffdf8;
-  --sky-a: #fffdf8;
-  --sky-b: #f2e8da;
-  --hotspot-card: #fffdf8f2;
-  --caption: #6f6259;
-  --disabled: #b3a89d;
-  --danger: #b4523f;
-  --focus: #c25a49;
+  --raise: #fbfcf8;
+  --chip: #f2f4ee;
+  --field: #ffffff80;
+  --tint: #3d4a3f12;
+  --active-bg: #b0402c1f;
+  /* 选中态用比 --coral 更深的专用前景色：标注色本身还要当色点用，不能一味压深 */
+  --active-fg: #a43c29;
+  --primary-a: #b9573c;
+  --primary-b: #9a3c28;
+  --on-primary: #fbf7f2;
+  --glyph-base: #fafbf7;
+  --on-tone: #fbfaf6;
+  --sky-a: #f4f6f0;
+  --sky-b: #dfe4d8;
+  --hotspot-card: #fafbf7f2;
+  --caption: #4f5a54;
+  --disabled: #a6adaa;
+  --danger: #a63f2c;
+  --focus: #a43c29;
 }
 
 * {
@@ -140,11 +153,11 @@ body {
   transition: background-color 0.25s ease, color 0.25s ease;
 }
 
-/* 纸张的细微不匀：两层极淡的径向渐变，避免大面积纯色显得廉价 */
+/* 档案衬板的细微不匀：两层极淡的径向渐变，避免大面积纯色显得廉价 */
 :root[data-theme='light'] body {
   background-image:
-    radial-gradient(1200px 680px at 18% -8%, #fffdf9 0%, #fffdf900 62%),
-    radial-gradient(900px 560px at 92% 6%, #f5ece0 0%, #f5ece000 58%);
+    radial-gradient(1200px 680px at 18% -8%, #f6f8f2 0%, #f6f8f200 62%),
+    radial-gradient(900px 560px at 92% 6%, #e2e6db 0%, #e2e6db00 58%);
 }
 
 h1,
@@ -169,7 +182,7 @@ button {
  * 键盘焦点环。
  *
  * 鼠标点击的 :focus 光圈全部压掉；键盘使用者靠 :focus-visible 定位 ——
- * 暗主题亮黄铜、浅主题珊瑚，均比描边色醒目。
+ * 暗主题亮黄铜、浅主题砖红，均比描边色醒目。
  */
 :focus {
   outline: none;
@@ -385,8 +398,8 @@ button {
 }
 
 :root[data-theme='light'] .hotspot-dot {
-  border-color: #fffdf9;
-  box-shadow: 0 2px 7px #3a2a1c40;
+  border-color: #fafbf7;
+  box-shadow: 0 2px 7px #26302840;
 }
 
 .hotspot-dot:hover {

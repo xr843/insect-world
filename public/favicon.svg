@@ -1,15 +1,16 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
-  <!-- 站点标记：珊瑚圆底上的白叶，与顶栏/左栏、og 卡共用同一路径。
+  <!-- 站点标记：青铜圆底上的浅叶，与顶栏/左栏、og 卡共用同一路径。
+       青铜是两套主题共同的身份色（暗色黄铜 / 浅色压深一档）。
        ⚠️ 这里的渐变只给浏览器看 —— ImageMagick 解析 SVG 渐变会渲成黑块，
        所以 .ico / apple-touch-icon 不从这个文件栅格化，改由
        scripts/make-og.sh 用 IM 自己画的渐变圆盘导出。 -->
   <defs>
     <linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0" stop-color="#f0937f"/>
-      <stop offset="1" stop-color="#d9614f"/>
+      <stop offset="0" stop-color="#a9873f"/>
+      <stop offset="1" stop-color="#6f5622"/>
     </linearGradient>
   </defs>
   <circle cx="12" cy="12" r="12" fill="url(#g)"/>
-  <path transform="translate(12 12.4) scale(0.72) translate(-12 -13.4)" fill="#fffaf3"
+  <path transform="translate(12 12.4) scale(0.72) translate(-12 -13.4)" fill="#f7f8f4"
     d="M4.2 20.2c-.5-7.8 4.6-13.3 15.6-13.6.5 8.9-4.4 13.6-12.4 13.6h-2c1.9-3.4 4.6-5.8 8.2-7.4-4.1 1.1-7.2 3.6-9.4 7.4Z"/>
 </svg>

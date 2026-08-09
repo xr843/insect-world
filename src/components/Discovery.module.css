@@ -1,12 +1,14 @@
 /**
- * 讲解弹窗 —— 对应参考站的 "Guided discovery" 模态。
- * 四个变体（讲解 / 动态演示 / 小测 / 栖境）共用同一个外壳，
+ * 讲解弹窗 —— 四个变体（讲解 / 动态演示 / 小测 / 栖境）共用同一个外壳，
  * 只换图标、眉标与内容区。
+ *
+ * 交互位置对应参考站的 "Guided discovery"，但那边四个变体是同一段静态文字、
+ * 点选项无任何反馈；这里每一步都会把 3D 镜头移到对应部位，小测真能判对错。
  */
 
-/* 遮罩与卡片的数值取自参考站实测：
-   backdrop rgba(52,39,30,.24) + blur(8px)；卡片 451px 宽、圆角 26、内边距 32、
-   阴影 0 30px 90px rgba(63,42,28,.24)。 */
+/* 尺寸与遮罩取本项目自己的一套：宽 440、圆角 18（贴近全站 --radius 的收紧语言）、
+   内边距 30、冷色遮罩。早期这几个数是照着参考站实测抄来的（451/26/32 与暖色遮罩），
+   随仓库转公开一并换掉 —— 借来的数值不该出现在一个要署自己名的仓库里。 */
 .backdrop {
   position: fixed;
   inset: 0;
@@ -14,28 +16,28 @@
   display: grid;
   place-items: center;
   padding: 32px 20px;
-  background: rgba(52, 39, 30, 0.24);
+  background: rgba(24, 28, 26, 0.3);
   backdrop-filter: blur(8px);
   animation: fade-up 0.16s ease both;
 }
 
 .sheet {
   position: relative;
-  width: min(451px, 100%);
+  width: min(440px, 100%);
   max-height: 100%;
   overflow-y: auto;
-  padding: 32px;
-  border-radius: 26px;
+  padding: 30px;
+  border-radius: 18px;
   background: var(--paper-solid);
   border: 1px solid var(--line);
-  box-shadow: 0 30px 90px rgba(63, 42, 28, 0.24);
+  box-shadow: var(--shadow-lift);
   text-align: center;
   animation: pop-in 0.2s cubic-bezier(0.3, 1.2, 0.5, 1) both;
 }
 
 /* 小测因为有选项，需要更宽一点 */
 .sheet[data-wide='true'] {
-  width: min(486px, 100%);
+  width: min(472px, 100%);
 }
 
 .close {
@@ -73,8 +75,8 @@
 }
 
 :global([data-theme='light']) .badge {
-  background: radial-gradient(circle at 36% 30%, #f6dcd5, #f2ded6);
-  box-shadow: inset 0 1px 0 #ffffffa6;
+  background: radial-gradient(circle at 36% 30%, #e7ded4, #e0dccf);
+  box-shadow: inset 0 1px 0 #ffffffb0;
 }
 
 .kicker {
@@ -254,8 +256,8 @@
 
 /* 作答后：正确项标绿、选错的那项标红，其余淡出 */
 .option[data-state='correct'] {
-  border-color: #769d7480;
-  background: #769d741f;
+  border-color: var(--sage);
+  background: color-mix(in srgb, var(--sage) 12%, transparent);
 }
 
 .option[data-state='wrong'] {

@@ -157,7 +157,7 @@
 }
 
 :global([data-theme='light']) .compareStage {
-  background: radial-gradient(120% 90% at 50% 8%, #fffdfa 0%, #f0e6d8 100%);
+  background: radial-gradient(120% 90% at 50% 8%, #fbfcf8 0%, #dfe4d8 100%);
 }
 
 .compareBody {

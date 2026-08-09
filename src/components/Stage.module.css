@@ -26,7 +26,8 @@
   pointer-events: none;
 }
 
-/* 浅主题（v1 纸感）：从底部升起的巨大浅色圆台，模型停在弧顶上 */
+/* 浅主题「标本台」：从底部升起的档案衬板圆台，标本停在弧顶上。
+   （早期这里是复刻参考站的暖奶油圆台，随仓库转公开一并换成自研冷灰绿） */
 :global([data-theme='light']) .stage::before {
   inset: auto;
   left: 50%;
@@ -35,11 +36,11 @@
   aspect-ratio: 1;
   transform: translateX(-50%);
   border-radius: 50%;
-  background: radial-gradient(circle at 50% 22%, #efe4d6 0%, #e9dccb 46%, #e4d5c2 100%);
+  background: radial-gradient(circle at 50% 22%, #e4e8de 0%, #dbe0d3 46%, #d2d8c9 100%);
 }
 
 :global([data-theme='light']) .stage::after {
-  background: radial-gradient(120% 78% at 50% 12%, #fffdfa 0%, #fffdfa00 58%);
+  background: radial-gradient(120% 78% at 50% 12%, #fbfcf8 0%, #fbfcf800 58%);
 }
 
 .canvasWrap {
