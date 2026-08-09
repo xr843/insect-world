@@ -36,10 +36,12 @@ export default function App() {
   const [focusAnchor, setFocusAnchor] = useState<string | null>(null)
   const [orderFilter, setOrderFilter] = useState<Order | null>(null)
   const [notedOnly, setNotedOnly] = useState(false)
-  /** 双主题：暗=博物馆之夜（默认），浅=v1 纸感图鉴；选择持久化本机 */
+  /** 双主题：浅=纸感图鉴（默认），暗=博物馆之夜；选择持久化本机。
+      首帧前的 data-theme 由 public/theme-boot.js 先行设好（防闪变），
+      这里读同一份 localStorage 键接管后续切换。 */
   const [theme, setTheme] = useState<Theme>(() => {
     const saved = typeof localStorage !== 'undefined' ? localStorage.getItem('iw-theme') : null
-    return saved === 'light' ? 'light' : 'dark'
+    return saved === 'dark' ? 'dark' : 'light'
   })
 
   useEffect(() => {
