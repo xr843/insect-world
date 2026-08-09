@@ -224,8 +224,14 @@ describe('中华草蛉 buildLacewing', () => {
     // kit 默认稀疏翅脉"这类回归挡住，而不是只靠命名标记的有无取巧过关。
     // 本文件实际密度是 9 纵脉+40 横脉=49 条/单翅实例，四片共 196 条。
     const model = buildLacewing()
+    // 横脉已按翅合并成单 Mesh（draw-call 治理）：网格密度按**段数**算 ——
+    // 纵脉仍一根一 mesh，横脉段数记在合并 mesh 的 userData.crossCount
     const veins = collectNamed(model, 'vein')
-    expect(veins.length, `翅脉 mesh 数=${veins.length}`).toBeGreaterThanOrEqual(100)
+    const segments = veins.reduce(
+      (n, m) => n + ((m.userData.venationRole === 'cross' ? (m.userData.crossCount as number) : 1) ?? 1),
+      0,
+    )
+    expect(segments, `翅脉总段数=${segments}`).toBeGreaterThanOrEqual(100)
   })
 
   it('复眼材质 metalness > 0.5，证明是自建的金属感材质而非 kit.compoundEye() 写死的 0.1', () => {

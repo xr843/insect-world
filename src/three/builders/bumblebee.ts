@@ -18,6 +18,7 @@
  *   segmentedAbdomen 的默认膜位也用不上——腹部是自写双色分段）。
  */
 import * as THREE from 'three'
+import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js'
 import {
   antennaPair,
   chitin,
@@ -97,14 +98,33 @@ function bandedAbdomen(matYellow: THREE.Material, matBlack: THREE.Material): THR
 }
 
 /** 一根绒毛：细锥沿法线立起，长度带伪随机参差（可复现）。 */
-function hair(p: THREE.Vector3, n: THREE.Vector3, seed: number, baseLen: number, mat: THREE.Material): THREE.Mesh {
+/**
+ * 单根毛的几何，变换直接烘进顶点（position/quaternion 归零）——
+ * 这样同色的几百根能 mergeGeometries 成一个 Mesh。
+ * 曾经一根一 mesh：420 根毛 = 420 个 draw call，是本模型帧率的第一大头。
+ */
+function hairGeo(p: THREE.Vector3, n: THREE.Vector3, seed: number, baseLen: number): THREE.BufferGeometry {
   const jitter = Math.sin(seed * 12.9898) * 43758.5453
   const len = baseLen + 0.035 * (jitter - Math.floor(jitter))
-  const h = new THREE.Mesh(new THREE.ConeGeometry(0.008, len, 5), mat)
-  h.position.copy(p).addScaledVector(n, len * 0.42)
-  h.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), n)
-  h.name = 'bumblebee-fuzz'
-  return h
+  const geo = new THREE.ConeGeometry(0.008, len, 5)
+  const m = new THREE.Matrix4().makeRotationFromQuaternion(
+    new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0, 1, 0), n),
+  )
+  m.setPosition(p.clone().addScaledVector(n, len * 0.42))
+  geo.applyMatrix4(m)
+  return geo
+}
+
+/** 同材质毛束合并成单个 Mesh；name 维持 'bumblebee-fuzz'，段数记在 userData.hairCount */
+function mergedFuzz(geos: THREE.BufferGeometry[], mat: THREE.Material): THREE.Mesh | null {
+  if (geos.length === 0) return null
+  const merged = mergeGeometries(geos)
+  for (const g2 of geos) g2.dispose()
+  if (!merged) return null
+  const mesh = new THREE.Mesh(merged, mat)
+  mesh.name = 'bumblebee-fuzz'
+  mesh.userData.hairCount = geos.length
+  return mesh
 }
 
 /** 胸部绒毛：黄金角螺旋撒满上半球+体侧；x>collarX 的毛用黄色——领环的色界糊在毛里。 */
@@ -118,6 +138,7 @@ function thoraxFuzz(
 ): THREE.Group {
   const g = new THREE.Group()
   const golden = Math.PI * (3 - Math.sqrt(5))
+  const byMat: [THREE.BufferGeometry[], THREE.BufferGeometry[]] = [[], []]
   for (let i = 0; i < count; i++) {
     const yFrac = 1 - (i + 0.5) / count
     const ringR = Math.sqrt(Math.max(0, 1 - yFrac * yFrac))
@@ -127,8 +148,12 @@ function thoraxFuzz(
     const ny = yFrac
     const p = new THREE.Vector3(center.x + nx * radii.x, center.y + ny * radii.y, center.z + nz * radii.z)
     const n = new THREE.Vector3(nx / radii.x, ny / radii.y, nz / radii.z).normalize()
-    g.add(hair(p, n, i, 0.05, p.x > collarX ? yellowMat : blackMat))
+    byMat[p.x > collarX ? 0 : 1].push(hairGeo(p, n, i, 0.05))
   }
+  const yellow = mergedFuzz(byMat[0], yellowMat)
+  const black = mergedFuzz(byMat[1], blackMat)
+  if (yellow) g.add(yellow)
+  if (black) g.add(black)
   return g
 }
 
@@ -137,18 +162,23 @@ function abdomenFuzz(yellowMat: THREE.Material, blackMat: THREE.Material): THREE
   const g = new THREE.Group()
   const rings = 20
   const perRing = 9
+  const byMat: [THREE.BufferGeometry[], THREE.BufferGeometry[]] = [[], []]
   for (let k = 0; k < rings; k++) {
     const t = (k + 0.5) / rings
     const center = new THREE.Vector3().lerpVectors(ABD_FROM, ABD_TO, t)
     const r = abdRadius(t) * 0.98
-    const mat = bandIndex(t) % 2 === 0 ? yellowMat : blackMat
+    const yellowBand = bandIndex(t) % 2 === 0
     for (let j = 0; j < perRing; j++) {
       const phi = (j / (perRing - 1) - 0.5) * (Math.PI * 200) / 180
       const n = new THREE.Vector3(0, Math.cos(phi), Math.sin(phi)).normalize()
       const p = center.clone().addScaledVector(n, r)
-      g.add(hair(p, n, k * perRing + j + 977, 0.045, mat))
+      byMat[yellowBand ? 0 : 1].push(hairGeo(p, n, k * perRing + j + 977, 0.045))
     }
   }
+  const yellow = mergedFuzz(byMat[0], yellowMat)
+  const black = mergedFuzz(byMat[1], blackMat)
+  if (yellow) g.add(yellow)
+  if (black) g.add(black)
   return g
 }
 

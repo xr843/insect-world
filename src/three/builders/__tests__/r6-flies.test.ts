@@ -332,11 +332,17 @@ describe('螳蛉 buildMantidfly', () => {
     expect(spines, `腿节内缘刺 ${spines} 应 ≥ 8（左右各 5 枚）`).toBeGreaterThanOrEqual(8)
   })
 
-  it('招牌 b：脉翅目网状翅——venation 翅脉 mesh ≥ 80（与招牌 a 同框才是螳蛉）', () => {
-    const veins = countMeshByName(model.group, 'vein')
+  it('招牌 b：脉翅目网状翅——纵脉 + 横脉总段数 ≥ 80（与招牌 a 同框才是螳蛉）', () => {
+    // 横脉已按翅合并为单 Mesh（draw-call 治理），段数从 userData.crossCount 读
+    let veins = 0
+    model.group.traverse((o) => {
+      const m = o as THREE.Mesh
+      if (!m.isMesh || m.name !== 'vein') return
+      veins += m.userData.venationRole === 'cross' ? (m.userData.crossCount as number) : 1
+    })
     // eslint-disable-next-line no-console
-    console.log(`[mantidfly] vein meshes = ${veins}`)
-    expect(veins, `翅脉 mesh 数 ${veins} 应 ≥ 80（两对翅的纵脉扇 + 渐密横脉网）`).toBeGreaterThanOrEqual(80)
+    console.log(`[mantidfly] vein segments = ${veins}`)
+    expect(veins, `翅脉总段数 ${veins} 应 ≥ 80（两对翅的纵脉扇 + 渐密横脉网）`).toBeGreaterThanOrEqual(80)
   })
 
   it('三角面数在预算内（含四片网翅的翅脉）', () => {

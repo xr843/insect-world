@@ -274,11 +274,14 @@ describe('明亮熊蜂 buildBumblebee', () => {
   })
 
   it('招牌：绒毛 ∈ [300, 900] 根且至少黑黄两色（环带色界糊在毛里）；腹面材质真的开了 velvet', () => {
+    // 同色毛束已合并成单 Mesh（draw-call 治理），根数从 userData.hairCount 求和
     const hairs = findMeshesByName(model, 'bumblebee-fuzz')
+    const hairCount = hairs.reduce((n, m) => n + ((m.userData.hairCount as number) ?? 1), 0)
     // eslint-disable-next-line no-console
-    console.log(`[bumblebee] fuzz=${hairs.length}`)
-    expect(hairs.length, '绒毛要比蜜蜂的 170 根多得多').toBeGreaterThanOrEqual(300)
-    expect(hairs.length, '面数预算保护').toBeLessThanOrEqual(900)
+    console.log(`[bumblebee] fuzz meshes=${hairs.length} hairs=${hairCount}`)
+    expect(hairCount, '绒毛要比蜜蜂的 170 根多得多').toBeGreaterThanOrEqual(300)
+    expect(hairCount, '面数预算保护').toBeLessThanOrEqual(900)
+    expect(hairs.length, '合并后毛束 Mesh 应寥寥数个').toBeLessThanOrEqual(8)
     expect(distinctColors(hairs).size, '绒毛应有黑黄两色').toBeGreaterThanOrEqual(2)
 
     const segs = findMeshesByName(model, 'bumblebee-abdomen-segment')

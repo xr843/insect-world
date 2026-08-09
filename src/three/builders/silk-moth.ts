@@ -24,6 +24,7 @@
  *   成虫口器完全退化，不建喙。
  */
 import * as THREE from 'three'
+import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js'
 import {
   antennaPair,
   chitin,
@@ -48,6 +49,7 @@ import {
  */
 function thoraxFuzz(center: THREE.Vector3, radii: THREE.Vector3, count: number, material: THREE.Material): THREE.Group {
   const g = new THREE.Group()
+  const hairGeos: THREE.BufferGeometry[] = []
   const golden = Math.PI * (3 - Math.sqrt(5))
   for (let i = 0; i < count; i++) {
     const yFrac = 1 - (i + 0.5) / count
@@ -60,10 +62,22 @@ function thoraxFuzz(center: THREE.Vector3, radii: THREE.Vector3, count: number, 
     const n = new THREE.Vector3(nx / radii.x, ny / radii.y, nz / radii.z).normalize()
     const jitter = Math.sin(i * 12.9898) * 43758.5453
     const len = 0.024 + 0.016 * (jitter - Math.floor(jitter))
-    const hair = new THREE.Mesh(new THREE.ConeGeometry(0.0055, len, 5), material)
-    hair.position.copy(p).addScaledVector(n, len * 0.45)
-    hair.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), n)
-    g.add(hair)
+    // 变换烘进顶点，攒起来合并 —— 一根一 mesh 的毛曾把本模型推到 395 个 draw call
+    const geo = new THREE.ConeGeometry(0.0055, len, 5)
+    const m = new THREE.Matrix4().makeRotationFromQuaternion(
+      new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0, 1, 0), n),
+    )
+    m.setPosition(p.clone().addScaledVector(n, len * 0.45))
+    geo.applyMatrix4(m)
+    hairGeos.push(geo)
+  }
+  const merged = mergeGeometries(hairGeos)
+  for (const hg of hairGeos) hg.dispose()
+  if (merged) {
+    const mesh = new THREE.Mesh(merged, material)
+    mesh.name = 'thorax-fuzz'
+    mesh.userData.hairCount = hairGeos.length
+    g.add(mesh)
   }
   return g
 }

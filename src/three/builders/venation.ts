@@ -34,6 +34,7 @@
  *   其余参数非法时钳制到安全档。node 无 Canvas 与本模块无关（纯几何）。
  */
 import * as THREE from 'three'
+import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js'
 import { loft, type Section } from './kit'
 
 export interface VenationSpec {
@@ -281,6 +282,16 @@ export function venation(spec: VenationSpec): THREE.Group | null {
   }
 
   const rCross = Math.max(rUnit * 0.5, 1e-4)
+  /**
+   * 横脉合并成**单个 Mesh**（draw-call 治理）：
+   * 蜻蜓一只曾有 636 个 mesh，其中 ~500 个是一段一 mesh 的横脉——GPU 顶点数
+   * 毫无压力，压垮帧率的是每段一次的 draw call。loft 产出的几何本就在最终
+   * 坐标系（无 mesh 级变换），mergeGeometries 后三角面逐字节不变。
+   * 分桶/计数类断言改读 userData.crossMeta（构建时记录的每段中点与所属
+   * 纵脉对），与烘进几何的数据同源。
+   */
+  const crossGeos: THREE.BufferGeometry[] = []
+  const crossMeta: { x: number; pair: number }[] = []
   for (const plan of plans) {
     const a = paths[plan.pair]
     const b = paths[plan.pair + 1]
@@ -297,7 +308,7 @@ export function venation(spec: VenationSpec): THREE.Group | null {
       if (zA === null || zB === null) continue
       // 纵脉几乎贴在一起的区段（如豆娘翅柄的集束段）不搭桥，桥会退化成疙瘩
       if (Math.hypot(x2 - x, zB - zA) < rCross * 3) continue
-      const mesh = new THREE.Mesh(
+      crossGeos.push(
         loft(
           [
             { at: new THREE.Vector3(x, lift, zA), ry: rCross, rz: rCross },
@@ -305,11 +316,19 @@ export function venation(spec: VenationSpec): THREE.Group | null {
           ],
           CROSS_RADIAL,
         ),
-        spec.material,
       )
+      crossMeta.push({ x: (x + x2) / 2, pair: plan.pair })
+    }
+  }
+  if (crossGeos.length > 0) {
+    const merged = mergeGeometries(crossGeos)
+    for (const cg of crossGeos) cg.dispose()
+    if (merged) {
+      const mesh = new THREE.Mesh(merged, spec.material)
       mesh.name = name
       mesh.userData.venationRole = 'cross'
-      mesh.userData.pairIndex = plan.pair
+      mesh.userData.crossCount = crossMeta.length
+      mesh.userData.crossMeta = crossMeta
       g.add(mesh)
     }
   }

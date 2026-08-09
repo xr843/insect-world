@@ -142,17 +142,21 @@ describe('venation：退化输入返回 null 而不抛', () => {
 describe('venation：横脉从翅基到翅尖渐密（X 坐标分桶计数）', () => {
   it('前两条纵脉走廊内：翅尖半段的横脉数 > 翅基半段', () => {
     const group = venation({ length: 4, width: 1, longitudinal: 9, crossDensity: 22, material: mat() })!
-    const crosses = meshesByRole(group, 'cross')
-    expect(crosses.length, '横脉总数').toBeGreaterThan(20)
+    /**
+     * 横脉已合并为单个 Mesh（draw-call 治理）：每段的中点与所属纵脉对
+     * 记录在 userData.crossMeta —— 与烘进几何的坐标同一次计算产出，
+     * 分桶断言改读它（合并前这里逐 mesh 量 bbox 中心，语义等价）。
+     */
+    const crossMesh = meshesByRole(group, 'cross')[0]
+    expect(crossMesh, '合并后的横脉 Mesh 存在').toBeDefined()
+    const meta = crossMesh.userData.crossMeta as { x: number; pair: number }[]
+    expect(meta.length, '横脉总数').toBeGreaterThan(20)
+    expect(crossMesh.userData.crossCount, 'crossCount 与 meta 一致').toBe(meta.length)
 
     for (const pairIndex of [0, 1]) {
-      const own = crosses.filter((m) => m.userData.pairIndex === pairIndex)
+      const own = meta.filter((m) => m.pair === pairIndex)
       expect(own.length, `pair ${pairIndex} 横脉数`).toBeGreaterThanOrEqual(8)
-      const centers = own.map((m) => {
-        const c = new THREE.Vector3()
-        geoBox(m).getCenter(c)
-        return c.x
-      })
+      const centers = own.map((m) => m.x)
       const min = Math.min(...centers)
       const max = Math.max(...centers)
       const mid = (min + max) / 2
