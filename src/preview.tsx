@@ -149,8 +149,8 @@ function App() {
               borderRadius: 9,
               fontSize: 13,
               marginBottom: 2,
-              background: id === sid ? '#eb7c6b1f' : 'transparent',
-              color: id === sid ? '#c25a49' : 'var(--ink)',
+              background: id === sid ? '#b0402c1f' : 'transparent',
+              color: id === sid ? '#a43c29' : 'var(--ink)',
             }}
           >
             {name}
