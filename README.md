@@ -10,7 +10,7 @@
 
 **长期目标 60 种 / 14 目已达成**；物种史与打磨史见 [docs/roadmap.md](docs/roadmap.md) 与 [docs/polish-plan.md](docs/polish-plan.md)。
 
-![图鉴总览](docs/screenshots/05-gallery-24.jpg)
+![图鉴总览 —— 60 种 / 14 个目](docs/screenshots/05-gallery.jpg)
 
 界面与交互复刻自 [Anatomy Atelier](https://anatomy-livid.vercel.app/)：奶油纸背景、衬线标题、三栏工作台（图鉴列表 / 3D 展台 / 详情面板）、模型上的彩色标注点、底部扩展卡片。
 
