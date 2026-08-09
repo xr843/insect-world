@@ -16,6 +16,10 @@
 标本标签的印刷墨色），一键切换**「博物馆之夜」**（展厅黑做底、黄铜做骨，标本靠
 聚光灯锥与光池从暗场里托出——金属鞘翅、薄膜虹彩、萤火虫的尾灯都在深底上起飞）。
 
+| 浅色「标本台」（默认） | 暗色「博物馆之夜」 |
+| --- | --- |
+| ![标本台](docs/screenshots/02-beetle-closeup.jpg) | ![博物馆之夜](docs/screenshots/03-dark-stage.jpg) |
+
 > ⚠️ **关于讲解文本**：60 种昆虫的总述、关键数据、生活史与冷知识**由 AI 撰写，
 > 尚未经昆虫学文献或专业人士逐条核校**。当作「看着好玩、顺便认个形态」的读物，
 > 别当作可引用的资料；发现错处欢迎开 issue。
@@ -26,9 +30,16 @@
 npm install
 npm run dev          # 主站      http://localhost:5178
                      # 模型调试台 http://localhost:5178/preview.html
-npm test             # 3004 个测试
+npm test             # 3116 个测试
 npm run build        # tsc --noEmit + vite build
 npm run deploy       # 构建并发布到 Cloudflare Pages（需先 npx wrangler login）
+```
+
+两个出图脚本（都不进依赖，用到时临时装）：
+
+```bash
+bash scripts/make-og.sh    # 重生成分享卡 public/og.png 与图标三件套（需 ImageMagick）
+node scripts/shots.mjs     # 重拍 README 截图（无头 Chromium，用法见文件头注释）
 ```
 
 部署在 Cloudflare Pages，静态托管，无后端。`public/_headers` 配了缓存策略：
@@ -41,6 +52,10 @@ npm run deploy       # 构建并发布到 Cloudflare Pages（需先 npx wrangler
 左侧工具条：**聚焦**把镜头凑到当前标注的部位上，**剖切**沿矢状面切开，**分层**让外骨骼半透明，**对比**在展台底部浮出对照条。
 
 右栏的**读它的图鉴详解**是分步讲解，每翻一步镜头会自己移到讲到的部位上；**小测**是真能作答的，判对错、给解释、统计得分。
+
+![分步讲解 —— 讲到哪一步，镜头就移到哪个部位](docs/screenshots/06-lesson.jpg)
+
+![对比条 —— 展台底部的内联对照](docs/screenshots/07-compare.jpg)
 
 ## 一个必须先讲清楚的决定：模型是代码生成的
 
@@ -152,6 +167,13 @@ src/
 **`legPair` 曾经不是镜像。** 原写法是「把 `base.z` 取负，再翻 `scale.z`」。但 `leg()` 内部算出的腿节方向 z 分量恒为正、不随 `base.z` 变号，于是左腿的基节被翻回右侧，整条腿从右侧根部斜穿过身体中线。三个物种作者独立报告了这个现象。几何完全合法、没有 NaN，只是长错了地方 —— 这类问题只能靠专门的对称性断言抓住（`__tests__/mirror.test.ts`）。
 
 **`wing()` 的 `spread` 语义与直觉相反，且文档自己也错过一回。** 实测是 `180` = 向本侧完全展开、`90` = 沿体轴向前、`0` = 横穿身体伸向**对侧**。早期文档写成「0 = 侧展」，而当时的测试只比对了展开跨度 —— 0 与 180 的跨度一模一样、只是方向相反，于是错误文档被绿灯测试背书，先后坑了两位物种作者。现在 `mirror.test.ts` 连方向一起钉住了，别顺手「修正」实现。
+
+**3D 只在浏览器窗口「可见」时才会渲染，截图因此一度做不出来。** 隐藏标签页没有
+`requestAnimationFrame`，r3f 的 Canvas 量不到容器尺寸就永远不挂载子树——症状是
+canvas 在、无报错、加载转圈永不消失，而 DOM 外壳照常渲染，于是**截图工具拍到的
+是一张「正在生成…」**。判据一行：`document.visibilityState !== 'visible'` 或 600ms 内
+rAF 计数为 0，就别再排查渲染代码了。出图改走无头 Chromium（`scripts/shots.mjs`），
+那里 visibilityState 恒为 visible，顺带让 README 截图变成可复现的一条命令。
 
 **`elytra()` 的清漆层调太高会整片过曝。** 原值 0.85 配 Environment 的面光源，正对光的角度会把固有色和隆起的体积感一起吃掉 —— 深栗褐的独角仙从正面看像两个白球。压到 0.55 才对。
 
