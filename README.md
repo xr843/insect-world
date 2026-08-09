@@ -12,7 +12,11 @@
 
 ![图鉴总览 —— 60 种 / 14 个目](docs/screenshots/05-gallery.jpg)
 
-界面与交互复刻自 [Anatomy Atelier](https://anatomy-livid.vercel.app/)：奶油纸背景、衬线标题、三栏工作台（图鉴列表 / 3D 展台 / 详情面板）、模型上的彩色标注点、底部扩展卡片。
+视觉语言是自研的**「博物馆之夜」**（v2，2026-08-09 起）：展厅黑做底、黄铜做骨、
+标本牌米白做字，标本靠聚光灯锥与光池从暗场里托出——金属鞘翅、薄膜虹彩、萤火虫的
+尾灯都在深底上起飞。三栏工作台的信息架构（图鉴列表 / 3D 展台 / 详情面板 + 彩色标注点 +
+底部扩展卡片）沿自早期参考的 [Anatomy Atelier](https://anatomy-livid.vercel.app/)，
+视觉皮肤已全部替换。
 
 ## 跑起来
 
@@ -66,7 +70,10 @@ npm run deploy       # 构建并发布到 Cloudflare Pages（需先 npx wrangler
 | Quiz | 三个选项，点了没有任何反馈 | 真能作答，判对错、给解释、统计得分 |
 | 讲解弹窗 | 四个变体共用一段静态文字 | 分 3~4 步，每步把 3D 镜头移到对应部位 |
 
-视觉与版式是照着参考站复刻的 —— 设计 token 是从它页面上实测取的（`--canvas #f7f0e7`、`--coral #eb7c6b`、Cormorant Garamond + DM Sans，讲解弹窗的遮罩 `rgba(52,39,30,.24) + blur(8px)`、卡片 451px / 圆角 26 / 内边距 32）。交互上凡是它做成装饰的，这里都补成了真功能。
+v1 的视觉曾按参考站复刻（奶油纸底 + Cormorant Garamond，token 从它页面实测取值）；
+v2 已整体换成自研的「博物馆之夜」系统（`--canvas #131110` 展厅黑、`--brass #b08d57` 黄铜、
+Playfair Display + Noto Serif SC，聚光灯池展台，见 `src/styles/global.css` 头注）。
+交互上凡是参考站做成装饰的，这里都补成了真功能——这一条从 v1 起就是本项目的立身之本。
 
 ## 结构
 
@@ -201,6 +208,6 @@ npm test
 
 ## 致谢与许可
 
-界面与交互设计复刻自 [Anatomy Atelier](https://anatomy-livid.vercel.app/)，配色、字体与版式均取自该站。本仓库的 3D 模型、图鉴文案、讲解测验与全部代码为原创。
+三栏工作台 + 标注点 + 引导讲解的交互结构学习自 [Anatomy Atelier](https://anatomy-livid.vercel.app/)（v1 曾复刻其视觉，v2 起视觉系统已全部自研替换）。本仓库的 3D 模型、图鉴文案、讲解测验、视觉系统与全部代码为原创。
 
 代码以 MIT 许可发布，见 [LICENSE](LICENSE)。
