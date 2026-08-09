@@ -301,8 +301,7 @@ function Framing({
   const goal = useRef<{ target: THREE.Vector3; dist: number } | null>(null)
 
   useEffect(() => {
-    const fov = ((camera as THREE.PerspectiveCamera).fov * Math.PI) / 180
-    const dist = (radius / Math.sin(fov / 2)) * 1.12
+    const dist = fitDistance(camera as THREE.PerspectiveCamera, radius)
     target.current.copy(home).multiplyScalar(dist)
     camera.position.copy(target.current)
     camera.near = dist * 0.02
@@ -351,10 +350,9 @@ function Framing({
       c.minDistance = radius * 0.18
     } else {
       // 退出聚焦要回到与初次取景相同的距离，否则镜头会一直停在偏近的位置
-      const fov = ((camera as THREE.PerspectiveCamera).fov * Math.PI) / 180
       goal.current = {
         target: new THREE.Vector3(0, 0, 0),
-        dist: (radius / Math.sin(fov / 2)) * 1.12,
+        dist: fitDistance(camera as THREE.PerspectiveCamera, radius),
       }
       c.minDistance = radius * 1.15
     }
@@ -430,6 +428,21 @@ function blobShadowTexture(dark: boolean): THREE.CanvasTexture | null {
   tex.colorSpace = THREE.SRGBColorSpace
   _blobCache[key] = tex
   return tex
+}
+
+/**
+ * 把半径为 r 的包围球恰好装进画面所需的相机距离。
+ *
+ * ⚠️ 不能只按垂直 fov 算。竖屏（aspect < 1）时水平视场角比垂直的**窄**，
+ * 宽物体会从左右两侧出画 —— 手机上实测犀金龟的腹部被裁掉一截
+ * （2026-08-09 用无头浏览器按 iPhone 13 视口验出来的，桌面宽屏永远不显形）。
+ * 取水平与垂直里更紧的那个来定距离。
+ */
+function fitDistance(camera: THREE.PerspectiveCamera, r: number, margin = 1.12): number {
+  const vFov = (camera.fov * Math.PI) / 180
+  const aspect = camera.aspect || 1
+  const hFov = 2 * Math.atan(Math.tan(vFov / 2) * aspect)
+  return (r / Math.sin(Math.min(vFov, hFov) / 2)) * margin
 }
 
 function BlobShadow({ floorY, radius, dark }: { floorY: number; radius: number; dark: boolean }) {
