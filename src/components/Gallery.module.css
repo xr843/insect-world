@@ -34,11 +34,10 @@
 }
 
 .sub {
-  font-family: var(--serif);
-  font-style: italic;
-  font-size: 14px;
-  color: var(--lavender);
-  margin-top: 3px;
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  color: var(--muted);
+  margin-top: 5px;
 }
 
 .close {
@@ -56,7 +55,7 @@
 }
 
 .close:hover {
-  background: #755b4614;
+  background: #b08d5714;
   color: var(--ink);
 }
 
@@ -86,7 +85,7 @@
   padding: 12px;
   border-radius: 15px;
   border: 1px solid var(--line);
-  background: #fffbf466;
+  background: #ffffff08;
   text-align: left;
   transition: transform 0.16s ease, border-color 0.16s ease, background 0.16s ease;
 }
@@ -98,8 +97,8 @@
 }
 
 .tile[data-active='true'] {
-  border-color: #eb7c6b66;
-  background: #eb7c6b12;
+  border-color: #b08d5766;
+  background: #b08d5714;
 }
 
 .tileThumb {
@@ -148,13 +147,13 @@
   border: 1px solid var(--line);
   border-radius: 16px;
   overflow: hidden;
-  background: #fffdf9;
+  background: #191612;
 }
 
 .compareStage {
   height: 240px;
   position: relative;
-  background: radial-gradient(120% 90% at 50% 8%, #fffdfa 0%, #f0e6d8 100%);
+  background: radial-gradient(120% 90% at 50% 8%, #2a241b 0%, #171310 100%);
 }
 
 .compareBody {
@@ -210,6 +209,6 @@
 
 .pick[data-active='true'] {
   background: var(--ink);
-  color: #fffbf4;
+  color: #1a1510;
   border-color: var(--ink);
 }

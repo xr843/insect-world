@@ -9,7 +9,6 @@ import {
   IconLibrary,
   IconNote,
   IconSearch,
-  IconSparkle,
 } from './icons'
 import s from './TopBar.module.css'
 
@@ -122,8 +121,8 @@ export function TopBar({
     <header className={s.bar}>
       <div className={s.brand}>
         <span className={s.wordmark}>昆虫世界</span>
-        <IconSparkle size={13} className={s.spark} />
-        <span className={s.tagline}>像博物学家一样观察</span>
+        <span className={s.hall}>标本馆</span>
+        <span className={s.tagline}>INSECTA · 十四目 · 六十标本</span>
       </div>
 
       <nav className={s.nav} ref={navRef}>

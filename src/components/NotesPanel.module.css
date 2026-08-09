@@ -35,11 +35,10 @@
 }
 
 .sub {
-  font-family: var(--serif);
-  font-style: italic;
-  font-size: 14px;
-  color: var(--lavender);
-  margin-top: 2px;
+  font-size: 10.5px;
+  letter-spacing: 0.18em;
+  color: var(--brass);
+  margin-top: 4px;
 }
 
 .close {
@@ -52,7 +51,7 @@
 }
 
 .close:hover {
-  background: #7d651d14;
+  background: #b08d5714;
 }
 
 /* ---------------------------------------------------------------- 编辑区 */
@@ -61,7 +60,7 @@
   border: 1px solid var(--line);
   border-radius: 14px;
   padding: 13px 14px 11px;
-  background: #fffbf46b;
+  background: #ffffff08;
 }
 
 .editorHead {
@@ -126,7 +125,7 @@
 }
 
 .save:hover {
-  background: #7d651d14;
+  background: #b08d5714;
 }
 
 /* ---------------------------------------------------------------- 列表 */
@@ -159,11 +158,11 @@
 }
 
 .row:hover {
-  background: #7d651d0f;
+  background: #b08d5712;
 }
 
 .row[data-current='true'] {
-  background: #eb7c6b14;
+  background: #b08d5721;
 }
 
 .rowBody {

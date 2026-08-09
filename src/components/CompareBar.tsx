@@ -24,7 +24,7 @@ export function CompareBar({
       <div className={s.side}>
         <span
           className={s.thumb}
-          style={{ background: `radial-gradient(circle at 34% 26%, ${left.accent}33, #fffdf9 100%)` }}
+          style={{ background: `radial-gradient(circle at 34% 26%, ${left.accent}33, #241f18 100%)` }}
         >
           <InsectGlyph id={left.id} size={22} color={left.accent} />
         </span>
@@ -40,7 +40,7 @@ export function CompareBar({
       <div className={s.side}>
         <span
           className={s.thumb}
-          style={{ background: `radial-gradient(circle at 34% 26%, ${right.accent}33, #fffdf9 100%)` }}
+          style={{ background: `radial-gradient(circle at 34% 26%, ${right.accent}33, #241f18 100%)` }}
         >
           <InsectGlyph id={right.id} size={22} color={right.accent} />
         </span>

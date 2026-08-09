@@ -37,21 +37,20 @@
   display: grid;
   place-items: center;
   border: 1px solid var(--line);
-  box-shadow: var(--shadow-inset), 0 6px 18px #573e2b12;
+  box-shadow: var(--shadow-inset), 0 6px 18px #00000040;
 }
 
 .epithet {
   font-family: var(--serif);
-  font-style: italic;
-  font-size: 16px;
-  color: var(--lavender);
+  font-size: 15px;
+  color: var(--brass-bright);
   margin-top: 6px;
 }
 
 .summary {
   font-size: 13px;
   line-height: 1.72;
-  color: #4a423c;
+  color: #c8bda9;
   margin-top: 14px;
 }
 
@@ -97,7 +96,7 @@
   gap: 9px;
   padding: 11px 13px;
   border-radius: 13px;
-  background: #755b460d;
+  background: #b08d570f;
   margin-top: 12px;
 }
 
@@ -139,14 +138,14 @@
   align-items: center;
   padding: 5px 10px;
   border-radius: 999px;
-  background: #fffbf4;
+  background: #241f18;
   border: 1px solid var(--line);
   font-size: 10.5px;
-  color: #5c534c;
+  color: #b3a48c;
 }
 
 .cycleArrow {
-  color: #bcb1a6;
+  color: #6d6355;
   font-size: 10px;
 }
 
@@ -165,17 +164,17 @@
   justify-content: space-between;
   padding: 13px 17px;
   border-radius: 13px;
-  background: linear-gradient(180deg, #ef8674, #e26e5c);
-  color: #fffaf5;
+  background: linear-gradient(180deg, #d9b980, #a5824c);
+  color: #1a1510;
   font-size: 13px;
-  font-weight: 500;
-  box-shadow: 0 8px 20px #e26e5c33;
+  font-weight: 600;
+  box-shadow: 0 8px 20px #00000059;
   transition: transform 0.16s ease, box-shadow 0.16s ease;
 }
 
 .primary:hover {
   transform: translateY(-1px);
-  box-shadow: 0 12px 26px #e26e5c42;
+  box-shadow: 0 12px 26px #00000073;
 }
 
 .pairRow {
@@ -192,7 +191,7 @@
   padding: 11px 12px;
   border-radius: 12px;
   border: 1px solid var(--line);
-  background: #fffbf47a;
+  background: #ffffff08;
   font-size: 12px;
   color: var(--ink);
   transition: background 0.16s ease, border-color 0.16s ease;
@@ -236,7 +235,7 @@
 }
 
 .metaValue {
-  color: #5c534c;
+  color: #b3a48c;
   text-align: right;
   line-height: 1.5;
 }

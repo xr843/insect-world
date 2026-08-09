@@ -1,12 +1,8 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
-  <!-- 站点标记：珊瑚圆底上的叶片，与顶栏/左栏共用同一路径 -->
-  <defs>
-    <linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0" stop-color="#f0937f"/>
-      <stop offset="1" stop-color="#d9614f"/>
-    </linearGradient>
-  </defs>
-  <circle cx="12" cy="12" r="12" fill="url(#g)"/>
-  <path transform="translate(12 12.4) scale(0.72) translate(-12 -13.4)" fill="#fffaf3"
+  <!-- 站点标记：黄铜圆底上的墨色叶片，与顶栏/左栏共用同一路径。
+       纯色而非渐变：ImageMagick 栅格化 ico/apple-touch-icon 时渐变会
+       解析失败渲染成黑底，48px 下渐变本也不可辨。 -->
+  <circle cx="12" cy="12" r="12" fill="#c09a5f"/>
+  <path transform="translate(12 12.4) scale(0.72) translate(-12 -13.4)" fill="#1c1712"
     d="M4.2 20.2c-.5-7.8 4.6-13.3 15.6-13.6.5 8.9-4.4 13.6-12.4 13.6h-2c1.9-3.4 4.6-5.8 8.2-7.4-4.1 1.1-7.2 3.6-9.4 7.4Z"/>
 </svg>

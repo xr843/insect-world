@@ -1,36 +1,44 @@
 /**
- * 设计系统 —— 纸感博物图鉴
+ * 设计系统 —— 博物馆之夜（暗色展柜）
  *
- * 色板与排版规格取自参考站 Anatomy Atelier：奶油纸背景 + 衬线标题 + 三色标注体系。
- * 昆虫主题在原有 coral/lavender/sage 之外增补 amber（琥珀），用于第四类标注点。
+ * 自研视觉语言（v2，2026-08-09 起），替换早期的纸感系统：
+ * 展厅黑做底、黄铜做骨、标本牌米白做字。3D 标本靠暗场衬托，
+ * 金属色 / 虹彩 / 萤光在深底上起飞 —— 灯光在展柜里，不在纸上。
+ *
+ * 语义速查（沿用旧变量名避免全站改名，含义已换）：
+ *   --canvas = 展厅底色   --paper = 展柜面板   --line = 黄铜发丝线
+ *   --brass  = 身份色（黄铜），用于展签 / 选中态 / 焦点环
+ * 四色标注体系（coral/lavender/sage/amber）保留分类语义，
+ * 数值按深底重调：深底要的是「亮而不荧」，全部提亮降饱和。
  */
 
 :root {
-  --ink: #2f2a27;
-  --muted: #71685f; /* 原 #8d847c 对纸底只有 3.3:1，11~13px 的辅助文字读不清；4.95:1 过 AA */
-  --canvas: #f7f0e7;
-  --paper: #fffbf4d1;
-  --paper-solid: #fffbf4;
-  --line: #755b462e;
-  --line-strong: #755b4647;
+  --ink: #eae2d2;
+  --muted: #a3937d; /* 深底上的次级文字，对 --paper 约 6.9:1，过 AA */
+  --canvas: #131110;
+  --paper: #1d1915f0;
+  --paper-solid: #1d1915;
+  --line: #b08d5726;
+  --line-strong: #b08d574d;
 
-  --coral: #eb7c6b;
-  --lavender: #7455b5; /* 原 #8d6bcc 3.7:1；斜体小字号尤其吃亏，压到 5.1:1 */
-  --sage: #769d74;
-  --amber: #c8944a;
+  --brass: #b08d57;
+  --brass-bright: #d4b273;
 
-  --shadow: 0 18px 48px #573e2b0f;
-  --shadow-lift: 0 22px 56px #573e2b1c;
-  --shadow-inset: inset 0 1px 0 #ffffff8c;
+  --coral: #e58a74;
+  --lavender: #a996dd; /* 亮紫：旧值为浅底压深过 AA，深底反过来要提亮 */
+  --sage: #93b389;
+  --amber: #d6a95f;
 
-  --serif: 'Cormorant Garamond', 'Noto Serif SC', Georgia, serif;
-  --sans: 'DM Sans', 'Noto Sans SC', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-  /* 手写体只有拉丁字形，中文会回退。回退项必须挑小字号下笔画清楚的黑体，
-     楷体一类在 12px 上会糊成一片。 */
-  --hand: 'Comic Sans MS', 'Segoe Print', 'Microsoft YaHei', 'PingFang SC', 'Noto Sans SC', cursive;
+  --shadow: 0 18px 48px #00000066;
+  --shadow-lift: 0 24px 60px #00000091;
+  --shadow-inset: inset 0 1px 0 #ffffff0d;
 
-  --radius: 18px;
-  --radius-sm: 12px;
+  --serif: 'Playfair Display', 'Noto Serif SC', Georgia, 'Songti SC', serif;
+  --sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB',
+    'Microsoft YaHei', 'Noto Sans SC', sans-serif;
+
+  --radius: 10px;
+  --radius-sm: 7px;
   --gap: 16px;
 }
 
@@ -48,10 +56,10 @@ body {
   font-family: var(--sans);
   color: var(--ink);
   background: var(--canvas);
-  /* 纸张的细微不匀：两层极淡的径向渐变，避免大面积纯色显得廉价 */
+  /* 展厅的空气感：顶部一束极暗的暖光晕，避免大面积纯黑显得死 */
   background-image:
-    radial-gradient(1200px 680px at 18% -8%, #fffdf9 0%, #fffdf900 62%),
-    radial-gradient(900px 560px at 92% 6%, #f5ece0 0%, #f5ece000 58%);
+    radial-gradient(1100px 620px at 50% -12%, #232019 0%, #23201900 62%),
+    radial-gradient(860px 540px at 90% 4%, #1a1613 0%, #1a161300 55%);
   background-attachment: fixed;
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
@@ -78,39 +86,37 @@ button {
 /**
  * 键盘焦点环。
  *
- * 鼠标点击留下的 :focus 光圈与这套暖纸色格格不入，全部压掉；
- * 但键盘使用者只有靠 :focus-visible 才知道自己在哪 —— 审查时实测
- * 全站没有任何 focus-visible 规则，Tab 过去毫无反应。两条一起给：
- * 鼠标无光圈，键盘有清晰的珊瑚色环。
+ * 鼠标点击的 :focus 光圈全部压掉；键盘使用者靠 :focus-visible 定位 ——
+ * 深底上用亮黄铜，比描边色更醒目。
  */
 :focus {
   outline: none;
 }
 
 :focus-visible {
-  outline: 2px solid #c25a49;
+  outline: 2px solid var(--brass-bright);
   outline-offset: 2px;
 }
 
 ::selection {
-  background: #eb7c6b33;
+  background: #b08d5740;
 }
 
-/* 统一的滚动条，纸感页面里不能出现系统深色滚动条 */
+/* 统一的滚动条：深色展厅里用黄铜细条 */
 * {
   scrollbar-width: thin;
-  scrollbar-color: #755b4638 transparent;
+  scrollbar-color: #b08d5738 transparent;
 }
 *::-webkit-scrollbar {
   width: 7px;
   height: 7px;
 }
 *::-webkit-scrollbar-thumb {
-  background: #755b4638;
+  background: #b08d5738;
   border-radius: 99px;
 }
 *::-webkit-scrollbar-thumb:hover {
-  background: #755b4666;
+  background: #b08d5766;
 }
 *::-webkit-scrollbar-track {
   background: transparent;
@@ -118,21 +124,22 @@ button {
 
 /* ---------------------------------------------------------------- 通用卡片 */
 
+/* 展柜面板：深底 + 黄铜发丝边 + 顶缘一线内高光（玻璃展柜的上沿反光） */
 .card {
   background: var(--paper);
   border: 1px solid var(--line);
   border-radius: var(--radius);
-  box-shadow: var(--shadow);
+  box-shadow: var(--shadow), var(--shadow-inset);
   backdrop-filter: blur(6px);
 }
 
-/* 小节标题：字距拉开的大写标签，图鉴里到处在用 */
+/* 展签：字距拉开的大写小标签，黄铜色 —— 全站的「馆内标识系统」 */
 .eyebrow {
   font-size: 10.5px;
   font-weight: 500;
-  letter-spacing: 0.16em;
+  letter-spacing: 0.18em;
   text-transform: uppercase;
-  color: var(--muted);
+  color: var(--brass);
 }
 
 /* ---------------------------------------------------------------- 页面骨架 */
@@ -211,7 +218,7 @@ button {
 .rail-float button {
   width: 34px;
   height: 34px;
-  border-radius: 11px;
+  border-radius: var(--radius-sm);
   display: grid;
   place-items: center;
   background: var(--paper);
@@ -219,12 +226,12 @@ button {
   box-shadow: var(--shadow);
   color: var(--muted);
   backdrop-filter: blur(6px);
-  transition: color 0.16s ease, transform 0.16s ease, background 0.16s ease;
+  transition: color 0.16s ease, transform 0.16s ease, border-color 0.16s ease;
 }
 
 .rail-float button:hover {
-  color: var(--coral);
-  background: var(--paper-solid);
+  color: var(--brass-bright);
+  border-color: var(--line-strong);
   transform: translateY(-1px);
 }
 
@@ -274,7 +281,8 @@ button {
 }
 
 /* ---------------------------------------------------------------- 3D 热点
-   由 drei 的 <Html> 渲染到 canvas 上层，故用全局类名而非 CSS Module。 */
+   由 drei 的 <Html> 渲染到 canvas 上层，故用全局类名而非 CSS Module。
+   圆点=大头针：亮针头压在被灯照亮的标本上，深浅底都读得出。 */
 
 .hotspot {
   position: relative;
@@ -288,8 +296,8 @@ button {
   height: 13px;
   border-radius: 999px;
   background: var(--tone);
-  border: 2.5px solid #fffdf9;
-  box-shadow: 0 2px 7px #3a2a1c40;
+  border: 2.5px solid #f2e9d8;
+  box-shadow: 0 2px 8px #000000a6;
   pointer-events: auto;
   transition: transform 0.18s cubic-bezier(0.3, 1.5, 0.5, 1);
 }
@@ -327,10 +335,10 @@ button {
   top: -9px;
   width: 172px;
   padding: 10px 13px 11px;
-  border-radius: 12px;
-  background: #fffdf8f2;
-  border: 1px solid var(--line);
-  box-shadow: 0 12px 30px #573e2b24;
+  border-radius: var(--radius-sm);
+  background: #211c16f5;
+  border: 1px solid var(--line-strong);
+  box-shadow: 0 12px 30px #00000080;
   backdrop-filter: blur(8px);
   pointer-events: auto;
   animation: fade-up 0.18s ease both;

@@ -77,7 +77,7 @@ export function Gallery({
                   <span
                     className={s.tileThumb}
                     style={{
-                      background: `radial-gradient(circle at 34% 26%, ${i.accent}33, ${i.accent}12 60%, #fffdf9 100%)`,
+                      background: `radial-gradient(circle at 34% 26%, ${i.accent}33, ${i.accent}12 60%, #241f18 100%)`,
                     }}
                   >
                     <InsectGlyph id={i.id} size={30} color={i.accent} />

@@ -20,7 +20,7 @@ import {
 } from './icons'
 import s from './BottomCards.module.css'
 
-const TONE = ['#eb7c6b', '#8d6bcc', '#769d74', '#c8944a'] as const
+const TONE = ['#e58a74', '#a996dd', '#93b389', '#d6a95f'] as const
 
 /** 从「体长 30–55 毫米」这类描述里取出毫米数，取上限值 */
 function parseLengthMm(text: string): number | null {
@@ -95,8 +95,8 @@ function HabitatFigure({ color, order }: { color: string; order: string }) {
       <svg viewBox="0 0 220 108" width="100%" height="100%" preserveAspectRatio="xMidYMid slice">
         <defs>
           <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor="#fffdf8" />
-            <stop offset="100%" stopColor="#f2e8da" />
+            <stop offset="0%" stopColor="#34302a" />
+            <stop offset="100%" stopColor="#1e1a15" />
           </linearGradient>
         </defs>
         <rect width="220" height="108" fill="url(#sky)" />
@@ -217,7 +217,7 @@ export function BottomCards({
                       className={s.barFill}
                       style={{
                         width: `${b.pct}%`,
-                        background: b.insect.id === insect.id ? insect.accent : '#755b4633',
+                        background: b.insect.id === insect.id ? insect.accent : '#b08d5733',
                       }}
                     />
                   </span>

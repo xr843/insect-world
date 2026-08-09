@@ -9,7 +9,6 @@ import {
   IconReset,
   IconRotate,
   IconSection,
-  IconSparkle,
   IconZoom,
 } from './icons'
 import s from './Stage.module.css'
@@ -40,7 +39,6 @@ export function Stage({
     () => !window.matchMedia('(prefers-reduced-motion: reduce)').matches,
   )
   const [openHotspot, setOpenHotspot] = useState<string | null>(null)
-  const [noteVisible, setNoteVisible] = useState(true)
   const [zoomNonce, setZoomNonce] = useState(0)
   const [resetNonce, setResetNonce] = useState(0)
   const [status, setStatus] = useState<{ loading: boolean; error: string | null }>({
@@ -172,42 +170,18 @@ export function Stage({
         </button>
       </div>
 
-      {noteVisible && (
-        <div className={s.note}>
-          <button className={s.noteClose} onClick={() => setNoteVisible(false)} aria-label="收起提示">
-            ×
-          </button>
-          <div className={s.noteHead}>
-            <IconSparkle size={12} />
-            观察提示
-          </div>
-          <div className={s.noteBody}>
-            <span>拖动可以转动虫体</span>
-            <span>滚轮拉近细看</span>
-            <span>点彩色圆点认识部位</span>
-          </div>
-        </div>
-      )}
-
       <div className={s.caption}>
-        <div className={s.captionEyebrow}>3D 标本 · 点击圆点探索</div>
         <div className={s.captionLatin}>{insect.latin}</div>
+        <div className={s.captionHint}>拖动旋转 · 滚轮细看 · 圆点＝观察点</div>
       </div>
 
-      {/* 对比条占住展台底部，此时让自动旋转开关让位，避免两块浮层叠在一起 */}
-      {compareWith ? (
+      {compareWith && (
         <CompareBar
           left={insect}
           right={compareWith}
           onCycle={onCompareCycle}
           onClose={onCompareToggle}
         />
-      ) : (
-        <button className={s.autoRotate} onClick={() => setSpin((v) => !v)}>
-          <IconRotate size={13} />
-          自动旋转
-          <span className={s.switch} data-on={spin} />
-        </button>
       )}
 
       {(showLoading || status.error) && (

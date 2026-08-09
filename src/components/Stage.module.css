@@ -4,26 +4,24 @@
   isolation: isolate;
 }
 
-/* 展台：一枚从底部升起的巨大浅色圆，模型停在它的弧顶上。
-   参考站用同样的手法把 3D 物体「放」在一个平面上而不显得漂浮。 */
+/* 展柜灯光：顶部一束下打的暖光锥 + 底部被照亮的光池，标本立在光池中央。
+   这是「博物馆之夜」的核心手法 —— 深色展厅里只有展品被照亮。 */
 .stage::before {
   content: '';
   position: absolute;
-  left: 50%;
-  bottom: -78%;
-  width: 128%;
-  aspect-ratio: 1;
-  transform: translateX(-50%);
-  border-radius: 50%;
-  background: radial-gradient(circle at 50% 22%, #efe4d6 0%, #e9dccb 46%, #e4d5c2 100%);
+  inset: 0;
+  background:
+    radial-gradient(ellipse 64% 32% at 50% 75%, #3b3226 0%, #262019 50%, #26201900 78%),
+    radial-gradient(ellipse 46% 58% at 50% -6%, #2c261c59 0%, #2c261c00 72%);
   z-index: 0;
 }
 
+/* 展柜四缘的暗角：把视线往中央的标本上收 */
 .stage::after {
   content: '';
   position: absolute;
   inset: 0;
-  background: radial-gradient(120% 78% at 50% 12%, #fffdfa 0%, #fffdfa00 58%);
+  background: radial-gradient(118% 96% at 50% 46%, #00000000 58%, #0c0a0866 100%);
   z-index: 0;
   pointer-events: none;
 }
@@ -39,33 +37,29 @@
   touch-action: none;
 }
 
-/* ---------------------------------------------------------------- 工具条 */
+/* ---------------------------------------------------------------- 操作台 */
 
 /**
- * ⚠️ 两条影响文字清晰度的约束，改这块时注意：
+ * 展台底部居中的横排操作台（博物馆导览机的按键排）。
  *
- * 1. 别加 backdrop-filter。它会把整条工具条变成合成层，里面的文字从
- *    子像素渲染退化成灰度抗锯齿，小字会明显发虚。这里背景本来就压在
- *    一片平缓渐变上，模糊看不出效果，纯属白亏清晰度。
- * 2. `top:50% + translateY(-50%)` 在**高度为奇数**时会算出 −x.5px，
- *    整条工具条连同文字一起偏半个像素，看起来就是糊的。当前高度 414
- *    （偶数）没问题；若增删工具按钮或改字号导致高度变奇数，需要调
- *    padding 补回偶数。
+ * ⚠️ 别加 backdrop-filter：它会把整条变成合成层，文字从子像素渲染退化成
+ * 灰度抗锯齿，小字发虚。深底上它压在光池渐变上，模糊本来也看不出效果。
  */
 .rail {
   position: absolute;
-  left: 16px;
-  top: 50%;
-  transform: translateY(-50%);
+  left: 50%;
+  bottom: 14px;
+  transform: translateX(-50%);
   z-index: 6;
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
+  align-items: stretch;
   gap: 2px;
-  padding: 8px 6px;
-  border-radius: 16px;
-  background: #fffcf6;
+  padding: 6px 8px;
+  border-radius: var(--radius);
+  background: #191612f5;
   border: 1px solid var(--line);
-  box-shadow: var(--shadow);
+  box-shadow: 0 14px 36px #00000073, inset 0 1px 0 #ffffff0a;
 }
 
 .tool {
@@ -74,23 +68,23 @@
   align-items: center;
   gap: 4px;
   width: 52px;
-  padding: 9px 2px 7px;
-  border-radius: 11px;
+  padding: 8px 2px 6px;
+  border-radius: var(--radius-sm);
   color: var(--ink);
   transition: background 0.16s ease, color 0.16s ease;
 }
 
 .tool:hover {
-  background: #755b4614;
+  background: #b08d5714;
 }
 
 .tool[data-active='true'] {
-  background: #eb7c6b1f;
-  color: #c25a49;
+  background: #b08d5721;
+  color: var(--brass-bright);
 }
 
 .tool[data-active='true'] .toolLabel {
-  color: #c25a49;
+  color: var(--brass-bright);
 }
 
 .toolLabel {
@@ -101,156 +95,34 @@
 }
 
 .railSplit {
-  height: 1px;
-  margin: 5px 8px;
+  width: 1px;
+  margin: 6px 5px;
   background: var(--line);
 }
 
-/* ---------------------------------------------------------------- 便签 */
+/* ---------------------------------------------------------------- 展签 */
 
-/**
- * 便签的 −0.7° 倾斜只作用在纸面上，文字保持水平。
- *
- * 原先整块 .note 带着 `transform: rotate(-0.7deg)`，而**任何非零旋转都会把整个
- * 元素提升为合成层**：字形从此改用灰度抗锯齿（不再有次像素渲染），
- * 每一笔又都落在非整数像素上。实测这台机器 devicePixelRatio = 1，
- * 1× 屏没有多余像素可以掩盖这半个像素的偏移，12.5px 的中文就糊成一团。
- *
- * 倾斜是装饰，清晰度不是 —— 所以纸面（底色 / 圆角 / 阴影）交给 ::before 去转，
- * 内容留在未变换的 .note 上。178px 宽、0.7° 的差异是两端约 2px，
- * 肉眼看仍是一张歪贴的便签。
- *
- * 同时把字号与行高从 12.5px / 21.25px 改成整数 —— 小数字号会让每一行的基线
- * 都停在半个像素上，和上面那件事叠加。
- */
-.note {
-  position: absolute;
-  right: 22px;
-  top: 22px;
-  z-index: 6;
-  width: 176px;
-  padding: 13px 15px 15px;
-  isolation: isolate;
-  animation: fade-up 0.4s ease both;
-}
-
-.note::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  z-index: -1;
-  background: #fdf3bf;
-  border-radius: 3px 14px 3px 3px;
-  box-shadow: 0 10px 26px #7d651d24, 0 1px 2px #7d651d1a;
-  transform: rotate(-0.7deg);
-}
-
-.noteHead {
-  display: flex;
-  align-items: center;
-  gap: 5px;
-  font-size: 11px;
-  font-weight: 700;
-  color: #8a7420;
-  margin-bottom: 7px;
-}
-
-.noteBody {
-  font-family: var(--hand);
-  font-size: 13px;
-  line-height: 22px;
-  color: #63500f;
-}
-
-.noteBody span {
-  display: block;
-}
-
-.noteClose {
-  position: absolute;
-  top: 7px;
-  right: 8px;
-  color: #a08c37;
-  opacity: 0;
-  transition: opacity 0.16s ease;
-  font-size: 13px;
-  line-height: 1;
-}
-
-.note:hover .noteClose {
-  opacity: 1;
-}
-
-/* ---------------------------------------------------------------- 角标 */
-
+/* 左下角的标本展签：拉丁学名为主，下缀一行操作微提示（顶替旧便签） */
 .caption {
   position: absolute;
-  left: 24px;
-  bottom: 20px;
+  left: 22px;
+  bottom: 18px;
   z-index: 5;
   pointer-events: none;
-}
-
-.captionEyebrow {
-  font-size: 10.5px;
-  letter-spacing: 0.1em;
-  color: #71685f; /* 跟随 --muted 的对比度修正 */
 }
 
 .captionLatin {
   font-family: var(--serif);
   font-style: italic;
   font-size: 17px;
-  color: #6f6259;
-  margin-top: 3px;
+  color: #cbb890;
 }
 
-.autoRotate {
-  position: absolute;
-  right: 20px;
-  bottom: 20px;
-  z-index: 6;
-  display: flex;
-  align-items: center;
-  gap: 9px;
-  padding: 8px 11px 8px 13px;
-  border-radius: 999px;
-  background: #fffcf6;
-  border: 1px solid var(--line);
-  box-shadow: var(--shadow);
-  font-size: 12px;
-  color: var(--ink);
-}
-
-.switch {
-  position: relative;
-  width: 34px;
-  height: 19px;
-  border-radius: 999px;
-  background: #cbbfb2;
-  transition: background 0.2s ease;
-  flex-shrink: 0;
-}
-
-.switch[data-on='true'] {
-  background: #59b6e0;
-}
-
-.switch::after {
-  content: '';
-  position: absolute;
-  top: 2.5px;
-  left: 2.5px;
-  width: 14px;
-  height: 14px;
-  border-radius: 999px;
-  background: #fff;
-  box-shadow: 0 1px 3px #00000026;
-  transition: transform 0.2s cubic-bezier(0.3, 1.4, 0.5, 1);
-}
-
-.switch[data-on='true']::after {
-  transform: translateX(15px);
+.captionHint {
+  margin-top: 5px;
+  font-size: 10.5px;
+  letter-spacing: 0.08em;
+  color: #86775f;
 }
 
 /* ---------------------------------------------------------------- 状态 */
@@ -278,8 +150,8 @@
   width: 26px;
   height: 26px;
   border-radius: 999px;
-  border: 2px solid #755b4626;
-  border-top-color: var(--coral);
+  border: 2px solid #b08d5726;
+  border-top-color: var(--brass-bright);
   animation: spin 0.85s linear infinite;
 }
 
@@ -292,31 +164,33 @@
 .error {
   max-width: 300px;
   padding: 16px 18px;
-  border-radius: 14px;
-  background: #fffbf4;
-  border: 1px solid #eb7c6b4d;
-  color: #b4523f;
+  border-radius: var(--radius);
+  background: #241d18f5;
+  border: 1px solid #e58a744d;
+  color: #e8a390;
   font-size: 12.5px;
   line-height: 1.6;
   text-align: center;
   pointer-events: auto;
 }
 
-/* ---------------------------------------------------------------- 目标签 */
+/* ---------------------------------------------------------------- 门牌 */
 
+/* 左上角的展厅门牌：目 · 变态类型 */
 .orderTag {
   position: absolute;
-  left: 24px;
-  top: 22px;
+  left: 20px;
+  top: 18px;
   z-index: 5;
   display: inline-flex;
   align-items: center;
-  gap: 6px;
+  gap: 7px;
   padding: 6px 12px;
-  border-radius: 999px;
-  background: #fffcf6;
+  border-radius: var(--radius-sm);
+  background: #191612e6;
   border: 1px solid var(--line);
   font-size: 11.5px;
+  letter-spacing: 0.04em;
   color: var(--ink);
 }
 
@@ -326,26 +200,16 @@
   border-radius: 999px;
 }
 
-
 /* ---------------------------------------------------------------- 手机展台 */
 
 @media (max-width: 640px) {
-  /* 便签写的是拖动/滚轮这类桌面操作，小屏上还挡住虫体 */
-  .note {
-    display: none;
-  }
-
   .caption {
     display: none;
   }
 
-  /* 工具条横排贴底居中；标签收起只留图标（各按钮仍有 title） */
+  /* 操作台收窄：标签收起只留图标（各按钮仍有 title） */
   .rail {
-    top: auto;
-    bottom: 12px;
-    left: 50%;
-    transform: translateX(-50%);
-    flex-direction: row;
+    bottom: 10px;
     padding: 4px 5px;
   }
 
@@ -359,17 +223,7 @@
   }
 
   .railSplit {
-    width: 1px;
-    height: 22px;
-    margin: auto 4px;
-  }
-
-  /* 让位给横排工具条 */
-  .autoRotate {
-    right: 12px;
-    bottom: 64px;
-    padding: 7px 10px 7px 12px;
-    font-size: 11px;
+    margin: 4px 4px;
   }
 
   .orderTag {

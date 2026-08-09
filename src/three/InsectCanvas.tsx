@@ -24,6 +24,8 @@ const PostFX = lazy(() => import('./PostFX'))
  * pointer: coarse 比 UA 嗅探可靠：带鼠标的平板会取到 fine，按桌面走。
  */
 const COARSE = typeof window !== 'undefined' && window.matchMedia('(pointer: coarse)').matches
+/** ?pdb=1 开 preserveDrawingBuffer（截图/出图链路专用，默认关省显存） */
+const PDB = typeof window !== 'undefined' && new URLSearchParams(window.location.search).has('pdb')
 /** 系统「减少动态效果」：CSS 那侧有全局规则兜底，JS 驱动的触角微动在这里问一次 */
 const REDUCED_MOTION =
   typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches
@@ -414,10 +416,11 @@ function blobShadowTexture(): THREE.CanvasTexture | null {
   const ctx = canvas.getContext('2d')
   if (!ctx) return null
   const c = size / 2
+  // 博物馆之夜：落影投在被聚光照亮的光池上，用纯黑（暖棕是旧纸底的遗产）
   const grad = ctx.createRadialGradient(c, c, size * 0.05, c, c, size * 0.5)
-  grad.addColorStop(0, 'rgba(92, 70, 48, 0.62)')
-  grad.addColorStop(0.45, 'rgba(92, 70, 48, 0.26)')
-  grad.addColorStop(1, 'rgba(92, 70, 48, 0)')
+  grad.addColorStop(0, 'rgba(0, 0, 0, 0.6)')
+  grad.addColorStop(0.45, 'rgba(0, 0, 0, 0.25)')
+  grad.addColorStop(1, 'rgba(0, 0, 0, 0)')
   ctx.fillStyle = grad
   ctx.fillRect(0, 0, size, size)
   const tex = new THREE.CanvasTexture(canvas)
@@ -466,9 +469,12 @@ function StudioLights({ radius }: { radius: number }) {
         />
       </directionalLight>
       {/* 冷补光：把暗部从死黑救回来，模拟环境天光 */}
-      <directionalLight position={[-d * 3, d * 1.2, -d * 1.5]} intensity={0.85} color="#d6e2ff" />
-      {/* 轮廓光：从背后勾边，让虫体脱离背景 */}
-      <directionalLight position={[-d * 0.5, d * 1.8, -d * 3.2]} intensity={1.15} color="#ffe6c8" />
+      <directionalLight position={[-d * 3, d * 1.2, -d * 1.5]} intensity={0.95} color="#d6e2ff" />
+      {/* 轮廓光（博物馆之夜加强档）：深色展厅里暗部会融进背景，
+          靠背后双色勾边把标本从暗场里剥出来 —— 暖主勾 + 冷副勾。
+          只动灯不动材质：材质是逐只目检定过版的。 */}
+      <directionalLight position={[-d * 0.5, d * 1.8, -d * 3.2]} intensity={1.9} color="#ffe6c8" />
+      <directionalLight position={[d * 2.6, d * 0.9, -d * 2.6]} intensity={0.9} color="#cfe0ff" />
 
       {/* 反射环境：甲壳与膜翅的高光全靠这几片面光源。
           必须包在自己的 Suspense 里 —— 它挂起时会连带同一边界内的
@@ -729,7 +735,9 @@ export function InsectCanvas({
       // antialias 只在手机开：桌面走 EffectComposer 后，画面经由它的离屏渲染目标
       // 合成，canvas 自己的 MSAA 缓冲已经用不上（抗锯齿改由 PostFX 的
       // multisampling={8} 负责），留 true 只是白占一份显存。
-      gl={{ antialias: COARSE, alpha: true, preserveDrawingBuffer: false, powerPreference: 'high-performance' }}
+      // preserveDrawingBuffer 仅 ?pdb=1 时开：截图/出图链路要从 canvas
+      // toDataURL 取帧，默认关着省一份缓冲拷贝（未来照片模式同走此门）。
+      gl={{ antialias: COARSE, alpha: true, preserveDrawingBuffer: PDB, powerPreference: 'high-performance' }}
       camera={{ fov: 34, position: [2, 1, 3] }}
       onCreated={({ gl }) => {
         gl.toneMapping = THREE.ACESFilmicToneMapping

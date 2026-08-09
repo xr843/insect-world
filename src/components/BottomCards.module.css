@@ -35,12 +35,12 @@
   justify-content: center;
   gap: 12px;
   padding: 22px 20px;
-  background: #f4ebdd8c;
+  background: linear-gradient(160deg, #262019f0, #17140fe6);
 }
 
 .quoteMark {
-  color: var(--coral);
-  opacity: 0.75;
+  color: var(--brass);
+  opacity: 0.85;
 }
 
 .quoteText {
@@ -51,10 +51,9 @@
 }
 
 .quoteLink {
-  font-family: var(--serif);
-  font-style: italic;
-  font-size: 14px;
-  color: var(--lavender);
+  font-size: 11px;
+  letter-spacing: 0.16em;
+  color: var(--brass);
   text-align: left;
   transition: opacity 0.16s ease;
 }
@@ -122,7 +121,7 @@
   padding: 9px 12px;
   border-radius: 11px;
   border: 1px solid var(--line);
-  background: #fffbf46b;
+  background: #ffffff08;
   font-size: 11.5px;
   color: var(--ink);
   transition: background 0.16s ease;
@@ -149,7 +148,7 @@
   border-radius: 999px;
   overflow: hidden;
   border: 1px solid var(--line);
-  box-shadow: inset 0 0 22px #573e2b1f;
+  box-shadow: inset 0 0 22px #00000059;
 }
 
 /* 体长对比条 */
@@ -178,7 +177,7 @@
 .barTrack {
   height: 7px;
   border-radius: 999px;
-  background: #755b4614;
+  background: #ffffff0f;
   overflow: hidden;
 }
 
@@ -189,7 +188,7 @@
 }
 
 .barVal {
-  color: #5c534c;
+  color: #b3a48c;
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
 }
@@ -216,13 +215,13 @@
   place-items: center;
   font-size: 9.5px;
   font-weight: 700;
-  color: #fffdf8;
+  color: #1a1510;
   flex-shrink: 0;
 }
 
 .cycleLabel {
   font-size: 11.5px;
-  color: #4a423c;
+  color: #c8bda9;
 }
 
 /* 观察笔记列表 */
@@ -239,7 +238,7 @@
   gap: 7px;
   font-size: 11px;
   line-height: 1.45;
-  color: #4a423c;
+  color: #c8bda9;
 }
 
 .noteBullet {
