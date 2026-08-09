@@ -8,7 +8,7 @@
  */
 import { Suspense, lazy, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { Canvas, useFrame, useThree } from '@react-three/fiber'
-import { ContactShadows, Environment, Html, Lightformer, OrbitControls } from '@react-three/drei'
+import { Environment, Html, Lightformer, OrbitControls } from '@react-three/drei'
 import * as THREE from 'three'
 import type { OrbitControls as OrbitControlsImpl } from 'three-stdlib'
 import type { Insect } from '../data/types'
@@ -368,6 +368,58 @@ function Framing({
 
 // ---------------------------------------------------------------- 光照
 
+/**
+ * 接触阴影：预烘的径向渐变血斑，替换 drei 的 ContactShadows。
+ *
+ * 换掉它不是审美问题而是事故复盘：CS 的 frames=Infinity 逐帧深度烘焙与
+ * frameloop='demand' 的稀疏帧存在时序竞态——深度 RT 呈全遮挡，整片
+ * 4.2×半径的平面按 0.44 不透明度显示成一块灰色地板。只在**生产构建**
+ * 显形（dev 的 StrictMode 双挂载正好掩盖了它），且机器相关（验收机上
+ * 从未出现，另一台一开就是）。参考项目用的正是静态血斑，其注释原话：
+ * shadow mapping 每帧要把模型画两遍，烘好的接触阴影免费给出同样观感。
+ * 附带收益：省掉每帧一次深度渲染 + 两次模糊 pass，手机尤其受益。
+ */
+const _blobCache: { tex: THREE.CanvasTexture | null } = { tex: null }
+function blobShadowTexture(): THREE.CanvasTexture | null {
+  if (_blobCache.tex) return _blobCache.tex
+  if (typeof document === 'undefined') return null
+  const size = 256
+  const canvas = document.createElement('canvas')
+  canvas.width = canvas.height = size
+  const ctx = canvas.getContext('2d')
+  if (!ctx) return null
+  const c = size / 2
+  const grad = ctx.createRadialGradient(c, c, size * 0.05, c, c, size * 0.5)
+  grad.addColorStop(0, 'rgba(92, 70, 48, 0.62)')
+  grad.addColorStop(0.45, 'rgba(92, 70, 48, 0.26)')
+  grad.addColorStop(1, 'rgba(92, 70, 48, 0)')
+  ctx.fillStyle = grad
+  ctx.fillRect(0, 0, size, size)
+  const tex = new THREE.CanvasTexture(canvas)
+  tex.colorSpace = THREE.SRGBColorSpace
+  _blobCache.tex = tex
+  return tex
+}
+
+function BlobShadow({ floorY, radius }: { floorY: number; radius: number }) {
+  const tex = useMemo(() => blobShadowTexture(), [])
+  const mat = useMemo(() => {
+    if (!tex) return null
+    return new THREE.MeshBasicMaterial({
+      map: tex,
+      transparent: true,
+      depthWrite: false,
+      toneMapped: false,
+    })
+  }, [tex])
+  if (!mat) return null
+  return (
+    <mesh rotation-x={-Math.PI / 2} position={[0, floorY, 0]} scale={radius * 3} material={mat} renderOrder={1}>
+      <planeGeometry args={[1, 1]} />
+    </mesh>
+  )
+}
+
 function StudioLights({ radius }: { radius: number }) {
   const d = Math.max(radius, 0.001)
   return (
@@ -583,15 +635,7 @@ function Scene({
               })}
           </InsectMesh>
 
-          <ContactShadows
-            position={[0, floorY, 0]}
-            scale={radius * 4.2}
-            opacity={0.44}
-            blur={2.6}
-            far={radius * 2.4}
-            resolution={COARSE ? 256 : 512}
-            color="#5c4630"
-          />
+          <BlobShadow floorY={floorY} radius={radius} />
         </>
       )}
 
