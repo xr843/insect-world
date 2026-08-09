@@ -80,7 +80,10 @@
   --line: #755b462e;
   --line-strong: #755b4647;
 
-  --brass: #8a6a33;
+  /* 两个值都是按 WCAG 实算钉住的，别凭眼睛回调（2026-08-09 补算发现
+     v1 传下来的选中态只有 3.46:1）：--brass 压在页面底上 4.58:1，
+     --active-fg 压在 12% 珊瑚选中底上 4.54:1，均为最坏背景下的小字档。 */
+  --brass: #876832;
   --brass-bright: #a5824c;
 
   --coral: #eb7c6b;
@@ -98,7 +101,7 @@
   --field: #fffbf480;
   --tint: #755b4614;
   --active-bg: #eb7c6b1f;
-  --active-fg: #c25a49;
+  --active-fg: #a94939;
   --primary-a: #ef8674;
   --primary-b: #e26e5c;
   --on-primary: #fffaf5;

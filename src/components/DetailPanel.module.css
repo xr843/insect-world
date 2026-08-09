@@ -9,7 +9,9 @@
   display: flex;
   align-items: center;
   gap: 6px;
-  color: var(--coral);
+  /* 展签一律 --brass（与 global.css 的 .eyebrow 同规）。原先用 --coral，
+     10.5px 小字在浅色主题下只有 2.63:1，是全站唯一一处真的文字违规。 */
+  color: var(--brass);
   font-size: 10.5px;
   font-weight: 500;
   letter-spacing: 0.16em;
