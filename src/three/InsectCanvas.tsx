@@ -291,6 +291,12 @@ function Framing({
   const target = useRef(new THREE.Vector3())
   const home = useMemo(() => new THREE.Vector3(0.86, 0.44, 1.25).normalize(), [])
 
+  /**
+   * 聚焦：把旋转中心挪到目标部位并凑近，退出时回到全身。
+   * 位移做逐帧插值而非瞬移 —— 镜头突然跳走会让人丢失方位感。
+   */
+  const goal = useRef<{ target: THREE.Vector3; dist: number } | null>(null)
+
   useEffect(() => {
     const fov = ((camera as THREE.PerspectiveCamera).fov * Math.PI) / 180
     const dist = (radius / Math.sin(fov / 2)) * 1.12
@@ -299,15 +305,34 @@ function Framing({
     camera.near = dist * 0.02
     camera.far = dist * 12
     camera.updateProjectionMatrix()
-    controls.current?.target.set(0, 0, 0)
-    controls.current?.update()
+    const c = controls.current
+    if (c) {
+      c.target.set(0, 0, 0)
+      /**
+       * 硬同步：阻尼开启时 update() 是**插值步**——把相机往控件内部记录的
+       * 旧球坐标拉一小段。always 模式下后续帧会持续收敛无感；demand 模式
+       * 停帧后就停在中间态（实拍：虫偏右下、方位错）。关掉阻尼做一次
+       * update() 变成**同步步**，内部球坐标与刚赋的相机姿态即刻一致，再开回。
+       */
+      const damp = c.enableDamping
+      c.enableDamping = false
+      c.update()
+      c.enableDamping = damp
+    }
+    /**
+     * 初始/复位取景同时压进 goal-lerp 通道收尾。
+     *
+     * 上面的直接赋值在 frameloop='demand' 下不保证被渲染出来——effect 触发的
+     * 那一两帧里 OrbitControls 的 update 顺序与稀疏帧时序在部分机器上会把
+     * 相机留在 Canvas 的初始 position（虫偏右下、过近；生产构建实拍抓到）。
+     * goal 通道的 useFrame 每帧 invalidate 自续帧直到收敛（聚焦流程同一条路，
+     * 已验证），等于给取景上了一道「必达」保险；always 模式下它一帧就收敛，
+     * 无感。
+     */
+    goal.current = { target: new THREE.Vector3(0, 0, 0), dist }
   }, [radius, camera, home, controls, resetNonce])
 
-  /**
-   * 聚焦：把旋转中心挪到目标部位并凑近，退出时回到全身。
-   * 位移做逐帧插值而非瞬移 —— 镜头突然跳走会让人丢失方位感。
-   */
-  const goal = useRef<{ target: THREE.Vector3; dist: number } | null>(null)
+
   useEffect(() => {
     const c = controls.current
     if (!c) return
