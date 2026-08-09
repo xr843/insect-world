@@ -1,0 +1,38 @@
+# 每次 push 与 PR 都跑一遍类型检查、全量测试与生产构建。
+#
+# 为什么三步都要：
+# - vitest **不做类型检查**（它只转译），所以 tsc 必须单独跑一次 ——
+#   曾有一个不存在的触角类型字符串一路绿灯到构建才被发现。
+# - 构建单独跑一次是因为 vite 的产物层还有 tsc 管不到的东西
+#   （glob 注册、chunk 切分），本地 `npm test` 全绿而构建挂掉是可能的。
+name: CI
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+  workflow_dispatch: # 允许在 Actions 页手动触发一次
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      # 用 ci 而非 install：严格按 lockfile 装，锁不上就直接失败，
+      # 免得 CI 悄悄装了跟本地不同的版本
+      - run: npm ci
+
+      - name: 类型检查
+        run: npm run typecheck
+
+      - name: 全量测试
+        run: npm test
+
+      - name: 生产构建
+        run: npm run build

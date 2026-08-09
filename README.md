@@ -1,5 +1,8 @@
 # 昆虫世界
 
+[![CI](https://github.com/xr843/insect-world/actions/workflows/ci.yml/badge.svg)](https://github.com/xr843/insect-world/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-8a6318.svg)](LICENSE)
+
 可交互的 3D 昆虫图鉴 —— 旋转、缩放、点击标注点，认识 60 种昆虫的身体构造、生活史与生态角色。
 
 **线上：https://insect-world.pages.dev**
