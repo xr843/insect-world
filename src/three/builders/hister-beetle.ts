@@ -273,12 +273,16 @@ export function buildHisterBeetle(): InsectModel {
   const tuckedLegTip = legRigs[0].userData.tip as THREE.Vector3
 
   const anchors: Record<string, THREE.Vector3> = {
-    elytra: new THREE.Vector3((elytraXFrom + elytraXTo) / 2, halfHeight * 2, halfWidth * 0.6),
+    // ⚠️ Y 一律压在 halfHeight 以内：原先背面三个锚点写的是 halfHeight*2 / *1.3 / *1.4，
+    // 意思大概是「抬到背上方一点」，实际把圆点抬出了整个包围盒（实测高出体顶 0.09），
+    // 界面上就是三个热点悬在甲虫背上方的空气里。热点是 HTML 覆盖层、本来就画在最上层，
+    // 不需要靠抬高来避免被埋进网格。（anchors-have-geometry.test.ts 会盯着）
+    elytra: new THREE.Vector3((elytraXFrom + elytraXTo) / 2, halfHeight * 0.9, halfWidth * 0.6),
     tuckedLeg: tuckedLegTip.clone(),
-    head: new THREE.Vector3((headXFrom + headXTo) / 2, halfHeight * 1.3, halfWidth * 0.5),
+    head: new THREE.Vector3((headXFrom + headXTo) / 2, halfHeight * 0.8, halfWidth * 0.5),
     antenna: antennaTip.clone(),
-    pronotum: new THREE.Vector3((pronotumXFrom + pronotumXTo) / 2, halfHeight * 2, 0),
-    abdomen: new THREE.Vector3((abdomenXFrom + abdomenXTo) / 2, halfHeight * 1.4, halfWidth * 0.4),
+    pronotum: new THREE.Vector3((pronotumXFrom + pronotumXTo) / 2, halfHeight * 0.9, 0),
+    abdomen: new THREE.Vector3((abdomenXFrom + abdomenXTo) / 2, halfHeight * 0.85, halfWidth * 0.4),
   }
 
   return finalize(g, anchors)

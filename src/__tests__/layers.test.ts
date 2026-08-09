@@ -18,7 +18,7 @@ import type { ReactElement, ReactNode } from 'react'
 import { INSECTS } from '../data/insects'
 import { GUIDES } from '../data/guides'
 import { insectBody } from '../components/InsectGlyph'
-import { isKnownSpecies, knownSpecies } from '../three/registry'
+import { UTILITY_MODULES, isKnownSpecies, knownSpecies } from '../three/registry'
 
 /**
  * 把剪影的元素树压成一个字符串。
@@ -133,13 +133,15 @@ describe('展示文案里没有混进异文字', () => {
 
 describe('建模层不该有孤儿', () => {
   /**
-   * builders/ 里的非物种工具模块。registry 的 glob 把目录里每个文件都当物种
-   * （只滤掉 kit），这里跟着滤 —— 新增工具模块必须显式登记，否则本测试红给你看，
-   * 逼一次「这真是工具不是忘了配数据的物种」的确认。
-   * - surface：程序化表面微观贴图（刻点/纵沟/微颗粒），kit 材质函数的下层
-   * - eyes：复眼小眼面材质，待主线接入 compoundEye()
+   * 非物种的工具模块名单 —— **直接用 registry 的那一份，不再抄**。
+   *
+   * 原先这里抄了一份平行名单，结果守卫被自己挡住了：变异测试把
+   * registry 的 UTILITY_MODULES 里的 'venation' 删掉（模拟「新增工具文件
+   * 忘了登记」），venation.ts 于是被当成物种注册，而本测试因为自己那份
+   * 名单里还留着 'venation'，照样全绿。抄名单等于把要检查的东西
+   * 复制一份来当答案。
    */
-  const TOOLBOX_MODULES = new Set(['surface', 'eyes', 'venation'])
+  const TOOLBOX_MODULES = UTILITY_MODULES
 
   /**
    * 反方向：模型做好了，图鉴数据却没跟上。线上不会出错（界面按数据渲染），

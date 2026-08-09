@@ -13,6 +13,7 @@ import { Stage } from './components/Stage'
 import { TopBar } from './components/TopBar'
 import { IconGrid, IconSparkle } from './components/icons'
 import { isKnownSpecies, prefetchInsectModel } from './three/registry'
+import { THEME_COLOR, THEME_KEY, resolveTheme, type Theme } from './theme'
 
 /**
  * 只保留建模文件确实在产物里的物种。数据层与建模层是分头推进的，
@@ -22,10 +23,6 @@ import { isKnownSpecies, prefetchInsectModel } from './three/registry'
  */
 const SPECIES = INSECTS.filter((i) => isKnownSpecies(i.id))
 
-export type Theme = 'dark' | 'light'
-
-/** 主题色跟随主题（浏览器地址栏/安卓任务卡） */
-const THEME_COLOR: Record<Theme, string> = { dark: '#131110', light: '#faf3e7' }
 
 export default function App() {
   const [activeId, setActiveId] = useState(SPECIES[0].id)
@@ -38,15 +35,15 @@ export default function App() {
   const [notedOnly, setNotedOnly] = useState(false)
   /** 双主题：浅=纸感图鉴（默认），暗=博物馆之夜；选择持久化本机。
       首帧前的 data-theme 由 public/theme-boot.js 先行设好（防闪变），
-      这里读同一份 localStorage 键接管后续切换。 */
+      这里读同一份键接管后续切换 —— 判定逻辑在 src/theme.ts，两边共用。 */
   const [theme, setTheme] = useState<Theme>(() => {
-    const saved = typeof localStorage !== 'undefined' ? localStorage.getItem('iw-theme') : null
-    return saved === 'dark' ? 'dark' : 'light'
+    const saved = typeof localStorage !== 'undefined' ? localStorage.getItem(THEME_KEY) : null
+    return resolveTheme(saved)
   })
 
   useEffect(() => {
     document.documentElement.dataset.theme = theme
-    localStorage.setItem('iw-theme', theme)
+    localStorage.setItem(THEME_KEY, theme)
     document.querySelector('meta[name="theme-color"]')?.setAttribute('content', THEME_COLOR[theme])
   }, [theme])
 

@@ -158,6 +158,10 @@ function longhornAntenna(
       antennomere(joints[i], joints[i + 1], rJointIn, rPeak, rJointOut, 0.32, hasRing ? 0.3 : 0, hasRing ? bandMat : null, blackMat),
     )
   }
+  // 关节链留给锚点用：热点圆点必须落在真实几何上，不能靠估offset猜
+  // （旧版锚点写死 base+(3.2,1.5,1.3)，实测离触角最近顶点 0.45×包围半径 ——
+  //  圆点明显浮在空气里。见 anchors-have-geometry.test.ts）
+  g.userData.joints = joints
   return g
 }
 
@@ -284,9 +288,16 @@ export function buildLonghornBeetle(): InsectModel {
   g.add(reniformEyePair(antennaBaseX - 0.05, antennaBaseY, antennaBaseZ))
 
   // ---- 触角：11 节黑白环纹长鞭，长度约为体长的 1.5~2 倍
+  let rightAntenna: THREE.Group | null = null
   for (const side of [1, -1] as const) {
-    g.add(longhornAntenna(new THREE.Vector3(antennaBaseX, antennaBaseY, antennaBaseZ * side), side, 6.0, 0.05, antennaBlack, antennaBand))
+    const ant = longhornAntenna(new THREE.Vector3(antennaBaseX, antennaBaseY, antennaBaseZ * side), side, 6.0, 0.05, antennaBlack, antennaBand)
+    g.add(ant)
+    if (side === 1) rightAntenna = ant
   }
+  // 锚点取链上约 45% 处的真实关节：太靠基部会和复眼的圆点挤在一起，
+  // 太靠端部则那截太细、圆点看着像没搭在东西上
+  const antJoints = rightAntenna!.userData.joints as THREE.Vector3[]
+  const antennaAnchor = antJoints[Math.round((antJoints.length - 1) * 0.45)].clone()
 
   // ---- 三对足：粗壮，跗节加宽垫便于攀树
   const legs = [
@@ -300,7 +311,7 @@ export function buildLonghornBeetle(): InsectModel {
   }
 
   const anchors: Record<string, THREE.Vector3> = {
-    antenna: new THREE.Vector3(antennaBaseX + 3.2, antennaBaseY + 1.5, antennaBaseZ + 1.3),
+    antenna: antennaAnchor,
     eye: new THREE.Vector3(antennaBaseX - 0.05, antennaBaseY, antennaBaseZ + 0.15),
     mandible: new THREE.Vector3(2.15, 0.0, 0.12),
     pronotum: new THREE.Vector3(1.4, 0.35, 0),

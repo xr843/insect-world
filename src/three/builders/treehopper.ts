@@ -166,7 +166,20 @@ export function buildTreehopper(): InsectModel {
   // ---- 刺吸式口器：向下后方伸
   const rostrumAt: [number, number, number] = [0.34, -0.03, 0]
   const rostrumLen = 0.22
-  g.add(rostrum({ at: rostrumAt, length: rostrumLen, thickness: 0.018, angle: 62 }, bodyMat))
+  const rostrumAngle = 62
+  g.add(rostrum({ at: rostrumAt, length: rostrumLen, thickness: 0.018, angle: rostrumAngle }, bodyMat))
+  /**
+   * 锚点按 kit.rostrum() 的真实轴线取，不猜偏移量。
+   * 原先写的是 (x-0.4L, y-0.85L)，等于当它主要朝下伸 —— 但 62° 是**离竖直轴**
+   * 的夹角，实际方向 (-sin62°, -cos62°) 主要朝后。于是圆点落在口器斜下方的
+   * 空气里（实测离实体 0.13×半径）。同类错误本轮在星天牛触角、阎甲背面
+   * 各撞到一次，共同的根子都是「手估 offset 去追一个算出来的几何」。
+   */
+  const rostrumDir = new THREE.Vector3(
+    -Math.sin(THREE.MathUtils.degToRad(rostrumAngle)),
+    -Math.cos(THREE.MathUtils.degToRad(rostrumAngle)),
+    0,
+  )
 
   // ---- 触角：短小，藏在头盔投影下方
   const antBase: [number, number, number] = [0.34, 0.03, 0.04]
@@ -198,7 +211,7 @@ export function buildTreehopper(): InsectModel {
     helmet: new THREE.Vector3(hornTip.x, hornTip.y, 0),
     wing: new THREE.Vector3(wingSpec.base[0] - 0.15, wingSpec.base[1] - 0.02, wingSpec.base[2] + 0.16),
     eye: new THREE.Vector3(eyeAt[0], eyeAt[1] + 0.03, eyeAt[2] + 0.032),
-    rostrum: new THREE.Vector3(rostrumAt[0] - rostrumLen * 0.4, rostrumAt[1] - rostrumLen * 0.85, 0),
+    rostrum: new THREE.Vector3(...rostrumAt).addScaledVector(rostrumDir, rostrumLen * 0.55),
     hindleg: hindLegTip.clone(),
     abdomen: new THREE.Vector3(abdomenTailX + 0.1, 0.02, 0.03),
   }

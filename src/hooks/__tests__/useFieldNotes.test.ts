@@ -1,87 +1,124 @@
 /**
- * 观察笔记的存取。
+ * @vitest-environment jsdom
  *
- * 这一层唯一的外部依赖是 localStorage —— 一个用户随手就能改、
- * 也会跨版本残留旧结构的地方。所以测的重点不是「正常数据能读回来」，
- * 而是「喂进去各种坏东西时不会把界面带崩」。
+ * 观察笔记 —— 全站唯一会写用户数据的地方，也是唯一「坏了会丢东西」的地方。
+ *
+ * 之前这一层零测试，全靠手点验证：写一条、刷新、看看还在不在。
+ * 手点验不到的恰恰是要命的那些分支：localStorage 里躺着上个版本的脏数据、
+ * 隐私模式下 getItem 直接抛、正文清空到底算删除还是算空字符串。
  */
-import { describe, expect, it } from 'vitest'
-import { notesToMarkdown, parseNotes, type FieldNotes } from '../useFieldNotes'
+import { act, renderHook } from '@testing-library/react'
+import { afterEach, describe, expect, it } from 'vitest'
+import { notesToMarkdown, parseNotes, useFieldNotes } from '../useFieldNotes'
 
-describe('parseNotes', () => {
-  it('读回正常写入的笔记', () => {
-    const raw = JSON.stringify({ mantis: { text: '在窗台上等了半小时', at: 1700000000000 } })
-    expect(parseNotes(raw)).toEqual({ mantis: { text: '在窗台上等了半小时', at: 1700000000000 } })
-  })
+const KEY = 'insect-world.field-notes.v1'
 
-  it('没有存过时返回空对象，而不是 null', () => {
+afterEach(() => localStorage.clear())
+
+describe('parseNotes：localStorage 是用户能随手改的，坏数据不许拖垮整个图鉴', () => {
+  it('空值与非法 JSON 一律回空对象，不抛', () => {
     expect(parseNotes(null)).toEqual({})
     expect(parseNotes('')).toEqual({})
+    expect(parseNotes('{ 这不是 json')).toEqual({})
   })
 
-  it.each([
-    ['不是 JSON', '{这不是 json'],
-    ['顶层是数组', '[1,2,3]'],
-    ['顶层是字符串', '"hello"'],
-    ['顶层是 null', 'null'],
-  ])('%s 时返回空对象而不抛异常', (_label, raw) => {
-    expect(() => parseNotes(raw)).not.toThrow()
-    expect(parseNotes(raw)).toEqual({})
+  it('顶层是数组或标量时不当成笔记（旧版本残留的常见形态）', () => {
+    expect(parseNotes('[1,2,3]')).toEqual({})
+    expect(parseNotes('"a string"')).toEqual({})
+    expect(parseNotes('null')).toEqual({})
   })
 
-  it('丢掉坏掉的条目，保留好的 —— 一条坏数据不该连累其余', () => {
+  it('坏的那条丢掉、好的那些留下 —— 一条坏数据不该让所有笔记消失', () => {
     const raw = JSON.stringify({
-      good: { text: '正常', at: 5 },
-      noText: { at: 5 },
-      textIsNumber: { text: 42, at: 5 },
-      isNull: null,
-      isString: 'nope',
-      blank: { text: '   ', at: 5 },
-    })
-    expect(parseNotes(raw)).toEqual({ good: { text: '正常', at: 5 } })
-  })
-
-  it('时间戳缺失或不是有限数时补 0，条目本身仍保留', () => {
-    const raw = JSON.stringify({
-      a: { text: '甲' },
-      b: { text: '乙', at: 'yesterday' },
-      c: { text: '丙', at: Number.POSITIVE_INFINITY },
+      good: { text: '看到它在啃叶子', at: 1000 },
+      noText: { at: 2000 },
+      emptyText: { text: '   ', at: 3000 },
+      notObject: 'oops',
+      badAt: { text: '时间戳坏了但正文还在', at: 'yesterday' },
     })
     const out = parseNotes(raw)
-    expect(Object.keys(out).sort()).toEqual(['a', 'b', 'c'])
-    expect(out.a.at).toBe(0)
-    expect(out.b.at).toBe(0)
-    expect(out.c.at).toBe(0)
+    expect(Object.keys(out).sort()).toEqual(['badAt', 'good'])
+    expect(out.good).toEqual({ text: '看到它在啃叶子', at: 1000 })
+    // 时间戳坏了不丢正文，退回 0（排到最后）而不是 NaN —— NaN 会让排序整个乱掉
+    expect(out.badAt.at).toBe(0)
+  })
+
+  it('Infinity / NaN 这类非有限数也退回 0', () => {
+    expect(parseNotes(JSON.stringify({ a: { text: 'x', at: null } })).a.at).toBe(0)
   })
 })
 
-describe('notesToMarkdown', () => {
-  const nameOf = (id: string) => ({ mantis: '中华大刀螳', ant: '日本弓背蚁' })[id]
+describe('useFieldNotes：写入与删除', () => {
+  it('写一条会落到 localStorage（关掉页面还在，这是这个功能存在的理由）', () => {
+    const { result } = renderHook(() => useFieldNotes())
+    act(() => result.current.write('ladybird', '七个黑点数清楚了'))
 
-  it('按最近修改排在前面', () => {
-    const notes: FieldNotes = {
-      mantis: { text: '旧的', at: 1 },
-      ant: { text: '新的', at: 2 },
-    }
-    const md = notesToMarkdown(notes, nameOf)
-    expect(md.indexOf('日本弓背蚁')).toBeLessThan(md.indexOf('中华大刀螳'))
+    expect(result.current.notes.ladybird.text).toBe('七个黑点数清楚了')
+    expect(parseNotes(localStorage.getItem(KEY)).ladybird.text).toBe('七个黑点数清楚了')
   })
 
-  it('用中文名而不是 id 作标题', () => {
-    const md = notesToMarkdown({ mantis: { text: '记一笔', at: 1 } }, nameOf)
-    expect(md).toContain('## 中华大刀螳')
-    expect(md).not.toContain('## mantis')
-    expect(md).toContain('记一笔')
+  it('挂载时从 localStorage 恢复（模拟刷新页面）', () => {
+    localStorage.setItem(KEY, JSON.stringify({ mantis: { text: '前足像镰刀', at: 42 } }))
+    const { result } = renderHook(() => useFieldNotes())
+    expect(result.current.notes.mantis).toEqual({ text: '前足像镰刀', at: 42 })
   })
 
-  it('查不到名字时退回 id，而不是渲染出 undefined', () => {
-    const md = notesToMarkdown({ ghost: { text: '?', at: 1 } }, () => undefined)
-    expect(md).toContain('## ghost')
+  it('正文前后空白会被 trim（用户手抖打的空格不该存进去）', () => {
+    const { result } = renderHook(() => useFieldNotes())
+    act(() => result.current.write('ant', '  排成一列  '))
+    expect(result.current.notes.ant.text).toBe('排成一列')
+  })
+
+  it('清空正文＝删除这条（界面上没有单独的删除按钮，全靠这条语义）', () => {
+    const { result } = renderHook(() => useFieldNotes())
+    act(() => result.current.write('bee', '在采蜜'))
+    expect(result.current.notes.bee).toBeDefined()
+
+    act(() => result.current.write('bee', '   '))
+    expect(result.current.notes.bee).toBeUndefined()
+    expect(parseNotes(localStorage.getItem(KEY)).bee).toBeUndefined()
+  })
+
+  it('删一条本来就不存在的笔记不产生新状态（避免无谓重渲染）', () => {
+    const { result } = renderHook(() => useFieldNotes())
+    act(() => result.current.write('ladybird', '有'))
+    const before = result.current.notes
+    act(() => result.current.write('never-noted', ''))
+    expect(result.current.notes).toBe(before)
+  })
+
+  it('clear 清空全部', () => {
+    const { result } = renderHook(() => useFieldNotes())
+    act(() => result.current.write('a', '一'))
+    act(() => result.current.write('b', '二'))
+    act(() => result.current.clear())
+    expect(result.current.notes).toEqual({})
+    expect(parseNotes(localStorage.getItem(KEY))).toEqual({})
+  })
+})
+
+describe('notesToMarkdown：「复制笔记」导出的就是它', () => {
+  const nameOf = (id: string) => ({ ladybird: '七星瓢虫', mantis: '中华大刀螳' })[id]
+
+  it('按最近修改排序（最新的在最前）', () => {
+    const md = notesToMarkdown(
+      { ladybird: { text: '旧的', at: 100 }, mantis: { text: '新的', at: 900 } },
+      nameOf,
+    )
+    expect(md.indexOf('中华大刀螳')).toBeLessThan(md.indexOf('七星瓢虫'))
+  })
+
+  it('用中文名而非 id 作标题；查不到名字时退回 id 而不是 undefined', () => {
+    const md = notesToMarkdown(
+      { ladybird: { text: '甲', at: 2 }, 'unknown-bug': { text: '乙', at: 1 } },
+      nameOf,
+    )
+    expect(md).toContain('## 七星瓢虫')
+    expect(md).toContain('## unknown-bug')
     expect(md).not.toContain('undefined')
   })
 
-  it('一条都没有时给出可读的空状态，而不是只有标题', () => {
-    const md = notesToMarkdown({}, nameOf)
-    expect(md).toContain('还没有记录')
+  it('一条都没有时给一句人话，而不是空文件', () => {
+    expect(notesToMarkdown({}, nameOf)).toContain('还没有记录')
   })
 })

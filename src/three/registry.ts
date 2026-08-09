@@ -22,8 +22,13 @@ const MODULES = import.meta.glob('./builders/*.ts') as Record<string, Loader>
  * glob 分不出这两类，全靠这份名单 —— 新增工具文件必须在此登记，
  * 否则它会被当成「幽灵物种」注册进来，layers.test.ts 的孤儿检查会立刻抓住
  * （surface.ts / eyes.ts 落地当天就被抓过一次）。
+ *
+ * ⚠️ 导出是为了让那条孤儿检查 import 这一份，而不是自己再抄一份。
+ * 抄一份的后果实测过（2026-08-09 变异测试）：从这里删掉 'venation' 后
+ * venation.ts 被当成物种注册，而测试因为自己那份名单里也有 'venation'
+ * 照样全绿 —— 守卫被它要守的东西的副本挡住了。
  */
-const UTILITY_MODULES = new Set(['kit', 'surface', 'eyes', 'venation'])
+export const UTILITY_MODULES = new Set(['kit', 'surface', 'eyes', 'venation'])
 
 const LOADERS: Record<string, Loader> = Object.fromEntries(
   Object.entries(MODULES)
