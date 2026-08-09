@@ -230,6 +230,29 @@ describe('铜绿丽金龟 buildShiningChafer', () => {
     checkAnchorsExact(model, ['elytra', 'pronotum', 'clypeus', 'antenna', 'leg', 'eye'])
   })
 
+  it('鞘翅基色是中亮铜绿（H∈[0.3,0.45] L∈[0.28,0.5]）——近黑金属只剩清漆白光，招牌直接消失', () => {
+    // 生产目检教训（2026-08-09）：首版 #0f3a19 通过全部测试，上线读成「黑铬银」。
+    // 金属材质的环境反射色 = 基色，亮度下限在这里钉死，别再往黑里压。
+    let checked = 0
+    model.group.traverse((o) => {
+      const mesh = o as THREE.Mesh
+      if (!mesh.isMesh || mesh.name !== 'elytra') return
+      const mat = mesh.material as THREE.MeshPhysicalMaterial
+      const hsl = { h: 0, s: 0, l: 0 }
+      // 显式取 sRGB：Color 内部存线性工作空间，默认 getHSL 的 L 会比十六进制
+      // 直觉值低一大截（#2f9648 线性 L≈0.17，sRGB L≈0.39），带宽是按 sRGB 定的
+      mat.color.getHSL(hsl, THREE.SRGBColorSpace)
+      // eslint-disable-next-line no-console
+      console.log(`[shining-chafer] elytra HSL = ${hsl.h.toFixed(3)} ${hsl.s.toFixed(3)} ${hsl.l.toFixed(3)}`)
+      expect(hsl.h, `色相 ${hsl.h.toFixed(3)} 应在绿区 [0.3, 0.45]`).toBeGreaterThanOrEqual(0.3)
+      expect(hsl.h).toBeLessThanOrEqual(0.45)
+      expect(hsl.l, `亮度 ${hsl.l.toFixed(3)} 应 ≥ 0.28（对齐榆蓝叶甲返工定版 #1c8a8f 的量级）`).toBeGreaterThanOrEqual(0.28)
+      expect(hsl.l).toBeLessThanOrEqual(0.5)
+      checked++
+    })
+    expect(checked, "找不到 name='elytra' 的 mesh").toBeGreaterThan(0)
+  })
+
   it('身体长宽比 1.3~1.6（阔卵形：下限排除圆片、上限排除长椭圆）', () => {
     model.group.updateMatrixWorld(true)
 
