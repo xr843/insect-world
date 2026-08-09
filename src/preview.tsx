@@ -48,7 +48,9 @@ function Rig({ model, wire }: { model: InsectModel; wire: boolean }) {
 
   useEffect(() => {
     const fov = ((camera as THREE.PerspectiveCamera).fov * Math.PI) / 180
-    const d = (model.radius / Math.sin(fov / 2)) * 1.1
+    // 与主页同规：取景用 frameRadius（大蚊这类腿展物种否则缩成一个点）
+    const fit = model.frameRadius ?? model.radius
+    const d = (fit / Math.sin(fov / 2)) * 1.1
     camera.position.set(d * 0.8, d * 0.42, d * 1.15)
     camera.near = d * 0.02
     camera.far = d * 12
@@ -84,10 +86,10 @@ function Rig({ model, wire }: { model: InsectModel; wire: boolean }) {
       <primitive object={model.group} />
       <ContactShadows
         position={[0, box.min.y - model.radius * 0.02, 0]}
-        scale={model.radius * 4}
+        scale={(model.frameRadius ?? model.radius) * 4}
         opacity={0.4}
         blur={2.4}
-        far={model.radius * 2}
+        far={(model.frameRadius ?? model.radius) * 2}
         color="#5c4630"
       />
     </>
@@ -116,7 +118,9 @@ function App() {
   const stats = model
     ? {
         tris: countTriangles(model.group),
-        radius: model.radius.toFixed(2),
+        radius: model.frameRadius
+          ? `${model.radius.toFixed(2)}（取景 ${model.frameRadius.toFixed(2)}）`
+          : model.radius.toFixed(2),
         anchors: Object.keys(model.anchors),
         size: (() => {
           const b = new THREE.Box3().setFromObject(model.group)

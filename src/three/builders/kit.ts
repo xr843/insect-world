@@ -20,6 +20,13 @@ export interface InsectModel {
   anchors: Record<string, THREE.Vector3>
   /** 包围球半径，供相机自动取景 */
   radius: number
+  /**
+   * 取景半径覆写（缺省 = radius）。给腿展远大于虫体的物种用：大蚊的六条
+   * 5cm 高跷腿把包围球撑到 5.5，按它取景 3cm 的虫体缩成一个点。取景与
+   * 落影按 frameRadius，腿尖出画——真实微距摄影对大蚊就是这么裁的。
+   * 包围半径本身不动：它仍是「模型有多大」的事实。
+   */
+  frameRadius?: number
 }
 
 export type InsectBuilder = () => InsectModel
@@ -1070,8 +1077,13 @@ export function boundingRadius(obj: THREE.Object3D): number {
 /**
  * 收尾：把模型居中到原点、开启阴影，并算出包围半径。
  * 每个 builder 的最后一步都应调用它。
+ * opts.frameRadius：取景半径覆写，语义见 InsectModel.frameRadius。
  */
-export function finalize(group: THREE.Group, anchors: Record<string, THREE.Vector3>): InsectModel {
+export function finalize(
+  group: THREE.Group,
+  anchors: Record<string, THREE.Vector3>,
+  opts: { frameRadius?: number } = {},
+): InsectModel {
   const box = new THREE.Box3().setFromObject(group)
   const center = new THREE.Vector3()
   box.getCenter(center)
@@ -1088,7 +1100,9 @@ export function finalize(group: THREE.Group, anchors: Record<string, THREE.Vecto
     }
   })
 
-  return { group, anchors: shifted, radius: boundingRadius(group) }
+  const model: InsectModel = { group, anchors: shifted, radius: boundingRadius(group) }
+  if (opts.frameRadius !== undefined) model.frameRadius = opts.frameRadius
+  return model
 }
 
 /** 沿 Z 轴镜像复制一个部件（用于成对结构的快捷装配） */

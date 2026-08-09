@@ -589,7 +589,9 @@ function Scene({
     }
   }, [insect.id])
 
-  const radius = model?.radius ?? 1
+  // 取景/落影/光场一律用 frameRadius（缺省=包围半径）：大蚊这类「一团腿」
+  // 物种按腿尖包围球取景会把虫体缩成一个点，按 frameRadius 则腿尖出画。
+  const radius = model ? model.frameRadius ?? model.radius : 1
   const floorY = box ? box.min.y * 0.86 - radius * 0.06 : -radius * 0.7
 
   /**

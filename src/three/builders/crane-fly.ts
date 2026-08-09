@@ -56,6 +56,12 @@ interface CraneLegSpec {
  * 大蚊腿：股节斜向外上，胫节、跗节依次微折向外下，三段接近共线。
  * 端到端伸展 ≈ 5.0~5.3（体长 3.0 的 1.65~1.75 倍，落在断言带 [1.5,2.2] 中段）。
  * 组 name='craneLeg'（mirrorZ 克隆保留组名，左右各计一条）。
+ *
+ * ⚠️ 别试图靠改姿态压包围球：腿的招牌断言钉的是包围盒对角线 ≥ 1.5×体长，
+ * 对角线要够长三段就必须近共线；近共线的 5.2 长腿无论朝哪个方向摊，
+ * 包围半径都在 4~5.5 之间——「一团腿」是这只虫的本体。默认取景变成
+ * 一个点的问题在 finalize 的 frameRadius（取景半径与包围半径解耦）解，
+ * 不在这里解（2026-08-09 曾在这里折腾一轮悬垂姿态，对角线跌破 1.5 作罢）。
  */
 function craneLeg(spec: CraneLegSpec, material: THREE.Material): THREE.Group {
   const g = new THREE.Group()
@@ -268,5 +274,7 @@ export function buildCraneFly(): InsectModel {
     antenna: antennaTip,
   }
 
-  return finalize(g, anchors)
+  // 取景按虫体+翅（≈3.1）而非腿尖包围球（≈5.5）：腿尖出画，虫体占满画面。
+  // 权衡记录见 craneLeg() 注释——姿态解法已试过，会砸招牌断言。
+  return finalize(g, anchors, { frameRadius: 3.1 })
 }

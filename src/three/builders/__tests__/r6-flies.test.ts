@@ -279,6 +279,21 @@ describe('大蚊 buildCraneFly', () => {
     expect(countMeshByName(model.group, 'wing-membrane')).toBe(2)
   })
 
+  it('取景半径与包围半径解耦：frameRadius ∈ [2.5, 4] 且 < 包围半径的 75%', () => {
+    // 生产目检教训（2026-08-09）：六条近直的 5cm 腿把包围球撑到 5.5，
+    // 按它取景 3cm 的虫体缩成一个点，招牌平衡棒不可见。取景按虫体+翅。
+    expect(
+      model.frameRadius,
+      '大蚊必须带 frameRadius——被腿尖撑大的包围球不能拿来取景',
+    ).toBeDefined()
+    expect(model.frameRadius!).toBeGreaterThanOrEqual(2.5)
+    expect(model.frameRadius!).toBeLessThanOrEqual(4)
+    expect(
+      model.frameRadius!,
+      `frameRadius ${model.frameRadius!.toFixed(2)} 应明显小于包围半径 ${model.radius.toFixed(2)}，否则解耦失去意义`,
+    ).toBeLessThan(model.radius * 0.75)
+  })
+
   it('三角面数在预算内', () => {
     const { triangles } = inspectGeometry(model.group)
     // eslint-disable-next-line no-console
