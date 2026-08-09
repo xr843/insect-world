@@ -51,7 +51,7 @@
 }
 
 .close:hover {
-  background: #b08d5714;
+  background: var(--tint);
 }
 
 /* ---------------------------------------------------------------- 编辑区 */
@@ -60,7 +60,7 @@
   border: 1px solid var(--line);
   border-radius: 14px;
   padding: 13px 14px 11px;
-  background: #ffffff08;
+  background: var(--field);
 }
 
 .editorHead {
@@ -125,7 +125,7 @@
 }
 
 .save:hover {
-  background: #b08d5714;
+  background: var(--tint);
 }
 
 /* ---------------------------------------------------------------- 列表 */
@@ -158,11 +158,11 @@
 }
 
 .row:hover {
-  background: #b08d5712;
+  background: var(--tint);
 }
 
 .row[data-current='true'] {
-  background: #b08d5721;
+  background: var(--active-bg);
 }
 
 .rowBody {

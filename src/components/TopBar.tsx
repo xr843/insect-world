@@ -7,8 +7,11 @@ import {
   IconLayers,
   IconLeafSolid,
   IconLibrary,
+  IconMoon,
   IconNote,
   IconSearch,
+  IconSparkle,
+  IconSun,
 } from './icons'
 import s from './TopBar.module.css'
 
@@ -32,6 +35,8 @@ export function TopBar({
   noteCount,
   onCopyNotes,
   onClearNotes,
+  theme,
+  onToggleTheme,
 }: {
   insects: Insect[]
   onPick: (id: string) => void
@@ -47,6 +52,8 @@ export function TopBar({
   orderFilter: Order | null
   onOrderFilter: (order: Order | null) => void
   noteCount: number
+  theme: 'dark' | 'light'
+  onToggleTheme: () => void
   onCopyNotes: () => void
   onClearNotes: () => void
 }) {
@@ -121,8 +128,8 @@ export function TopBar({
     <header className={s.bar}>
       <div className={s.brand}>
         <span className={s.wordmark}>昆虫世界</span>
-        <span className={s.hall}>标本馆</span>
-        <span className={s.tagline}>INSECTA · 十四目 · 六十标本</span>
+        <IconSparkle size={13} className={s.spark} />
+        <span className={s.tagline}>像博物学家一样观察</span>
       </div>
 
       <nav className={s.nav} ref={navRef}>
@@ -188,6 +195,14 @@ export function TopBar({
       </nav>
 
       <div className={s.right}>
+        <button
+          className={s.themeToggle}
+          onClick={onToggleTheme}
+          aria-label={theme === 'dark' ? '切换到浅色主题' : '切换到深色主题'}
+          title={theme === 'dark' ? '浅色 · 纸感图鉴' : '深色 · 博物馆之夜'}
+        >
+          {theme === 'dark' ? <IconSun size={16} /> : <IconMoon size={16} />}
+        </button>
         <div className={s.searchWrap} ref={wrapRef}>
           <div className={s.search}>
             <IconSearch size={15} />

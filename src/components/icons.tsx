@@ -15,6 +15,19 @@ const base = (size = 16, sw = 1.6) => ({
   strokeLinejoin: 'round' as const,
 })
 
+export const IconSun = ({ size, className, strokeWidth }: P) => (
+  <svg {...base(size, strokeWidth)} className={className}>
+    <circle cx="12" cy="12" r="4.2" />
+    <path d="M12 3v2.2M12 18.8V21M3 12h2.2M18.8 12H21M5.6 5.6l1.6 1.6M16.8 16.8l1.6 1.6M18.4 5.6l-1.6 1.6M7.2 16.8l-1.6 1.6" />
+  </svg>
+)
+
+export const IconMoon = ({ size, className, strokeWidth }: P) => (
+  <svg {...base(size, strokeWidth)} className={className}>
+    <path d="M20 14.5A8.5 8.5 0 0 1 9.5 4a8.5 8.5 0 1 0 10.5 10.5Z" />
+  </svg>
+)
+
 export const IconCompass = ({ size, className, strokeWidth }: P) => (
   <svg {...base(size, strokeWidth)} className={className}>
     <circle cx="12" cy="12" r="9" />

@@ -75,7 +75,7 @@ export function Discovery({
     <span
       className={s.figure}
       style={{
-        background: `radial-gradient(circle at 34% 26%, ${insect.accent}33, ${insect.accent}12 60%, #241f18 100%)`,
+        background: `radial-gradient(circle at 34% 26%, ${insect.accent}33, ${insect.accent}12 60%, var(--glyph-base) 100%)`,
       }}
     >
       <InsectGlyph id={insect.id} size={74} color={insect.accent} />

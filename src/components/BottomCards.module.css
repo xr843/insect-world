@@ -38,6 +38,10 @@
   background: linear-gradient(160deg, #262019f0, #17140fe6);
 }
 
+:global([data-theme='light']) .quote {
+  background: #f4ebdd8c;
+}
+
 .quoteMark {
   color: var(--brass);
   opacity: 0.85;
@@ -121,7 +125,7 @@
   padding: 9px 12px;
   border-radius: 11px;
   border: 1px solid var(--line);
-  background: #ffffff08;
+  background: var(--field);
   font-size: 11.5px;
   color: var(--ink);
   transition: background 0.16s ease;
@@ -151,6 +155,10 @@
   box-shadow: inset 0 0 22px #00000059;
 }
 
+:global([data-theme='light']) .facetDisc {
+  box-shadow: inset 0 0 22px #573e2b1f;
+}
+
 /* 体长对比条 */
 .bars {
   width: 100%;
@@ -177,7 +185,7 @@
 .barTrack {
   height: 7px;
   border-radius: 999px;
-  background: #ffffff0f;
+  background: var(--tint);
   overflow: hidden;
 }
 
@@ -188,7 +196,7 @@
 }
 
 .barVal {
-  color: #b3a48c;
+  color: var(--muted);
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
 }
@@ -215,13 +223,13 @@
   place-items: center;
   font-size: 9.5px;
   font-weight: 700;
-  color: #1a1510;
+  color: var(--on-tone);
   flex-shrink: 0;
 }
 
 .cycleLabel {
   font-size: 11.5px;
-  color: #c8bda9;
+  color: var(--ink);
 }
 
 /* 观察笔记列表 */
@@ -238,7 +246,7 @@
   gap: 7px;
   font-size: 11px;
   line-height: 1.45;
-  color: #c8bda9;
+  color: var(--ink);
 }
 
 .noteBullet {

@@ -22,6 +22,11 @@ import { isKnownSpecies, prefetchInsectModel } from './three/registry'
  */
 const SPECIES = INSECTS.filter((i) => isKnownSpecies(i.id))
 
+export type Theme = 'dark' | 'light'
+
+/** 主题色跟随主题（浏览器地址栏/安卓任务卡） */
+const THEME_COLOR: Record<Theme, string> = { dark: '#131110', light: '#faf3e7' }
+
 export default function App() {
   const [activeId, setActiveId] = useState(SPECIES[0].id)
   const [galleryOpen, setGalleryOpen] = useState(false)
@@ -31,6 +36,17 @@ export default function App() {
   const [focusAnchor, setFocusAnchor] = useState<string | null>(null)
   const [orderFilter, setOrderFilter] = useState<Order | null>(null)
   const [notedOnly, setNotedOnly] = useState(false)
+  /** 双主题：暗=博物馆之夜（默认），浅=v1 纸感图鉴；选择持久化本机 */
+  const [theme, setTheme] = useState<Theme>(() => {
+    const saved = typeof localStorage !== 'undefined' ? localStorage.getItem('iw-theme') : null
+    return saved === 'light' ? 'light' : 'dark'
+  })
+
+  useEffect(() => {
+    document.documentElement.dataset.theme = theme
+    localStorage.setItem('iw-theme', theme)
+    document.querySelector('meta[name="theme-color"]')?.setAttribute('content', THEME_COLOR[theme])
+  }, [theme])
 
   const { notes, write, clear } = useFieldNotes()
   const noteCount = Object.keys(notes).length
@@ -165,6 +181,8 @@ export default function App() {
         noteCount={noteCount}
         onCopyNotes={copyNotes}
         onClearNotes={clear}
+        theme={theme}
+        onToggleTheme={() => setTheme((t) => (t === 'dark' ? 'light' : 'dark'))}
       />
 
       <main className="workbench">
@@ -186,6 +204,7 @@ export default function App() {
           onCompareToggle={toggleCompare}
           onCompareCycle={cycleCompare}
           focusAnchor={focusAnchor}
+          theme={theme}
         />
         <DetailPanel insect={insect} onCompare={toggleCompare} onDiscover={setDiscovery} />
       </main>

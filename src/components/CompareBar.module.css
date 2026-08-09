@@ -15,9 +15,9 @@
   max-width: calc(100% - 40px);
   padding: 11px 14px 11px 18px;
   border-radius: 999px;
-  background: #1c1814f5;
+  background: var(--raise);
   border: 1px solid var(--line);
-  box-shadow: 0 16px 40px #00000080;
+  box-shadow: var(--shadow-lift);
   backdrop-filter: blur(10px);
   animation: fade-up 0.22s ease both;
 }
@@ -104,7 +104,7 @@
 
 .fieldVal {
   font-size: 11.5px;
-  color: #c1b6a2;
+  color: var(--muted);
   margin-top: 2px;
   white-space: nowrap;
   overflow: hidden;
@@ -133,7 +133,7 @@
 
 .cycle:hover,
 .close:hover {
-  background: #b08d5714;
+  background: var(--tint);
   color: var(--ink);
 }
 

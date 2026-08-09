@@ -69,7 +69,7 @@ export function LibraryPanel({
               <span
                 className={s.thumb}
                 style={{
-                  background: `radial-gradient(circle at 34% 28%, ${i.accent}2e, ${i.accent}12 62%, #241f18 100%)`,
+                  background: `radial-gradient(circle at 34% 28%, ${i.accent}2e, ${i.accent}12 62%, var(--glyph-base) 100%)`,
                 }}
               >
                 <InsectGlyph id={i.id} size={26} color={i.accent} />

@@ -19,6 +19,7 @@ export function Stage({
   onCompareToggle,
   onCompareCycle,
   focusAnchor = null,
+  theme = 'dark',
 }: {
   insect: Insect
   /** 非 null 时展台底部浮出对比条 */
@@ -27,6 +28,8 @@ export function Stage({
   onCompareCycle: () => void
   /** 讲解弹窗下发的镜头指令 */
   focusAnchor?: string | null
+  /** 明暗主题：透传给 3D 场景定轮廓光档位与落影颜色 */
+  theme?: 'dark' | 'light'
 }) {
   const [mode, setMode] = useState<ViewMode>('normal')
   /**
@@ -108,6 +111,7 @@ export function Stage({
           zoomNonce={zoomNonce}
           resetNonce={resetNonce}
           focusAnchor={focusAnchor}
+          theme={theme}
           onStatus={onStatus}
         />
       </div>

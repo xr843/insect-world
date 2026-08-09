@@ -23,23 +23,19 @@
   white-space: nowrap;
 }
 
-.hall {
-  align-self: center;
-  padding: 3px 8px;
-  border: 1px solid var(--line-strong);
-  border-radius: 4px;
-  font-size: 11.5px;
-  letter-spacing: 0.3em;
-  text-indent: 0.3em; /* 抵消末字后的字距，视觉居中 */
-  color: var(--brass);
+.spark {
+  color: var(--coral);
+  transform: translateY(-6px);
   flex-shrink: 0;
 }
 
 .tagline {
-  font-size: 10.5px;
-  letter-spacing: 0.14em;
-  color: var(--muted);
+  font-family: var(--serif);
+  font-style: italic;
+  font-size: 15px;
+  color: var(--lavender);
   white-space: nowrap;
+  letter-spacing: 0.01em;
 }
 
 @media (max-width: 1180px) {
@@ -78,7 +74,7 @@
 .navItem[data-active='true'] {
   background: var(--paper-solid);
   color: var(--ink);
-  box-shadow: 0 2px 10px #00000040, var(--shadow-inset);
+  box-shadow: var(--soft-shadow), var(--shadow-inset);
   border: 1px solid var(--line);
 }
 
@@ -155,9 +151,9 @@
   font-size: 12.5px;
   font-weight: 700;
   letter-spacing: 0.04em;
-  color: #1a1510;
-  background: linear-gradient(150deg, #d9b980, #a5824c);
-  box-shadow: 0 4px 12px #00000059;
+  color: var(--on-primary);
+  background: linear-gradient(150deg, var(--primary-a), var(--primary-b));
+  box-shadow: var(--soft-shadow);
 }
 
 /* 搜索下拉 */
@@ -189,7 +185,7 @@
 }
 
 .result:hover {
-  background: #b08d5714;
+  background: var(--tint);
 }
 
 .resultDot {
@@ -233,7 +229,7 @@
   background: var(--paper-solid);
   border-radius: 14px;
   border: 1px solid var(--line);
-  box-shadow: 0 18px 44px #00000073;
+  box-shadow: var(--shadow-lift);
   animation: fade-up 0.14s ease both;
   max-height: min(420px, 60vh);
   overflow-y: auto;
@@ -272,17 +268,17 @@
 }
 
 .menuItem:hover:not(:disabled) {
-  background: #b08d5714;
+  background: var(--tint);
 }
 
 .menuItem:disabled {
-  color: #6d6355;
+  color: var(--disabled);
   cursor: default;
 }
 
 .menuItem[data-active='true'] {
-  background: #b08d5721;
-  color: var(--brass-bright);
+  background: var(--active-bg);
+  color: var(--active-fg);
 }
 
 .menuCount {
@@ -292,7 +288,7 @@
 }
 
 .danger {
-  color: #e08872;
+  color: var(--danger);
 }
 
 /* 「分类」正在筛选时的小圆点，「笔记」的条数角标 */
@@ -308,13 +304,30 @@
   height: 16px;
   padding: 0 4px;
   border-radius: 999px;
-  background: #b08d5729;
-  color: var(--brass-bright);
+  background: var(--active-bg);
+  color: var(--active-fg);
   font-size: 10px;
   font-weight: 700;
   display: grid;
   place-items: center;
   font-variant-numeric: tabular-nums;
+}
+
+.themeToggle {
+  width: 36px;
+  height: 36px;
+  border-radius: 999px;
+  display: grid;
+  place-items: center;
+  color: var(--muted);
+  border: 1px solid var(--line);
+  background: var(--paper);
+  transition: color 0.16s ease, border-color 0.16s ease;
+}
+
+.themeToggle:hover {
+  color: var(--active-fg);
+  border-color: var(--line-strong);
 }
 
 .avatarBtn {

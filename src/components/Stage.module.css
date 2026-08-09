@@ -4,8 +4,8 @@
   isolation: isolate;
 }
 
-/* 展柜灯光：顶部一束下打的暖光锥 + 底部被照亮的光池，标本立在光池中央。
-   这是「博物馆之夜」的核心手法 —— 深色展厅里只有展品被照亮。 */
+/* 展柜灯光（暗主题）：顶部一束下打的暖光锥 + 底部被照亮的光池，标本立在
+   光池中央 —— 「博物馆之夜」的核心手法：深色展厅里只有展品被照亮。 */
 .stage::before {
   content: '';
   position: absolute;
@@ -24,6 +24,22 @@
   background: radial-gradient(118% 96% at 50% 46%, #00000000 58%, #0c0a0866 100%);
   z-index: 0;
   pointer-events: none;
+}
+
+/* 浅主题（v1 纸感）：从底部升起的巨大浅色圆台，模型停在弧顶上 */
+:global([data-theme='light']) .stage::before {
+  inset: auto;
+  left: 50%;
+  bottom: -78%;
+  width: 128%;
+  aspect-ratio: 1;
+  transform: translateX(-50%);
+  border-radius: 50%;
+  background: radial-gradient(circle at 50% 22%, #efe4d6 0%, #e9dccb 46%, #e4d5c2 100%);
+}
+
+:global([data-theme='light']) .stage::after {
+  background: radial-gradient(120% 78% at 50% 12%, #fffdfa 0%, #fffdfa00 58%);
 }
 
 .canvasWrap {
@@ -57,9 +73,9 @@
   gap: 2px;
   padding: 6px 8px;
   border-radius: var(--radius);
-  background: #191612f5;
+  background: var(--raise);
   border: 1px solid var(--line);
-  box-shadow: 0 14px 36px #00000073, inset 0 1px 0 #ffffff0a;
+  box-shadow: var(--shadow), var(--shadow-inset);
 }
 
 .tool {
@@ -75,16 +91,16 @@
 }
 
 .tool:hover {
-  background: #b08d5714;
+  background: var(--tint);
 }
 
 .tool[data-active='true'] {
-  background: #b08d5721;
-  color: var(--brass-bright);
+  background: var(--active-bg);
+  color: var(--active-fg);
 }
 
 .tool[data-active='true'] .toolLabel {
-  color: var(--brass-bright);
+  color: var(--active-fg);
 }
 
 .toolLabel {
@@ -115,14 +131,14 @@
   font-family: var(--serif);
   font-style: italic;
   font-size: 17px;
-  color: #cbb890;
+  color: var(--caption);
 }
 
 .captionHint {
   margin-top: 5px;
   font-size: 10.5px;
   letter-spacing: 0.08em;
-  color: #86775f;
+  color: var(--muted);
 }
 
 /* ---------------------------------------------------------------- 状态 */
@@ -150,8 +166,8 @@
   width: 26px;
   height: 26px;
   border-radius: 999px;
-  border: 2px solid #b08d5726;
-  border-top-color: var(--brass-bright);
+  border: 2px solid var(--line);
+  border-top-color: var(--active-fg);
   animation: spin 0.85s linear infinite;
 }
 
@@ -165,9 +181,9 @@
   max-width: 300px;
   padding: 16px 18px;
   border-radius: var(--radius);
-  background: #241d18f5;
-  border: 1px solid #e58a744d;
-  color: #e8a390;
+  background: var(--chip);
+  border: 1px solid var(--line-strong);
+  color: var(--danger);
   font-size: 12.5px;
   line-height: 1.6;
   text-align: center;
@@ -187,7 +203,7 @@
   gap: 7px;
   padding: 6px 12px;
   border-radius: var(--radius-sm);
-  background: #191612e6;
+  background: var(--raise);
   border: 1px solid var(--line);
   font-size: 11.5px;
   letter-spacing: 0.04em;

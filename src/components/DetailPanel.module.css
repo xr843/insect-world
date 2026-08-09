@@ -37,7 +37,7 @@
   display: grid;
   place-items: center;
   border: 1px solid var(--line);
-  box-shadow: var(--shadow-inset), 0 6px 18px #00000040;
+  box-shadow: var(--shadow-inset), var(--soft-shadow);
 }
 
 .epithet {
@@ -50,7 +50,7 @@
 .summary {
   font-size: 13px;
   line-height: 1.72;
-  color: #c8bda9;
+  color: var(--ink);
   margin-top: 14px;
 }
 
@@ -96,7 +96,7 @@
   gap: 9px;
   padding: 11px 13px;
   border-radius: 13px;
-  background: #b08d570f;
+  background: var(--tint);
   margin-top: 12px;
 }
 
@@ -138,14 +138,14 @@
   align-items: center;
   padding: 5px 10px;
   border-radius: 999px;
-  background: #241f18;
+  background: var(--chip);
   border: 1px solid var(--line);
   font-size: 10.5px;
-  color: #b3a48c;
+  color: var(--muted);
 }
 
 .cycleArrow {
-  color: #6d6355;
+  color: var(--disabled);
   font-size: 10px;
 }
 
@@ -164,17 +164,17 @@
   justify-content: space-between;
   padding: 13px 17px;
   border-radius: 13px;
-  background: linear-gradient(180deg, #d9b980, #a5824c);
-  color: #1a1510;
+  background: linear-gradient(180deg, var(--primary-a), var(--primary-b));
+  color: var(--on-primary);
   font-size: 13px;
   font-weight: 600;
-  box-shadow: 0 8px 20px #00000059;
+  box-shadow: var(--soft-shadow);
   transition: transform 0.16s ease, box-shadow 0.16s ease;
 }
 
 .primary:hover {
   transform: translateY(-1px);
-  box-shadow: 0 12px 26px #00000073;
+  box-shadow: var(--shadow);
 }
 
 .pairRow {
@@ -191,7 +191,7 @@
   padding: 11px 12px;
   border-radius: 12px;
   border: 1px solid var(--line);
-  background: #ffffff08;
+  background: var(--field);
   font-size: 12px;
   color: var(--ink);
   transition: background 0.16s ease, border-color 0.16s ease;
@@ -235,7 +235,7 @@
 }
 
 .metaValue {
-  color: #b3a48c;
+  color: var(--muted);
   text-align: right;
   line-height: 1.5;
 }

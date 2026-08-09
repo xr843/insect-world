@@ -34,7 +34,7 @@ export function DetailPanel({
         <span
           className={s.portrait}
           style={{
-            background: `radial-gradient(circle at 34% 26%, ${insect.accent}33, ${insect.accent}14 58%, #241f18 100%)`,
+            background: `radial-gradient(circle at 34% 26%, ${insect.accent}33, ${insect.accent}14 58%, var(--glyph-base) 100%)`,
           }}
         >
           <InsectGlyph id={insect.id} size={42} color={insect.accent} />

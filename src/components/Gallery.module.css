@@ -55,7 +55,7 @@
 }
 
 .close:hover {
-  background: #b08d5714;
+  background: var(--tint);
   color: var(--ink);
 }
 
@@ -85,7 +85,7 @@
   padding: 12px;
   border-radius: 15px;
   border: 1px solid var(--line);
-  background: #ffffff08;
+  background: var(--field);
   text-align: left;
   transition: transform 0.16s ease, border-color 0.16s ease, background 0.16s ease;
 }
@@ -97,8 +97,8 @@
 }
 
 .tile[data-active='true'] {
-  border-color: #b08d5766;
-  background: #b08d5714;
+  border-color: var(--active-fg);
+  background: var(--active-bg);
 }
 
 .tileThumb {
@@ -147,13 +147,17 @@
   border: 1px solid var(--line);
   border-radius: 16px;
   overflow: hidden;
-  background: #191612;
+  background: var(--paper-solid);
 }
 
 .compareStage {
   height: 240px;
   position: relative;
   background: radial-gradient(120% 90% at 50% 8%, #2a241b 0%, #171310 100%);
+}
+
+:global([data-theme='light']) .compareStage {
+  background: radial-gradient(120% 90% at 50% 8%, #fffdfa 0%, #f0e6d8 100%);
 }
 
 .compareBody {
@@ -209,6 +213,6 @@
 
 .pick[data-active='true'] {
   background: var(--ink);
-  color: #1a1510;
+  color: var(--canvas);
   border-color: var(--ink);
 }

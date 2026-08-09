@@ -1,20 +1,28 @@
 /**
- * 设计系统 —— 博物馆之夜（暗色展柜）
+ * 设计系统 —— 双主题：博物馆之夜（默认暗色）× 纸感图鉴（浅色）
  *
- * 自研视觉语言（v2，2026-08-09 起），替换早期的纸感系统：
- * 展厅黑做底、黄铜做骨、标本牌米白做字。3D 标本靠暗场衬托，
- * 金属色 / 虹彩 / 萤光在深底上起飞 —— 灯光在展柜里，不在纸上。
+ * v2（2026-08-09）自研的暗色展柜语言：展厅黑做底、黄铜做骨、标本牌米白做字，
+ * 标本靠聚光灯锥与光池从暗场里托出。浅色主题保留 v1 的奶油纸面观感，
+ * 供白天阅读；两套共用同一结构（布局/圆角/操作台位置），只换颜色与光。
  *
- * 语义速查（沿用旧变量名避免全站改名，含义已换）：
- *   --canvas = 展厅底色   --paper = 展柜面板   --line = 黄铜发丝线
- *   --brass  = 身份色（黄铜），用于展签 / 选中态 / 焦点环
- * 四色标注体系（coral/lavender/sage/amber）保留分类语义，
- * 数值按深底重调：深底要的是「亮而不荧」，全部提亮降饱和。
+ * 主题机制：`:root` 定义暗色全量 token，`:root[data-theme='light']` 整组覆写；
+ * 切换即改 <html data-theme>（App.tsx 持久化到 localStorage）。
+ * ⚠️ 组件里禁止再写主题色十六进制 —— 一律经 token，否则另一主题就是漏。
+ *
+ * 语义速查：
+ *   --canvas 页面底    --paper 卡片面（带透明度） --paper-solid 卡片面（实色）
+ *   --raise  浮层实底（操作台/菜单）  --chip 小徽章底  --field 下沉输入区
+ *   --tint   悬停浅洗  --active-bg/fg 选中态       --brass 身份色（展签/焦点）
+ *   --primary-a/b + --on-primary 主按钮渐变与其上文字
+ *   --glyph-base 缩略图圆盘基色  --on-tone 落在四色圆点上的文字
+ *   --sky-a/b 栖境卡天空  --hotspot-card 3D 标注卡底
+ * 四色标注体系（coral/lavender/sage/amber）两主题各自调档：
+ * 深底「亮而不荧」，浅底压深过 AA。
  */
 
 :root {
   --ink: #eae2d2;
-  --muted: #a3937d; /* 深底上的次级文字，对 --paper 约 6.9:1，过 AA */
+  --muted: #a3937d;
   --canvas: #131110;
   --paper: #1d1915f0;
   --paper-solid: #1d1915;
@@ -25,13 +33,33 @@
   --brass-bright: #d4b273;
 
   --coral: #e58a74;
-  --lavender: #a996dd; /* 亮紫：旧值为浅底压深过 AA，深底反过来要提亮 */
+  --lavender: #a996dd;
   --sage: #93b389;
   --amber: #d6a95f;
 
   --shadow: 0 18px 48px #00000066;
   --shadow-lift: 0 24px 60px #00000091;
   --shadow-inset: inset 0 1px 0 #ffffff0d;
+  --soft-shadow: 0 2px 10px #00000040;
+
+  --raise: #191612f5;
+  --chip: #241f18;
+  --field: #ffffff08;
+  --tint: #b08d5714;
+  --active-bg: #b08d5721;
+  --active-fg: var(--brass-bright);
+  --primary-a: #d9b980;
+  --primary-b: #a5824c;
+  --on-primary: #1a1510;
+  --glyph-base: #241f18;
+  --on-tone: #1a1510;
+  --sky-a: #34302a;
+  --sky-b: #1e1a15;
+  --hotspot-card: #211c16f5;
+  --caption: #cbb890;
+  --disabled: #6d6355;
+  --danger: #e08872;
+  --focus: var(--brass-bright);
 
   --serif: 'Playfair Display', 'Noto Serif SC', Georgia, 'Songti SC', serif;
   --sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB',
@@ -40,6 +68,49 @@
   --radius: 10px;
   --radius-sm: 7px;
   --gap: 16px;
+}
+
+/* 纸感图鉴（v1 浅色）：奶油纸底 + 珊瑚主accent，黄铜降为深铜以过 AA */
+:root[data-theme='light'] {
+  --ink: #2f2a27;
+  --muted: #71685f;
+  --canvas: #f7f0e7;
+  --paper: #fffbf4d1;
+  --paper-solid: #fffbf4;
+  --line: #755b462e;
+  --line-strong: #755b4647;
+
+  --brass: #8a6a33;
+  --brass-bright: #a5824c;
+
+  --coral: #eb7c6b;
+  --lavender: #7455b5;
+  --sage: #769d74;
+  --amber: #c8944a;
+
+  --shadow: 0 18px 48px #573e2b0f;
+  --shadow-lift: 0 22px 56px #573e2b1c;
+  --shadow-inset: inset 0 1px 0 #ffffff8c;
+  --soft-shadow: 0 2px 10px #573e2b14;
+
+  --raise: #fffcf6;
+  --chip: #fffbf4;
+  --field: #fffbf480;
+  --tint: #755b4614;
+  --active-bg: #eb7c6b1f;
+  --active-fg: #c25a49;
+  --primary-a: #ef8674;
+  --primary-b: #e26e5c;
+  --on-primary: #fffaf5;
+  --glyph-base: #fffdf9;
+  --on-tone: #fffdf8;
+  --sky-a: #fffdf8;
+  --sky-b: #f2e8da;
+  --hotspot-card: #fffdf8f2;
+  --caption: #6f6259;
+  --disabled: #b3a89d;
+  --danger: #b4523f;
+  --focus: #c25a49;
 }
 
 * {
@@ -63,6 +134,14 @@ body {
   background-attachment: fixed;
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
+  transition: background-color 0.25s ease, color 0.25s ease;
+}
+
+/* 纸张的细微不匀：两层极淡的径向渐变，避免大面积纯色显得廉价 */
+:root[data-theme='light'] body {
+  background-image:
+    radial-gradient(1200px 680px at 18% -8%, #fffdf9 0%, #fffdf900 62%),
+    radial-gradient(900px 560px at 92% 6%, #f5ece0 0%, #f5ece000 58%);
 }
 
 h1,
@@ -87,36 +166,36 @@ button {
  * 键盘焦点环。
  *
  * 鼠标点击的 :focus 光圈全部压掉；键盘使用者靠 :focus-visible 定位 ——
- * 深底上用亮黄铜，比描边色更醒目。
+ * 暗主题亮黄铜、浅主题珊瑚，均比描边色醒目。
  */
 :focus {
   outline: none;
 }
 
 :focus-visible {
-  outline: 2px solid var(--brass-bright);
+  outline: 2px solid var(--focus);
   outline-offset: 2px;
 }
 
 ::selection {
-  background: #b08d5740;
+  background: var(--active-bg);
 }
 
-/* 统一的滚动条：深色展厅里用黄铜细条 */
+/* 统一的滚动条：跟随主题的细条 */
 * {
   scrollbar-width: thin;
-  scrollbar-color: #b08d5738 transparent;
+  scrollbar-color: var(--line-strong) transparent;
 }
 *::-webkit-scrollbar {
   width: 7px;
   height: 7px;
 }
 *::-webkit-scrollbar-thumb {
-  background: #b08d5738;
+  background: var(--line-strong);
   border-radius: 99px;
 }
 *::-webkit-scrollbar-thumb:hover {
-  background: #b08d5766;
+  background: var(--brass);
 }
 *::-webkit-scrollbar-track {
   background: transparent;
@@ -124,7 +203,7 @@ button {
 
 /* ---------------------------------------------------------------- 通用卡片 */
 
-/* 展柜面板：深底 + 黄铜发丝边 + 顶缘一线内高光（玻璃展柜的上沿反光） */
+/* 展柜面板：底 + 发丝边 + 顶缘一线内高光（玻璃展柜的上沿反光） */
 .card {
   background: var(--paper);
   border: 1px solid var(--line);
@@ -133,7 +212,7 @@ button {
   backdrop-filter: blur(6px);
 }
 
-/* 展签：字距拉开的大写小标签，黄铜色 —— 全站的「馆内标识系统」 */
+/* 展签：字距拉开的大写小标签 —— 全站的「馆内标识系统」 */
 .eyebrow {
   font-size: 10.5px;
   font-weight: 500;
@@ -230,7 +309,7 @@ button {
 }
 
 .rail-float button:hover {
-  color: var(--brass-bright);
+  color: var(--active-fg);
   border-color: var(--line-strong);
   transform: translateY(-1px);
 }
@@ -282,7 +361,7 @@ button {
 
 /* ---------------------------------------------------------------- 3D 热点
    由 drei 的 <Html> 渲染到 canvas 上层，故用全局类名而非 CSS Module。
-   圆点=大头针：亮针头压在被灯照亮的标本上，深浅底都读得出。 */
+   --tone 由 InsectCanvas 按标注类别写入（var(--coral) 等，随主题走）。 */
 
 .hotspot {
   position: relative;
@@ -300,6 +379,11 @@ button {
   box-shadow: 0 2px 8px #000000a6;
   pointer-events: auto;
   transition: transform 0.18s cubic-bezier(0.3, 1.5, 0.5, 1);
+}
+
+:root[data-theme='light'] .hotspot-dot {
+  border-color: #fffdf9;
+  box-shadow: 0 2px 7px #3a2a1c40;
 }
 
 .hotspot-dot:hover {
@@ -336,9 +420,9 @@ button {
   width: 172px;
   padding: 10px 13px 11px;
   border-radius: var(--radius-sm);
-  background: #211c16f5;
+  background: var(--hotspot-card);
   border: 1px solid var(--line-strong);
-  box-shadow: 0 12px 30px #00000080;
+  box-shadow: var(--shadow);
   backdrop-filter: blur(8px);
   pointer-events: auto;
   animation: fade-up 0.18s ease both;

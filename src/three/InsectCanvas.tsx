@@ -30,11 +30,12 @@ const PDB = typeof window !== 'undefined' && new URLSearchParams(window.location
 const REDUCED_MOTION =
   typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches
 
-const TONE_HEX: Record<string, string> = {
-  coral: '#eb7c6b',
-  lavender: '#8d6bcc',
-  sage: '#769d74',
-  amber: '#c8944a',
+/** 标注四色经 CSS token 解析（var(--coral) 等），自动跟随明暗主题 */
+const TONE_VAR: Record<string, string> = {
+  coral: 'var(--coral)',
+  lavender: 'var(--lavender)',
+  sage: 'var(--sage)',
+  amber: 'var(--amber)',
 }
 
 export type ViewMode = 'normal' | 'isolate' | 'section' | 'layers'
@@ -203,7 +204,7 @@ function Hotspot({
   onToggle: () => void
   groupRef: React.MutableRefObject<THREE.Group | null>
 }) {
-  const color = TONE_HEX[tone] ?? TONE_HEX.coral
+  const color = TONE_VAR[tone] ?? TONE_VAR.coral
   const wrap = useRef<HTMLDivElement>(null)
   const fade = useRef(1)
   const scratch = useRef({ world: new THREE.Vector3(), center: new THREE.Vector3(), toCam: new THREE.Vector3() })
@@ -406,9 +407,10 @@ function Framing({
  * shadow mapping 每帧要把模型画两遍，烘好的接触阴影免费给出同样观感。
  * 附带收益：省掉每帧一次深度渲染 + 两次模糊 pass，手机尤其受益。
  */
-const _blobCache: { tex: THREE.CanvasTexture | null } = { tex: null }
-function blobShadowTexture(): THREE.CanvasTexture | null {
-  if (_blobCache.tex) return _blobCache.tex
+const _blobCache: Record<string, THREE.CanvasTexture> = {}
+function blobShadowTexture(dark: boolean): THREE.CanvasTexture | null {
+  const key = dark ? 'dark' : 'light'
+  if (_blobCache[key]) return _blobCache[key]
   if (typeof document === 'undefined') return null
   const size = 256
   const canvas = document.createElement('canvas')
@@ -416,21 +418,22 @@ function blobShadowTexture(): THREE.CanvasTexture | null {
   const ctx = canvas.getContext('2d')
   if (!ctx) return null
   const c = size / 2
-  // 博物馆之夜：落影投在被聚光照亮的光池上，用纯黑（暖棕是旧纸底的遗产）
+  // 暗主题（博物馆之夜）：纯黑落影投在光池上；浅主题（纸感）：v1 的暖棕
+  const rgb = dark ? '0, 0, 0' : '92, 70, 48'
   const grad = ctx.createRadialGradient(c, c, size * 0.05, c, c, size * 0.5)
-  grad.addColorStop(0, 'rgba(0, 0, 0, 0.6)')
-  grad.addColorStop(0.45, 'rgba(0, 0, 0, 0.25)')
-  grad.addColorStop(1, 'rgba(0, 0, 0, 0)')
+  grad.addColorStop(0, `rgba(${rgb}, ${dark ? 0.6 : 0.62})`)
+  grad.addColorStop(0.45, `rgba(${rgb}, ${dark ? 0.25 : 0.26})`)
+  grad.addColorStop(1, `rgba(${rgb}, 0)`)
   ctx.fillStyle = grad
   ctx.fillRect(0, 0, size, size)
   const tex = new THREE.CanvasTexture(canvas)
   tex.colorSpace = THREE.SRGBColorSpace
-  _blobCache.tex = tex
+  _blobCache[key] = tex
   return tex
 }
 
-function BlobShadow({ floorY, radius }: { floorY: number; radius: number }) {
-  const tex = useMemo(() => blobShadowTexture(), [])
+function BlobShadow({ floorY, radius, dark }: { floorY: number; radius: number; dark: boolean }) {
+  const tex = useMemo(() => blobShadowTexture(dark), [dark])
   const mat = useMemo(() => {
     if (!tex) return null
     return new THREE.MeshBasicMaterial({
@@ -448,7 +451,7 @@ function BlobShadow({ floorY, radius }: { floorY: number; radius: number }) {
   )
 }
 
-function StudioLights({ radius }: { radius: number }) {
+function StudioLights({ radius, dark }: { radius: number; dark: boolean }) {
   const d = Math.max(radius, 0.001)
   return (
     <>
@@ -469,12 +472,12 @@ function StudioLights({ radius }: { radius: number }) {
         />
       </directionalLight>
       {/* 冷补光：把暗部从死黑救回来，模拟环境天光 */}
-      <directionalLight position={[-d * 3, d * 1.2, -d * 1.5]} intensity={0.95} color="#d6e2ff" />
-      {/* 轮廓光（博物馆之夜加强档）：深色展厅里暗部会融进背景，
-          靠背后双色勾边把标本从暗场里剥出来 —— 暖主勾 + 冷副勾。
+      <directionalLight position={[-d * 3, d * 1.2, -d * 1.5]} intensity={dark ? 0.95 : 0.85} color="#d6e2ff" />
+      {/* 轮廓光：暗主题（博物馆之夜）用加强档双色勾边 —— 深色展厅里暗部会
+          融进背景，靠背后暖主勾+冷副勾把标本剥出来；浅主题回 v1 单勾。
           只动灯不动材质：材质是逐只目检定过版的。 */}
-      <directionalLight position={[-d * 0.5, d * 1.8, -d * 3.2]} intensity={1.9} color="#ffe6c8" />
-      <directionalLight position={[d * 2.6, d * 0.9, -d * 2.6]} intensity={0.9} color="#cfe0ff" />
+      <directionalLight position={[-d * 0.5, d * 1.8, -d * 3.2]} intensity={dark ? 1.9 : 1.15} color="#ffe6c8" />
+      {dark && <directionalLight position={[d * 2.6, d * 0.9, -d * 2.6]} intensity={0.9} color="#cfe0ff" />}
 
       {/* 反射环境：甲壳与膜翅的高光全靠这几片面光源。
           必须包在自己的 Suspense 里 —— 它挂起时会连带同一边界内的
@@ -510,6 +513,7 @@ function Scene({
   focusAnchor,
   onLoaded,
   onError,
+  dark,
 }: {
   insect: Insect
   mode: ViewMode
@@ -520,6 +524,7 @@ function Scene({
   zoomNonce: number
   resetNonce: number
   focusAnchor: string | null
+  dark: boolean
   onLoaded: () => void
   onError: (msg: string) => void
 }) {
@@ -616,7 +621,7 @@ function Scene({
 
   return (
     <>
-      <StudioLights radius={radius} />
+      <StudioLights radius={radius} dark={dark} />
       <Framing
         radius={radius}
         controls={controls}
@@ -668,7 +673,7 @@ function Scene({
               })}
           </InsectMesh>
 
-          <BlobShadow floorY={floorY} radius={radius} />
+          <BlobShadow floorY={floorY} radius={radius} dark={dark} />
         </>
       )}
 
@@ -699,6 +704,7 @@ export function InsectCanvas({
   resetNonce,
   focusAnchor = null,
   active = true,
+  theme = 'dark',
   onStatus,
 }: {
   insect: Insect
@@ -712,6 +718,8 @@ export function InsectCanvas({
   focusAnchor?: string | null
   /** 展台滚出视口时置 false，整个渲染循环停摆 —— 手机上省下的是真电量 */
   active?: boolean
+  /** 明暗主题：决定轮廓光档位与落影颜色（材质与环境贴图不随主题动） */
+  theme?: 'dark' | 'light'
   onStatus: (s: { loading: boolean; error: string | null }) => void
 }) {
   const controls = useRef<OrbitControlsImpl>(null)
@@ -756,6 +764,7 @@ export function InsectCanvas({
           zoomNonce={zoomNonce}
           resetNonce={resetNonce}
           focusAnchor={focusAnchor}
+          dark={theme !== 'light'}
           onLoaded={() => onStatus({ loading: false, error: null })}
           onError={(msg) => onStatus({ loading: false, error: msg })}
         />
