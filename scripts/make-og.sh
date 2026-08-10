@@ -43,10 +43,12 @@ convert "$TMP/disc-fill.png" "$TMP/disc-mask.png" \
   -alpha off -compose CopyOpacity -composite "$TMP/disc.png"
 composite "$TMP/leaf.png" "$TMP/disc.png" "$TMP/badge.png"
 
-# 档案衬板底：左上偏亮、右下偏沉，与站点 body 的两层径向渐变同调
+# 档案衬板底：左上偏亮、右下偏沉，与站点 body 的两层径向渐变同调。
+# 高光层用浅色主题自己的 --raise #fbfcf8 → --canvas #e9ebe4；这里一度残留着
+# v1 从参考站取来的奶油纸底 #f7f0e7（其余地方早换掉了），别再写回暖色。
 convert -size 1200x630 gradient:'#f6f8f2'-'#e0e5da' -rotate 0 "$TMP/bg.png"
 convert "$TMP/bg.png" \
-  \( -size 1200x630 radial-gradient:'#fffefb'-'#f7f0e7' -alpha set -channel A \
+  \( -size 1200x630 radial-gradient:'#fbfcf8'-'#e9ebe4' -alpha set -channel A \
      -evaluate multiply 0.55 +channel \) -composite "$TMP/canvas.png"
 
 # 标题描边 1.1px 是在补字重：ImageMagick 用不了可变字体的 weight 轴，
