@@ -1,3 +1,4 @@
+import { useEffect, useRef } from 'react'
 import type { Insect } from '../data/types'
 import { InsectGlyph } from './InsectGlyph'
 import { IconArrowRight, IconBookmark, IconLeafSolid } from './icons'
@@ -29,6 +30,31 @@ export function LibraryPanel({
   onToggleNotedOnly: () => void
   noteCount: number
 }) {
+  /**
+   * 让选中项跟着走。
+   *
+   * 方向键翻图鉴（App.tsx 的 step）只改 activeId，没人负责把新的选中项
+   * 滚进视野 —— 实测按 9 下之后高亮已经在列表下边缘之外 143px 处，而
+   * 3D 展台照常换标本。于是症状看起来像「方向键坏了」，其实是列表没跟上。
+   *
+   * nearest 是关键：已经可见就一动不动，只在真的看不见时滚最小距离。
+   * 换成 center/start 会让每一次点击都把列表（连带整页）拽一下。
+   * block 管桌面端的竖列，inline 管手机上那条横向滑条，两个轴都得给。
+   *
+   * behavior 用 auto（瞬时）而不是 smooth，是实测之后改回来的：
+   * 平滑滚动由 rAF 驱动，在后台标签页里一次都不跑（实测 1.5 秒纹丝不动，
+   * 同一刻 auto 立刻到位）；连按方向键时动画又会被反复打断重启，列表
+   * 追不上高亮 —— 正好复现用户报的那个症状。「选中项可见」是正确性，
+   * 不该架在动画上。顺带也就天然合了 prefers-reduced-motion。
+   */
+  const activeRef = useRef<HTMLButtonElement>(null)
+
+  useEffect(() => {
+    // 选中项被筛掉时没有这个节点，不滚 —— 展台仍显示它，但列表里没有它的位置
+    if (!activeRef.current) return
+    activeRef.current.scrollIntoView({ block: 'nearest', inline: 'nearest', behavior: 'auto' })
+  }, [activeId, insects])
+
   return (
     <aside className={`card stage-height ${s.panel} detail-left`}>
       <div className={s.head}>
@@ -62,6 +88,7 @@ export function LibraryPanel({
           return (
             <button
               key={i.id}
+              ref={active ? activeRef : undefined}
               className={s.item}
               data-active={active}
               onClick={() => onSelect(i.id)}
