@@ -307,3 +307,22 @@
   color: var(--muted);
   margin-top: 16px;
 }
+
+/**
+ * AI 声明 —— 卡片底部的一条注脚。
+ *
+ * 刻意用 --muted 而不是更淡的 --disabled：这句话是要被读到的，不是
+ * 走过场的免责声明。--muted 落在卡片面上的对比度由 contrast.test.ts
+ * 守着 4.5:1，往下调就破了 AA。
+ *
+ * 负边距是为了让分隔线出血到卡片两边，读起来像「页面的底」而不是
+ * 正文的最后一段。
+ */
+.disclaimer {
+  margin: 20px -30px -12px;
+  padding: 12px 30px 0;
+  border-top: 1px solid var(--line);
+  font-size: 11px;
+  line-height: 1.6;
+  color: var(--muted);
+}

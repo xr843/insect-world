@@ -93,6 +93,14 @@ export function Discovery({
         </span>
         <div className={s.kicker}>跟着看</div>
         {children}
+        {/*
+          AI 声明贴在讲解正下方，而不是塞进页脚 —— 声明离被声明的对象越远
+          越没用。这里是全站长篇讲解文字唯一出现的地方，四个变体共用这个
+          shell，所以一处插入就覆盖讲解/动态/小测/栖境全部。
+        */}
+        <p className={s.disclaimer}>
+          讲解由 AI 撰写，未经昆虫学文献逐条核校 —— 认个形态可以，别当资料引用
+        </p>
       </div>
     </div>
   )
