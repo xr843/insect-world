@@ -9,6 +9,7 @@ import { Discovery, type DiscoveryKind } from './components/Discovery'
 import { Gallery } from './components/Gallery'
 import { DetailPanel } from './components/DetailPanel'
 import { LibraryPanel } from './components/LibraryPanel'
+import { SiteFooter } from './components/SiteFooter'
 import { Stage } from './components/Stage'
 import { TopBar } from './components/TopBar'
 import { IconGrid, IconSparkle } from './components/icons'
@@ -215,6 +216,8 @@ export default function App() {
         onDiscover={setDiscovery}
         onExplore={() => setGalleryOpen(true)}
       />
+
+      <SiteFooter />
 
       <div className="rail-float">
         <button onClick={() => setGalleryOpen(true)} title={`全部 ${SPECIES.length} 种`}>

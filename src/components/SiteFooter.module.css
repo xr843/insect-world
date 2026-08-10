@@ -1,0 +1,41 @@
+/**
+ * 页脚 —— 一条细线之下的一行小字，两套主题都靠 token 跟随。
+ *
+ * 刻意不给它卡片底/背景：页脚该像展签背面的落款，不是第四张卡片。
+ * --muted 落在 --canvas 上的对比度由 styles/__tests__/contrast.test.ts 守着。
+ */
+.footer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  margin-top: 36px;
+  padding-top: 18px;
+  border-top: 1px solid var(--line);
+  font-size: 12px;
+  letter-spacing: 0.02em;
+  color: var(--muted);
+}
+
+.sep {
+  opacity: 0.55;
+}
+
+.link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--muted);
+  text-decoration: none;
+  transition: color 0.16s ease;
+}
+
+.link:hover {
+  color: var(--brass);
+}
+
+@media (max-width: 900px) {
+  .footer {
+    margin-top: 28px;
+  }
+}
