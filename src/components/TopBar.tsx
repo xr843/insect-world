@@ -1,6 +1,8 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import type { Insect, Order } from '../data/types'
-import { useLabels, useT } from '../i18n/useT'
+import { useLabels, useLocale, useT } from '../i18n/useT'
+import { hrefForLocale } from '../i18n/hrefForLocale'
+import { LOCALE_AUTONYM } from '../i18n/locales'
 import {
   IconBook,
   IconChevronDown,
@@ -26,6 +28,7 @@ const NAV = [
 
 export function TopBar({
   insects,
+  activeId,
   onPick,
   onLessons,
   onLibrary,
@@ -40,6 +43,8 @@ export function TopBar({
   onToggleTheme,
 }: {
   insects: Insect[]
+  /** 当前物种 —— 切语言时带进地址，免得回到第一只 */
+  activeId: string
   onPick: (id: string) => void
   /** 「课程」打开讲解弹窗 —— 参考站的 Lessons 也是这个行为 */
   onLessons: () => void
@@ -60,6 +65,7 @@ export function TopBar({
 }) {
   const t = useT()
   const labels = useLabels()
+  const locale = useLocale()
   const [active, setActive] = useState<string>('explore')
   const [query, setQuery] = useState('')
   const [open, setOpen] = useState(false)
@@ -198,6 +204,24 @@ export function TopBar({
       </nav>
 
       <div className={s.right}>
+        {/*
+          用真 <a href> 而不是 onClick：中键、右键「新标签页打开」、
+          复制链接地址都得能用 —— 这是个跨页面跳转，不是页内状态切换。
+        */}
+        <div className={s.langToggle}>
+          {(['zh', 'en'] as const).map((code) => (
+            <a
+              key={code}
+              className={s.langItem}
+              data-active={locale === code}
+              href={locale === code ? undefined : hrefForLocale(code, activeId)}
+              aria-current={locale === code ? 'true' : undefined}
+              lang={code === 'zh' ? 'zh-Hans' : 'en'}
+            >
+              {LOCALE_AUTONYM[code]}
+            </a>
+          ))}
+        </div>
         <button
           className={s.themeToggle}
           onClick={onToggleTheme}

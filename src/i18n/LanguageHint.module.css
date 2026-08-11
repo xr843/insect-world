@@ -1,0 +1,55 @@
+/* 提示条：贴在最顶上一条窄带，克制到不抢内容，但足够被看见。 */
+.bar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 8px 44px 8px 16px;
+  position: relative;
+  font-size: 13px;
+  color: var(--ink);
+  background: var(--chip);
+  border-bottom: 1px solid var(--line);
+}
+
+.text {
+  color: var(--muted);
+}
+
+.cta {
+  color: var(--active-fg);
+  text-decoration: none;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.cta:hover {
+  text-decoration: underline;
+}
+
+.close {
+  position: absolute;
+  right: 12px;
+  width: 24px;
+  height: 24px;
+  display: grid;
+  place-items: center;
+  border-radius: 999px;
+  font-size: 16px;
+  line-height: 1;
+  color: var(--muted);
+}
+
+.close:hover {
+  color: var(--ink);
+  background: var(--tint);
+}
+
+@media (max-width: 600px) {
+  .bar {
+    flex-direction: column;
+    gap: 4px;
+    align-items: flex-start;
+    text-align: left;
+  }
+}

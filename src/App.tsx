@@ -16,6 +16,8 @@ import { TopBar } from './components/TopBar'
 import { IconGrid, IconSparkle } from './components/icons'
 import { isKnownSpecies, prefetchInsectModel } from './three/registry'
 import { THEME_COLOR, THEME_KEY, resolveTheme, type Theme } from './theme'
+import { speciesFromSearch } from './i18n/hrefForLocale'
+import { LanguageHint } from './i18n/LanguageHint'
 
 /**
  * 只保留建模文件确实在产物里的物种。数据层与建模层是分头推进的，
@@ -24,12 +26,19 @@ import { THEME_COLOR, THEME_KEY, resolveTheme, type Theme } from './theme'
  * 不一致大声报出来，这里是生产环境的兜底。
  */
 const SPECIES = INSECTS.filter((i) => isKnownSpecies(i.id))
+const SPECIES_IDS = SPECIES.map((i) => i.id)
 
 
 export default function App() {
   const t = useT()
   const labels = useLabels()
-  const [activeId, setActiveId] = useState(SPECIES[0].id)
+  /**
+   * 初始物种可由地址里的 ?s= 指定 —— 语言切换靠它把上下文带过去，
+   * 顺带让物种链接可以分享。认不出的 id 静默回落到首个物种。
+   */
+  const [activeId, setActiveId] = useState(
+    () => speciesFromSearch(location.search, SPECIES_IDS) ?? SPECIES[0].id,
+  )
   const [galleryOpen, setGalleryOpen] = useState(false)
   const [notesOpen, setNotesOpen] = useState(false)
   const [compareId, setCompareId] = useState<string | null>(null)
@@ -172,8 +181,10 @@ export default function App() {
 
   return (
     <div className="app">
+      <LanguageHint speciesId={activeId} />
       <TopBar
         insects={SPECIES}
+        activeId={activeId}
         onPick={select}
         onLessons={() => setDiscovery('lesson')}
         onLibrary={() => setGalleryOpen(true)}
