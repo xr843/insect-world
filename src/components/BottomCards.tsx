@@ -20,26 +20,10 @@ import {
 } from './icons'
 import s from './BottomCards.module.css'
 import { METAMORPHOSIS_LABEL } from '../i18n/orders'
+import type { OrderKey } from '../data/types'
+import { lengthOf } from '../data/length'
 
 const TONE = ['var(--coral)', 'var(--lavender)', 'var(--sage)', 'var(--amber)'] as const
-
-/** 从「体长 30–55 毫米」这类描述里取出毫米数，取上限值 */
-function parseLengthMm(text: string): number | null {
-  const cm = /([\d.]+)\s*(?:[–\-~至])?\s*([\d.]+)?\s*厘米/.exec(text)
-  const mm = /([\d.]+)\s*(?:[–\-~至])?\s*([\d.]+)?\s*(?:毫米|mm)/i.exec(text)
-  const pick = (m: RegExpExecArray, scale: number) => {
-    const hi = m[2] ? parseFloat(m[2]) : parseFloat(m[1])
-    return Number.isFinite(hi) ? hi * scale : null
-  }
-  if (cm) return pick(cm, 10)
-  if (mm) return pick(mm, 1)
-  return null
-}
-
-function lengthOf(insect: Insect): number | null {
-  const f = insect.facts.find((x) => x.icon === 'size')
-  return f ? parseLengthMm(f.value) : null
-}
 
 /** 复眼小眼面：蜂窝密排的小圆，用两层渐变做出球面隆起感 */
 function FacetDisc({ color }: { color: string }) {
@@ -89,8 +73,9 @@ function FacetDisc({ color }: { color: string }) {
 }
 
 /** 栖息地剖面：地平线 + 植被剪影，按物种主题色调色 */
-function HabitatFigure({ color, order }: { color: string; order: string }) {
-  const canopy = order === '蜻蜓目' || order === '半翅目'
+function HabitatFigure({ color, order }: { color: string; order: OrderKey }) {
+  /** 蜻蜓与半翅多在水边、树冠层活动，剪影换成高植被 */
+  const canopy = order === 'odonata' || order === 'hemiptera'
   return (
     <div className={s.habitat}>
       <svg viewBox="0 0 220 108" width="100%" height="100%" preserveAspectRatio="xMidYMid slice">
