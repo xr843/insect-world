@@ -19,7 +19,7 @@ import {
   IconSparkle,
 } from './icons'
 import s from './BottomCards.module.css'
-import { METAMORPHOSIS_LABEL } from '../i18n/orders'
+import { useLabels, useT } from '../i18n/useT'
 import type { OrderKey } from '../data/types'
 import { lengthOf } from '../data/length'
 
@@ -125,6 +125,9 @@ export function BottomCards({
   /** 引言卡的「继续观察」—— 它带着箭头，就必须真的能点 */
   onExplore: () => void
 }) {
+  const t = useT()
+  const labels = useLabels()
+
   // 体长对比：当前物种 + 三个体型差异明显的同伴，按长度排序
   const bars = useMemo(() => {
     const self = lengthOf(insect)
@@ -142,13 +145,18 @@ export function BottomCards({
 
   const notes = useMemo(
     () => [
-      `${METAMORPHOSIS_LABEL.zh[insect.metamorphosis]}，一生经历 ${insect.lifecycle.length} 个阶段`,
-      insect.hotspots[0] ? `留意${insect.hotspots[0].label}：${insect.hotspots[0].note}` : '',
-      `分布于${insect.range}`,
+      t('cards.note.metamorphosis', {
+        type: labels.metamorphosis[insect.metamorphosis],
+        n: insect.lifecycle.length,
+      }),
+      insect.hotspots[0]
+        ? t('cards.note.watch', { part: insect.hotspots[0].label, note: insect.hotspots[0].note })
+        : '',
+      t('cards.note.range', { range: insect.range }),
       insect.status,
-      insect.hotspots[1] ? `${insect.hotspots[1].label}是识别要点` : '',
+      insect.hotspots[1] ? t('cards.note.idKey', { part: insect.hotspots[1].label }) : '',
     ].filter(Boolean),
-    [insect],
+    [insect, t, labels],
   )
 
   return (
@@ -156,20 +164,20 @@ export function BottomCards({
       <div className={`card ${s.quote}`}>
         <IconSparkle size={18} className={s.quoteMark} />
         <div className={s.quoteText}>
-          看得越久，
+          {t('cards.quote.line1')}
           <br />
-          看见得越多。
+          {t('cards.quote.line2')}
         </div>
         <button className={s.quoteLink} onClick={onExplore}>
-          继续观察 →
+          {t('cards.quote.cta')}
         </button>
       </div>
 
       <article className={`card ${s.card}`}>
         <div className={s.head}>
           <div>
-            <div className={s.kicker}>显微视角</div>
-            <div className={s.subject}>复眼的小眼面</div>
+            <div className={s.kicker}>{t('cards.micro.kicker')}</div>
+            <div className={s.subject}>{t('cards.micro.subject')}</div>
           </div>
           <IconMicroscope size={15} className={s.headIcon} />
         </div>
@@ -177,7 +185,7 @@ export function BottomCards({
           <FacetDisc color={insect.accent} />
         </div>
         <button className={s.foot} onClick={() => onDiscover('lesson')}>
-          放大看结构
+          {t('cards.micro.foot')}
           <IconArrowRight size={13} />
         </button>
       </article>
@@ -185,8 +193,8 @@ export function BottomCards({
       <article className={`card ${s.card}`}>
         <div className={s.head}>
           <div>
-            <div className={s.kicker}>体型对比</div>
-            <div className={s.subject}>它在昆虫里有多大</div>
+            <div className={s.kicker}>{t('cards.size.kicker')}</div>
+            <div className={s.subject}>{t('cards.size.subject')}</div>
           </div>
           <IconGrid size={15} className={s.headIcon} />
         </div>
@@ -212,11 +220,11 @@ export function BottomCards({
               ))}
             </div>
           ) : (
-            <span style={{ fontSize: 11, color: 'var(--muted)' }}>体长数据待补</span>
+            <span style={{ fontSize: 11, color: 'var(--muted)' }}>{t('cards.size.empty')}</span>
           )}
         </div>
         <button className={s.foot} onClick={onCompare}>
-          打开对比视图
+          {t('cards.size.foot')}
           <IconArrowRight size={13} />
         </button>
       </article>
@@ -224,8 +232,8 @@ export function BottomCards({
       <article className={`card ${s.card}`}>
         <div className={s.head}>
           <div>
-            <div className={s.kicker}>生活史</div>
-            <div className={s.subject}>{METAMORPHOSIS_LABEL.zh[insect.metamorphosis]}</div>
+            <div className={s.kicker}>{t('cards.lifecycle.kicker')}</div>
+            <div className={s.subject}>{labels.metamorphosis[insect.metamorphosis]}</div>
           </div>
           <IconPlay size={15} className={s.headIcon} />
         </div>
@@ -242,7 +250,7 @@ export function BottomCards({
           </div>
         </div>
         <button className={s.foot} onClick={() => onDiscover('motion')}>
-          播放发育动画
+          {t('cards.lifecycle.foot')}
           <IconArrowRight size={13} />
         </button>
       </article>
@@ -250,8 +258,8 @@ export function BottomCards({
       <article className={`card ${s.card}`}>
         <div className={s.head}>
           <div>
-            <div className={s.kicker}>野外笔记</div>
-            <div className={s.subject}>观察要点</div>
+            <div className={s.kicker}>{t('cards.notes.kicker')}</div>
+            <div className={s.subject}>{t('cards.notes.subject')}</div>
           </div>
           <IconDocument size={15} className={s.headIcon} />
         </div>
@@ -266,7 +274,7 @@ export function BottomCards({
           </div>
         </div>
         <button className={s.foot} onClick={() => onDiscover('lesson')}>
-          查看全部笔记
+          {t('cards.notes.foot')}
           <IconArrowRight size={13} />
         </button>
       </article>
@@ -274,8 +282,8 @@ export function BottomCards({
       <article className={`card ${s.card}`}>
         <div className={s.head}>
           <div>
-            <div className={s.kicker}>它生活在哪</div>
-            <div className={s.subject}>{insect.order}的栖境</div>
+            <div className={s.kicker}>{t('cards.habitat.kicker')}</div>
+            <div className={s.subject}>{t('cards.habitat.subject', { order: labels.order[insect.order] })}</div>
           </div>
           <IconLeaf size={15} className={s.headIcon} />
         </div>
@@ -283,7 +291,7 @@ export function BottomCards({
           <HabitatFigure color={insect.accent} order={insect.order} />
         </div>
         <button className={s.foot} onClick={() => onDiscover('habitat')}>
-          看这一目的成员
+          {t('cards.habitat.foot')}
           <IconShare size={13} />
         </button>
       </article>

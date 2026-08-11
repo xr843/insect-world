@@ -13,7 +13,8 @@
  * nearest 不是风格偏好 —— 它是「已经可见就别动」的唯一取值，换成
  * center/start 会让每一次点击都把列表（乃至整页）拽一下。
  */
-import { render, cleanup } from '@testing-library/react'
+import { cleanup } from '@testing-library/react'
+import { renderZh } from '../../i18n/testing'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { LibraryPanel } from '../LibraryPanel'
 import { INSECTS } from '../../data/insects'
@@ -48,7 +49,7 @@ const props = {
 
 describe('左栏名录的选中项跟随', () => {
   it('选中项换到列表深处时，把它滚进视野', () => {
-    const { rerender } = render(<LibraryPanel {...props} activeId={INSECTS[0].id} />)
+    const { rerender } = renderZh(<LibraryPanel {...props} activeId={INSECTS[0].id} />)
     calls = []
     // 方向键连按的效果：activeId 一路往下
     rerender(<LibraryPanel {...props} activeId={INSECTS[11].id} />)
@@ -56,7 +57,7 @@ describe('左栏名录的选中项跟随', () => {
   })
 
   it('滚的是新的选中项本身，不是别的行', () => {
-    const { rerender } = render(<LibraryPanel {...props} activeId={INSECTS[0].id} />)
+    const { rerender } = renderZh(<LibraryPanel {...props} activeId={INSECTS[0].id} />)
     calls = []
     rerender(<LibraryPanel {...props} activeId={INSECTS[11].id} />)
     const el = calls.at(-1)?.el
@@ -70,7 +71,7 @@ describe('左栏名录的选中项跟随', () => {
    * 的话手机上选中项照样看不见。
    */
   it('block 与 inline 都用 nearest —— 已经可见时不许动', () => {
-    const { rerender } = render(<LibraryPanel {...props} activeId={INSECTS[0].id} />)
+    const { rerender } = renderZh(<LibraryPanel {...props} activeId={INSECTS[0].id} />)
     calls = []
     rerender(<LibraryPanel {...props} activeId={INSECTS[11].id} />)
     expect(calls.at(-1)?.opts?.block).toBe('nearest')
@@ -84,7 +85,7 @@ describe('左栏名录的选中项跟随', () => {
    * 不该架在动画上。
    */
   it('用瞬时滚动，不依赖动画', () => {
-    const { rerender } = render(<LibraryPanel {...props} activeId={INSECTS[0].id} />)
+    const { rerender } = renderZh(<LibraryPanel {...props} activeId={INSECTS[0].id} />)
     calls = []
     rerender(<LibraryPanel {...props} activeId={INSECTS[11].id} />)
     expect(calls.at(-1)?.opts?.behavior).not.toBe('smooth')

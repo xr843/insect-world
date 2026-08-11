@@ -11,7 +11,8 @@
  * 用真实数据（src/data/insects）而不是造假数据：造的数据只能证明代码
  * 按我以为的方式跑，用真数据才能证明「搜萤火虫真的搜得到」。
  */
-import { fireEvent, render, screen } from '@testing-library/react'
+import { fireEvent, screen } from '@testing-library/react'
+import { renderZh } from '../../i18n/testing'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { cleanup } from '@testing-library/react'
 import { TopBar } from '../TopBar'
@@ -21,7 +22,7 @@ afterEach(cleanup)
 
 function mount(overrides: Partial<Parameters<typeof TopBar>[0]> = {}) {
   const onPick = vi.fn()
-  render(
+  renderZh(
     <TopBar
       insects={INSECTS}
       onPick={onPick}

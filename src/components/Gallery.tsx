@@ -1,6 +1,6 @@
 import { useEffect, useMemo } from 'react'
 import type { Insect, Order } from '../data/types'
-import { ORDER_LABEL } from '../i18n/orders'
+import { useLabels, useT } from '../i18n/useT'
 import { InsectGlyph } from './InsectGlyph'
 import s from './Gallery.module.css'
 
@@ -32,6 +32,8 @@ export function Gallery({
   onClose: () => void
 }) {
   useDismiss(onClose)
+  const t = useT()
+  const { order: orderLabel } = useLabels()
 
   // 按目分组，让目录呈现分类学结构而不是一片平铺
   const groups = useMemo(() => {
@@ -49,10 +51,10 @@ export function Gallery({
       <div className={s.sheet} onClick={(e) => e.stopPropagation()}>
         <div className={s.head}>
           <div>
-            <h2 className={s.title}>全部 {insects.length} 种</h2>
-            <div className={s.sub}>按目排列 · 共 {groups.length} 个目</div>
+            <h2 className={s.title}>{t('gallery.title', { n: insects.length })}</h2>
+            <div className={s.sub}>{t('gallery.subtitle', { n: groups.length })}</div>
           </div>
-          <button className={s.close} onClick={onClose} aria-label="关闭">
+          <button className={s.close} onClick={onClose} aria-label={t('common.close')}>
             ×
           </button>
         </div>
@@ -60,7 +62,7 @@ export function Gallery({
         {groups.map(([order, list]) => (
           <div key={order}>
             <div className={s.groupTitle}>
-              <span className="eyebrow">{ORDER_LABEL.zh[order]}</span>
+              <span className="eyebrow">{orderLabel[order]}</span>
               <span className={s.groupLine} />
               <span className="eyebrow">{list.length}</span>
             </div>

@@ -12,6 +12,7 @@ import {
   IconSparkle,
 } from './icons'
 import s from './DetailPanel.module.css'
+import { useT } from '../i18n/useT'
 
 export function DetailPanel({
   insect,
@@ -22,11 +23,12 @@ export function DetailPanel({
   onCompare: () => void
   onDiscover: (kind: DiscoveryKind) => void
 }) {
+  const t = useT()
   return (
     <aside className={`card stage-height ${s.panel} detail-panel`} key={insect.id}>
       <div className={s.eyebrow}>
         <IconLeaf size={12} />
-        本期标本
+        {t('detail.eyebrow')}
       </div>
 
       <div className={s.titleRow}>
@@ -45,7 +47,7 @@ export function DetailPanel({
       <p className={s.summary}>{insect.summary}</p>
 
       <div className={s.rule} />
-      <div className="eyebrow">关键数据</div>
+      <div className="eyebrow">{t('detail.facts')}</div>
 
       <div className={s.factList}>
         {insect.facts.map((f) => (
@@ -64,7 +66,7 @@ export function DetailPanel({
           <IconGlobe size={13} />
         </span>
         <span className={s.asideBody}>
-          <div className={s.asideTitle}>生态角色</div>
+          <div className={s.asideTitle}>{t('detail.ecology')}</div>
           <div className={s.asideText}>{insect.ecology}</div>
         </span>
       </div>
@@ -74,7 +76,7 @@ export function DetailPanel({
           <IconSparkle size={13} />
         </span>
         <span className={s.asideBody}>
-          <div className={s.asideTitle}>你知道吗</div>
+          <div className={s.asideTitle}>{t('detail.trivia')}</div>
           <div className={s.asideText}>{insect.trivia}</div>
         </span>
       </div>
@@ -90,36 +92,36 @@ export function DetailPanel({
 
       <div className={s.actions}>
         <button className={s.primary} onClick={() => onDiscover('lesson')}>
-          读它的图鉴详解
+          {t('detail.readGuide')}
           <IconArrowRight size={15} />
         </button>
         <div className={s.pairRow}>
           <button className={s.ghost} onClick={() => onDiscover('motion')}>
             <IconPlay size={13} />
-            动态演示
+            {t('detail.motionDemo')}
           </button>
           <button className={s.ghost} onClick={() => onDiscover('quiz')}>
             <IconQuiz size={13} />
-            小测
+            {t('detail.quiz')}
           </button>
         </div>
         <button className={`${s.ghost} ${s.wide}`} onClick={onCompare}>
           <IconShare size={13} />
-          与其他昆虫对比
+          {t('detail.compareOthers')}
         </button>
       </div>
 
       <div className={s.meta}>
         <div className={s.metaRow}>
-          <span className={s.metaKey}>分布</span>
+          <span className={s.metaKey}>{t('detail.range')}</span>
           <span className={s.metaValue}>{insect.range}</span>
         </div>
         <div className={s.metaRow}>
-          <span className={s.metaKey}>现状</span>
+          <span className={s.metaKey}>{t('detail.status')}</span>
           <span className={s.metaValue}>{insect.status}</span>
         </div>
         <div className={s.metaRow}>
-          <span className={s.metaKey}>近缘</span>
+          <span className={s.metaKey}>{t('detail.relatives')}</span>
           <span className={s.metaValue}>{insect.relatives.join(' · ')}</span>
         </div>
       </div>

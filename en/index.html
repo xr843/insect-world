@@ -1,15 +1,15 @@
 <!doctype html>
-<html lang="zh-CN">
+<html lang="en">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>昆虫世界 — 像博物学家一样认识昆虫</title>
-    <meta name="description" content="可交互的 3D 昆虫图鉴：旋转、缩放、点击标注点，认识每一种昆虫的身体构造与生活史。" />
+    <title>Insect World — an interactive 3D field guide</title>
+    <meta name="description" content="An interactive 3D field guide to insects: rotate, zoom and tap the annotation points to explore each species' anatomy and life cycle." />
     <meta name="theme-color" content="#faf3e7" />
     <!-- 主题引导：首帧前设 data-theme（默认浅色），同步加载防闪变；
          CSP 无内联脚本，故为同源小文件 -->
     <script src="/theme-boot.js"></script>
-    <link rel="canonical" href="https://insect-world.pages.dev/" />
+    <link rel="canonical" href="https://insect-world.pages.dev/en/" />
     <link rel="alternate" hreflang="zh-Hans" href="https://insect-world.pages.dev/" />
     <link rel="alternate" hreflang="en" href="https://insect-world.pages.dev/en/" />
     <link rel="alternate" hreflang="x-default" href="https://insect-world.pages.dev/" />
@@ -18,10 +18,10 @@
     <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
     <!-- 分享卡片：微信/QQ/Twitter 抓的都是这几行；og:image 必须是绝对地址 -->
     <meta property="og:type" content="website" />
-    <meta property="og:title" content="昆虫世界 — 3D 昆虫图鉴" />
-    <meta property="og:description" content="60 种昆虫的可交互 3D 标本：旋转、剖切、点击标注点，认识身体构造与生活史。" />
-    <meta property="og:url" content="https://insect-world.pages.dev/" />
-    <meta property="og:image" content="https://insect-world.pages.dev/og.png" />
+    <meta property="og:title" content="Insect World — 3D field guide" />
+    <meta property="og:description" content="Interactive 3D specimens of 60 insects: rotate, dissect and tap the annotation points to explore anatomy and life cycles." />
+    <meta property="og:url" content="https://insect-world.pages.dev/en/" />
+    <meta property="og:image" content="https://insect-world.pages.dev/og-en.png" />
     <meta name="twitter:card" content="summary_large_image" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -35,20 +35,20 @@
       不能让它挡住整个站。
     -->
     <link
-      href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;1,400;1,500&family=Noto+Serif+SC:wght@400;500;600&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;1,400;1,500&display=swap"
       rel="stylesheet"
       media="print"
       onload="this.media='all'"
     />
     <noscript>
       <link
-        href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;1,400;1,500&family=Noto+Serif+SC:wght@400;500;600&display=swap"
+        href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;1,400;1,500&display=swap"
         rel="stylesheet"
       />
     </noscript>
   </head>
   <body>
     <div id="root"></div>
-    <script type="module" src="/src/main.tsx"></script>
+    <script type="module" src="/src/main.en.tsx"></script>
   </body>
 </html>

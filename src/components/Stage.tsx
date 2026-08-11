@@ -12,7 +12,7 @@ import {
   IconZoom,
 } from './icons'
 import s from './Stage.module.css'
-import { METAMORPHOSIS_LABEL } from '../i18n/orders'
+import { useLabels, useT } from '../i18n/useT'
 
 export function Stage({
   insect,
@@ -32,6 +32,8 @@ export function Stage({
   /** 明暗主题：透传给 3D 场景定轮廓光档位与落影颜色 */
   theme?: 'dark' | 'light'
 }) {
+  const t = useT()
+  const labels = useLabels()
   const [mode, setMode] = useState<ViewMode>('normal')
   /**
    * 自动旋转默认开，但访客的系统若声明了「减少动态效果」，就以关闭起步 ——
@@ -86,8 +88,8 @@ export function Stage({
       setShowLoading(false)
       return
     }
-    const t = window.setTimeout(() => setShowLoading(true), 180)
-    return () => window.clearTimeout(t)
+    const timer = window.setTimeout(() => setShowLoading(true), 180)
+    return () => window.clearTimeout(timer)
   }, [status.loading])
 
   const toggleMode = (m: ViewMode) => setMode((cur) => (cur === m ? 'normal' : m))
@@ -100,7 +102,7 @@ export function Stage({
         className={s.canvasWrap}
         ref={wrapRef}
         role="img"
-        aria-label={`${insect.name}的可交互三维标本：拖动旋转，滚轮缩放，点击彩色圆点认识部位`}
+        aria-label={t('stage.canvasLabel', { name: insect.name })}
       >
         <InsectCanvas
           active={inView}
@@ -121,17 +123,17 @@ export function Stage({
         <span className={s.orderDot} style={{ background: insect.accent }} />
         {insect.order}
         <span style={{ color: 'var(--muted)' }}>·</span>
-        <span style={{ color: 'var(--muted)' }}>{METAMORPHOSIS_LABEL.zh[insect.metamorphosis]}</span>
+        <span style={{ color: 'var(--muted)' }}>{labels.metamorphosis[insect.metamorphosis]}</span>
       </div>
 
       <div className={s.rail}>
         <button className={s.tool} data-active={spin} onClick={() => setSpin((v) => !v)}>
           <IconRotate size={17} />
-          <span className={s.toolLabel}>旋转</span>
+          <span className={s.toolLabel}>{t('stage.tool.rotate')}</span>
         </button>
         <button className={s.tool} onClick={() => setZoomNonce((n) => n + 1)}>
           <IconZoom size={17} />
-          <span className={s.toolLabel}>放大</span>
+          <span className={s.toolLabel}>{t('stage.tool.zoom')}</span>
         </button>
         <button
           className={s.tool}
@@ -139,7 +141,7 @@ export function Stage({
           onClick={() => toggleMode('isolate')}
         >
           <IconIsolate size={17} />
-          <span className={s.toolLabel}>聚焦</span>
+          <span className={s.toolLabel}>{t('stage.tool.focus')}</span>
         </button>
         <button
           className={s.tool}
@@ -147,7 +149,7 @@ export function Stage({
           onClick={() => toggleMode('section')}
         >
           <IconSection size={17} />
-          <span className={s.toolLabel}>剖切</span>
+          <span className={s.toolLabel}>{t('stage.tool.section')}</span>
         </button>
         <button
           className={s.tool}
@@ -155,11 +157,11 @@ export function Stage({
           onClick={() => toggleMode('layers')}
         >
           <IconLayers size={17} />
-          <span className={s.toolLabel}>分层</span>
+          <span className={s.toolLabel}>{t('stage.tool.layers')}</span>
         </button>
         <button className={s.tool} data-active={compareWith !== null} onClick={onCompareToggle}>
           <IconBox size={17} />
-          <span className={s.toolLabel}>对比</span>
+          <span className={s.toolLabel}>{t('stage.tool.compare')}</span>
         </button>
         <div className={s.railSplit} />
         <button
@@ -171,13 +173,13 @@ export function Stage({
           }}
         >
           <IconReset size={17} />
-          <span className={s.toolLabel}>复位</span>
+          <span className={s.toolLabel}>{t('stage.tool.reset')}</span>
         </button>
       </div>
 
       <div className={s.caption}>
         <div className={s.captionLatin}>{insect.latin}</div>
-        <div className={s.captionHint}>拖动旋转 · 滚轮细看 · 圆点＝观察点</div>
+        <div className={s.captionHint}>{t('stage.captionHint')}</div>
       </div>
 
       {compareWith && (
@@ -192,13 +194,11 @@ export function Stage({
       {(showLoading || status.error) && (
         <div className={s.status}>
           {status.error ? (
-            <div className={s.error}>
-              这只虫的模型没能建起来：{status.error}
-            </div>
+            <div className={s.error}>{t('stage.error', { error: status.error })}</div>
           ) : (
             <div className={s.spinner}>
               <span className={s.spinnerRing} />
-              正在生成 {insect.name} 的立体标本…
+              {t('stage.loading', { name: insect.name })}
             </div>
           )}
         </div>

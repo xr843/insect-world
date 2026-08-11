@@ -3,7 +3,7 @@ import type { Insect } from '../data/types'
 import { InsectGlyph } from './InsectGlyph'
 import { IconArrowRight, IconBookmark, IconLeafSolid } from './icons'
 import s from './LibraryPanel.module.css'
-import { ORDER_LABEL } from '../i18n/orders'
+import { useLabels, useT } from '../i18n/useT'
 
 export function LibraryPanel({
   insects,
@@ -31,6 +31,8 @@ export function LibraryPanel({
   onToggleNotedOnly: () => void
   noteCount: number
 }) {
+  const t = useT()
+  const labels = useLabels()
   /**
    * 让选中项跟着走。
    *
@@ -59,12 +61,12 @@ export function LibraryPanel({
   return (
     <aside className={`card stage-height ${s.panel} detail-left`}>
       <div className={s.head}>
-        <span className="eyebrow">昆虫图鉴</span>
+        <span className="eyebrow">{t('library.title')}</span>
         <button
           className={s.bookmark}
           data-active={notedOnly}
           onClick={onToggleNotedOnly}
-          title={notedOnly ? '显示全部物种' : `只看记过笔记的（${noteCount} 种）`}
+          title={notedOnly ? t('library.showAllTitle') : t('library.notedOnlyTitle', { n: noteCount })}
           aria-pressed={notedOnly}
         >
           <IconBookmark size={15} />
@@ -72,7 +74,7 @@ export function LibraryPanel({
       </div>
 
       {filterLabel && (
-        <button className={s.filter} onClick={onClearFilter} title="清除筛选">
+        <button className={s.filter} onClick={onClearFilter} title={t('library.clearFilterTitle')}>
           <span>{filterLabel}</span>
           <span className={s.filterX}>×</span>
         </button>
@@ -81,7 +83,7 @@ export function LibraryPanel({
       <div className={s.list}>
         {insects.length === 0 && (
           <div className={s.none}>
-            {notedOnly ? '还没有记过笔记的物种' : '这个筛选下没有物种'}
+            {notedOnly ? t('library.emptyNoted') : t('library.emptyFiltered')}
           </div>
         )}
         {insects.map((i) => {
@@ -104,7 +106,7 @@ export function LibraryPanel({
               </span>
               <span style={{ minWidth: 0 }}>
                 <div className={s.name}>{i.name}</div>
-                <div className={s.order}>{ORDER_LABEL.zh[i.order]}</div>
+                <div className={s.order}>{labels.order[i.order]}</div>
               </span>
               {active && (
                 <span className={s.mark}>
@@ -120,7 +122,7 @@ export function LibraryPanel({
       <div className={s.footer}>
         {/* 数的是全部物种，不是过滤后的列表 —— 这个按钮打开的始终是完整总览 */}
         <button className={s.viewAll} onClick={onViewAll}>
-          查看全部 {totalCount} 种
+          {t('library.viewAll', { n: totalCount })}
           <IconArrowRight size={14} />
         </button>
       </div>

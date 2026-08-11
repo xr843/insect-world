@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { INSECTS } from './data/insects'
 import type { Order } from './data/types'
-import { ORDER_LABEL } from './i18n/orders'
+import { useLabels, useT } from './i18n/useT'
 import { getGuide } from './data/guides'
 import { notesToMarkdown, useFieldNotes } from './hooks/useFieldNotes'
 import { NotesPanel } from './components/NotesPanel'
@@ -27,6 +27,8 @@ const SPECIES = INSECTS.filter((i) => isKnownSpecies(i.id))
 
 
 export default function App() {
+  const t = useT()
+  const labels = useLabels()
   const [activeId, setActiveId] = useState(SPECIES[0].id)
   const [galleryOpen, setGalleryOpen] = useState(false)
   const [notesOpen, setNotesOpen] = useState(false)
@@ -193,7 +195,7 @@ export default function App() {
           onSelect={select}
           onViewAll={() => setGalleryOpen(true)}
           totalCount={SPECIES.length}
-          filterLabel={orderFilter && ORDER_LABEL.zh[orderFilter]}
+          filterLabel={orderFilter && labels.order[orderFilter]}
           onClearFilter={() => setOrderFilter(null)}
           notedOnly={notedOnly}
           onToggleNotedOnly={() => setNotedOnly((v) => !v)}
@@ -221,10 +223,10 @@ export default function App() {
       <SiteFooter />
 
       <div className="rail-float">
-        <button onClick={() => setGalleryOpen(true)} title={`全部 ${SPECIES.length} 种`}>
+        <button onClick={() => setGalleryOpen(true)} title={t('library.allCount', { n: SPECIES.length })}>
           <IconGrid size={16} />
         </button>
-        <button onClick={surprise} title="换一只看看">
+        <button onClick={surprise} title={t('rail.surprise')}>
           <IconSparkle size={16} />
         </button>
       </div>

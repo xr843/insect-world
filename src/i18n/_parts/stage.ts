@@ -1,4 +1,59 @@
 import { definePart } from './part'
 
-/** 占位：由外提任务填充 */
-export const PART = definePart({}, {})
+/**
+ * Stage（3D 展台）与 DetailPanel（右栏标本卡）的界面文案。
+ *
+ * 两个组件由同一次外提任务负责，共用这一片：`stage.*` 是展台工具条/
+ * 加载态，`detail.*` 是标本卡的区块标题与按钮。
+ */
+export const PART = definePart(
+  {
+    'stage.canvasLabel': '{name}的可交互三维标本：拖动旋转，滚轮缩放，点击彩色圆点认识部位',
+    'stage.tool.rotate': '旋转',
+    'stage.tool.zoom': '放大',
+    'stage.tool.focus': '聚焦',
+    'stage.tool.section': '剖切',
+    'stage.tool.layers': '分层',
+    'stage.tool.compare': '对比',
+    'stage.tool.reset': '复位',
+    'stage.captionHint': '拖动旋转 · 滚轮细看 · 圆点＝观察点',
+    'stage.error': '这只虫的模型没能建起来：{error}',
+    'stage.loading': '正在生成 {name} 的立体标本…',
+    'detail.eyebrow': '本期标本',
+    'detail.facts': '关键数据',
+    'detail.ecology': '生态角色',
+    'detail.trivia': '你知道吗',
+    'detail.readGuide': '读它的图鉴详解',
+    'detail.motionDemo': '动态演示',
+    'detail.quiz': '小测',
+    'detail.compareOthers': '与其他昆虫对比',
+    'detail.range': '分布',
+    'detail.status': '现状',
+    'detail.relatives': '近缘',
+  },
+  {
+    'stage.canvasLabel':
+      'Interactive 3D specimen of {name}: drag to rotate, scroll to zoom, click the colored dots to explore anatomy',
+    'stage.tool.rotate': 'Rotate',
+    'stage.tool.zoom': 'Zoom',
+    'stage.tool.focus': 'Focus',
+    'stage.tool.section': 'Cross-section',
+    'stage.tool.layers': 'Layers',
+    'stage.tool.compare': 'Compare',
+    'stage.tool.reset': 'Reset',
+    'stage.captionHint': 'Drag to rotate · Scroll to zoom in · Dots mark points of interest',
+    'stage.error': 'The 3D model for this insect could not be built: {error}',
+    'stage.loading': 'Building the 3D specimen of {name}…',
+    'detail.eyebrow': 'Featured specimen',
+    'detail.facts': 'Key facts',
+    'detail.ecology': 'Ecological role',
+    'detail.trivia': 'Did you know',
+    'detail.readGuide': 'Read the full entry',
+    'detail.motionDemo': 'Motion demo',
+    'detail.quiz': 'Quiz',
+    'detail.compareOthers': 'Compare with another insect',
+    'detail.range': 'Range',
+    'detail.status': 'Status',
+    'detail.relatives': 'Relatives',
+  },
+)
