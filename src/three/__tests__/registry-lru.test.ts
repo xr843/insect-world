@@ -8,7 +8,7 @@
  * 所以只在这一个文件里做，且断言不依赖进入本文件前的缓存状态。
  */
 import { describe, expect, it } from 'vitest'
-import { INSECTS } from '../../data/insects'
+import { INSECTS } from '../../data/insects.zh'
 import { cacheStats, loadInsectModel } from '../registry'
 
 describe('模型缓存有上限', () => {

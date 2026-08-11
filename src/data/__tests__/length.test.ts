@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { INSECTS } from '../insects'
+import { INSECTS } from '../insects.zh'
 import { lengthOf, parseLengthMm } from '../length'
 
 describe('体长解析', () => {

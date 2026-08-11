@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { getInsect, INSECTS } from '../insects'
+import { getInsect, INSECTS } from '../insects.zh'
 import { ORDER_LABEL } from '../../i18n/orders'
 
 /** 两段文字里最长的一段一模一样的话，用来识别「换个说法又讲一遍」 */

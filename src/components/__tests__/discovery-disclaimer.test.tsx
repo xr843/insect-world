@@ -16,8 +16,8 @@ import { screen, cleanup } from '@testing-library/react'
 import { renderZh } from '../../i18n/testing'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { Discovery, type DiscoveryKind } from '../Discovery'
-import { INSECTS } from '../../data/insects'
-import { getGuide } from '../../data/guides'
+import { INSECTS } from '../../data/insects.zh'
+import { getGuide } from '../../data/guides.zh'
 
 afterEach(cleanup)
 

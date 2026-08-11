@@ -54,7 +54,7 @@ describe('每个物种的触角都接上了微动钩子', () => {
   ])
 
   it('除豁免名单外，全部物种都有可摆动的触角组（随图鉴总数自动伸缩）', async () => {
-    const { INSECTS } = await import('../../../data/insects')
+    const { INSECTS } = await import('../../../data/insects.zh')
     const { loadInsectModel } = await import('../../registry')
     const dead: string[] = []
     for (const insect of INSECTS) {
