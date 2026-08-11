@@ -76,8 +76,8 @@ export interface Insect {
   ecology: string
   /** 「你知道吗」栏：一条反直觉的冷知识 */
   trivia: string
-  /** 变态类型 */
-  metamorphosis: '完全变态' | '不完全变态'
+  /** 变态类型；显示名在 i18n/orders.ts 的 METAMORPHOSIS_LABEL */
+  metamorphosis: Metamorphosis
   /** 生活史各阶段，用于底部卡片 */
   lifecycle: string[]
   /** 分布区域 */

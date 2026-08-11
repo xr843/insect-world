@@ -12,6 +12,7 @@ import {
   IconZoom,
 } from './icons'
 import s from './Stage.module.css'
+import { METAMORPHOSIS_LABEL } from '../i18n/orders'
 
 export function Stage({
   insect,
@@ -120,7 +121,7 @@ export function Stage({
         <span className={s.orderDot} style={{ background: insect.accent }} />
         {insect.order}
         <span style={{ color: 'var(--muted)' }}>·</span>
-        <span style={{ color: 'var(--muted)' }}>{insect.metamorphosis}</span>
+        <span style={{ color: 'var(--muted)' }}>{METAMORPHOSIS_LABEL.zh[insect.metamorphosis]}</span>
       </div>
 
       <div className={s.rail}>

@@ -19,6 +19,7 @@ import {
   IconSparkle,
 } from './icons'
 import s from './BottomCards.module.css'
+import { METAMORPHOSIS_LABEL } from '../i18n/orders'
 
 const TONE = ['var(--coral)', 'var(--lavender)', 'var(--sage)', 'var(--amber)'] as const
 
@@ -156,7 +157,7 @@ export function BottomCards({
 
   const notes = useMemo(
     () => [
-      `${insect.metamorphosis}，一生经历 ${insect.lifecycle.length} 个阶段`,
+      `${METAMORPHOSIS_LABEL.zh[insect.metamorphosis]}，一生经历 ${insect.lifecycle.length} 个阶段`,
       insect.hotspots[0] ? `留意${insect.hotspots[0].label}：${insect.hotspots[0].note}` : '',
       `分布于${insect.range}`,
       insect.status,
@@ -239,7 +240,7 @@ export function BottomCards({
         <div className={s.head}>
           <div>
             <div className={s.kicker}>生活史</div>
-            <div className={s.subject}>{insect.metamorphosis}</div>
+            <div className={s.subject}>{METAMORPHOSIS_LABEL.zh[insect.metamorphosis]}</div>
           </div>
           <IconPlay size={15} className={s.headIcon} />
         </div>
