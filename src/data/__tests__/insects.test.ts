@@ -238,7 +238,7 @@ describe('INSECTS 数据完整性', () => {
       })
 
       it('metamorphosis 是合法枚举值', () => {
-        expect(['完全变态', '不完全变态']).toContain(insect.metamorphosis)
+        expect(['complete', 'incomplete']).toContain(insect.metamorphosis)
       })
 
       it('lifecycle 有 3~4 个阶段', () => {

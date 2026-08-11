@@ -2,6 +2,7 @@ import type { Insect } from '../data/types'
 import { InsectGlyph } from './InsectGlyph'
 import { IconReset } from './icons'
 import s from './CompareBar.module.css'
+import { METAMORPHOSIS_LABEL } from '../i18n/orders'
 
 /** 取某条 fact 的值，找不到就退到别的字段，保证对比条不出现空栏 */
 function factOf(insect: Insect, icon: string, fallback: string): string {
@@ -59,8 +60,8 @@ export function CompareBar({
         </div>
         <div className={s.field}>
           <div className={s.fieldKey}>变态</div>
-          <div className={s.fieldVal}>{left.metamorphosis}</div>
-          <div className={s.fieldVal}>{right.metamorphosis}</div>
+          <div className={s.fieldVal}>{METAMORPHOSIS_LABEL.zh[left.metamorphosis]}</div>
+          <div className={s.fieldVal}>{METAMORPHOSIS_LABEL.zh[right.metamorphosis]}</div>
         </div>
         <div className={s.field}>
           <div className={s.fieldKey}>食性</div>
