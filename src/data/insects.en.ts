@@ -329,14 +329,14 @@ export const INSECTS: Insect[] = [
   },
   {
     id: 'firefly',
-    name: 'Chinese Yellow Firefly',
-    latin: 'Lampyris sp.',
+    name: 'Mountain Firefly',
+    latin: 'Pyrocoelia pectoralis',
     epithet: 'A night messenger that signals in flashes of light',
     order: 'coleoptera',
     summary:
-      'The Chinese yellow firefly is a common terrestrial firefly. The lantern (light organ) at the tip of the adult’s abdomen produces a rhythmic, cool-burning flash used in courtship. Its larvae also glow; by day they hide among fallen leaves and moss, and by night roam damp woodland floors hunting snails and slugs.',
+      'The mountain firefly is a terrestrial firefly common across mainland China. The lantern at the tip of the adult’s abdomen produces a rhythmic, cool-burning flash used in courtship. Its larvae also glow; by day they hide among fallen leaves and moss, and by night roam damp woodland floors hunting snails and slugs.',
     facts: [
-      { key: 'Length', value: 'Adults about 10–18 mm; in some females of this genus the wings are reduced, leaving them larva-like and flightless', icon: 'size' },
+      { key: 'Length', value: 'Males about 15–18 mm; females have reduced elytra and no hind wings, staying larva-like and flightless', icon: 'size' },
       { key: 'Life cycle', value: 'The larval stage can last more than 1 year, while the adult stage usually lasts only 1–2 weeks', icon: 'time' },
       { key: 'Habitat', value: 'Damp woodland, grassy areas, and leaf litter near streams', icon: 'place' },
       { key: 'Diet', value: 'Larvae prey on snails, slugs, and other mollusks; adults mostly do not feed', icon: 'food' },
@@ -399,14 +399,14 @@ export const INSECTS: Insect[] = [
   },
   {
     id: 'stick-insect',
-    name: 'Chinese Bamboo Stick Insect',
-    latin: 'Phasmatodea sp.',
+    name: 'Asian Stick Insect',
+    latin: 'Ramulus sp.',
     epithet: 'Living its whole life as a twig',
     order: 'phasmatodea',
     summary:
-      'The Chinese Bamboo Stick Insect is a plant-eating insect that mimics a slender twig. Its long, slim body all but merges with the plant stems it rests on when still. When disturbed, it often sways gently in imitation of a wind-blown branch, a trick that distracts predators from noticing it.',
+      'Ramulus stick insects are plant-eating insects that mimic a slender twig, with 80+ species endemic to China. The long, slim body all but merges with the plant stems it rests on when still. When disturbed, it often sways gently in imitation of a wind-blown branch, a trick that distracts predators from noticing it.',
     facts: [
-      { key: 'Length', value: 'Varies by species; common types are usually 10–20 cm long, among the most slender and elongated insects', icon: 'size' },
+      { key: 'Length', value: 'Varies by species; most are 8–16 cm long, among the most slender and elongated insects', icon: 'size' },
       { key: 'Life cycle', value: 'Eggs may take months or longer to hatch; nymphs grow into adults through repeated molts', icon: 'time' },
       { key: 'Habitat', value: 'Dense vegetation in shrubland, bamboo groves, and broadleaf forest', icon: 'place' },
       { key: 'Diet', value: 'Herbivorous; feeds on host plant leaves at night', icon: 'food' },
@@ -422,7 +422,7 @@ export const INSECTS: Insect[] = [
       { id: 'stick-insect-camouflage', label: 'Camouflage', note: 'Body color and surface texture shift with each molt to match the plant it lives on', anchor: 'camouflage', tone: 'coral' },
     ],
     ecology:
-      'The Chinese Bamboo Stick Insect is a plant-eating understory insect whose feeding is usually limited and has little impact on vegetation. Its highly specialized camouflage and limb-regrowth strategy evolved under predation pressure, and it remains a target that birds and other predators actively search for.',
+      'The Asian stick insect is a plant-eating understory insect whose feeding is usually limited and has little impact on vegetation. Its highly specialized camouflage and limb-regrowth strategy evolved under predation pressure, and it remains a target that birds and other predators actively search for.',
     trivia:
       'Many stick insect eggs mimic plant seeds in shape and scent and carry a nutrient-rich appendage ants find irresistible. Ants carry the eggs into the nest as seeds, and nymphs crawl out only after hatching.',
     metamorphosis: 'incomplete',

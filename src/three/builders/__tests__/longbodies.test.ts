@@ -99,7 +99,7 @@ describe('buildLonghornBeetle (星天牛)', () => {
   })
 })
 
-describe('buildStickInsect (中华修竹节虫)', () => {
+describe('buildStickInsect (棒䗛)', () => {
   it('构建不抛异常，radius > 0', () => {
     const model = buildStickInsect()
     expect(model.radius).toBeGreaterThan(0)
