@@ -3,6 +3,7 @@ import type { Insect } from '../data/types'
 import { InsectGlyph } from './InsectGlyph'
 import { IconArrowRight, IconBookmark, IconLeafSolid } from './icons'
 import s from './LibraryPanel.module.css'
+import { ORDER_LABEL } from '../i18n/orders'
 
 export function LibraryPanel({
   insects,
@@ -103,7 +104,7 @@ export function LibraryPanel({
               </span>
               <span style={{ minWidth: 0 }}>
                 <div className={s.name}>{i.name}</div>
-                <div className={s.order}>{i.order}</div>
+                <div className={s.order}>{ORDER_LABEL.zh[i.order]}</div>
               </span>
               {active && (
                 <span className={s.mark}>

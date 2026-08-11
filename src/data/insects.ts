@@ -6,7 +6,7 @@ export const INSECTS: Insect[] = [
     name: '双叉犀金龟',
     latin: 'Trypoxylus dichotomus',
     epithet: '腐叶堆里长大的角斗士',
-    order: '鞘翅目',
+    order: 'coleoptera',
     summary:
       '双叉犀金龟是东亚林地常见的大型金龟子，雄虫头部与前胸各生一支犄角，用于争夺树液与配偶而非用于飞行。它白天蛰伏于腐殖土或树皮缝隙，入夜后飞往栎树等阔叶树干舔食渗出的树液。',
     facts: [
@@ -41,7 +41,7 @@ export const INSECTS: Insect[] = [
     name: '帝王蝶',
     latin: 'Danaus plexippus',
     epithet: '会认路的橙色候鸟',
-    order: '鳞翅目',
+    order: 'lepidoptera',
     summary:
       '帝王蝶是北美洲最著名的长距离迁徙蝴蝶，翅膀橙黑相间的警戒色提醒天敌它体内积蓄的马利筋毒素。每年秋天，最后一代成虫会独自飞行数千公里，抵达自己从未去过的墨西哥冬眠地。',
     facts: [
@@ -76,7 +76,7 @@ export const INSECTS: Insect[] = [
     name: '西方蜜蜂',
     latin: 'Apis mellifera',
     epithet: '用舞蹈画地图的建筑师',
-    order: '膜翅目',
+    order: 'hymenoptera',
     summary:
       '西方蜜蜂是社会性程度最高的传粉昆虫之一，蜂群由一只蜂后、数万只工蜂和少量雄蜂组成，靠信息素与舞蹈协调分工。工蜂在数周的一生里依次承担清巢、育幼、筑巢与采集等不同工种。',
     facts: [
@@ -111,7 +111,7 @@ export const INSECTS: Insect[] = [
     name: '碧伟蜓',
     latin: 'Anax parthenope',
     epithet: '水陆两栖的空中猎手',
-    order: '蜻蜓目',
+    order: 'odonata',
     summary:
       '碧伟蜓是常见于池塘湖泊边的大型蜻蜓，体色以青绿与褐色为主，飞行敏捷且能悬停、瞬间转向。稚虫阶段生活在水中长达数月至一年，是水域中活跃的伏击型捕食者，羽化后转为空中猎手。',
     facts: [
@@ -146,7 +146,7 @@ export const INSECTS: Insect[] = [
     name: '中华大刀螳',
     latin: 'Tenodera sinensis',
     epithet: '伪装成绿叶的伏击刀客',
-    order: '螳螂目',
+    order: 'mantodea',
     summary:
       '中华大刀螳是中国原产的大型螳螂，前足特化成带列刺的镰刀状捕捉足，行动隐蔽、多倚仗拟态静候猎物靠近。锁定目标后，它的前足突然合拢完成一击，整个过程快到人眼难以看清细节。',
     facts: [
@@ -181,7 +181,7 @@ export const INSECTS: Insect[] = [
     name: '七星瓢虫',
     latin: 'Coccinella septempunctata',
     epithet: '红衣示警的蚜虫猎手',
-    order: '鞘翅目',
+    order: 'coleoptera',
     summary:
       '七星瓢虫是红底黑斑的小型甲虫，幼虫和成虫都以蚜虫为主食，是农田与果园里活跃的天然控害者。它靠鲜艳的体色警告天敌自己滋味不佳，受惊时还会分泌苦味体液自卫。',
     facts: [
@@ -216,7 +216,7 @@ export const INSECTS: Insect[] = [
     name: '日本弓背蚁',
     latin: 'Camponotus japonicus',
     epithet: '地下城邦的终身搬运工',
-    order: '膜翅目',
+    order: 'hymenoptera',
     summary:
       '日本弓背蚁是东亚常见的大型蚂蚁，工蚁分化出体型不同、分工各异的类型，靠触角接触与信息素协调分工。蚁群在地下或朽木中营建分室巢穴，蚁后深居巢穴中心，终生专事产卵。',
     facts: [
@@ -251,7 +251,7 @@ export const INSECTS: Insect[] = [
     name: '黑蚱蝉',
     latin: 'Cryptotympana atrata',
     epithet: '地下蛰伏多年的夏日歌手',
-    order: '半翅目',
+    order: 'hemiptera',
     summary:
       '黑蚱蝉是中国夏季最常见的大型鸣蝉，体色黑亮，雄虫腹部的发音器能发出持续而响亮的鸣声。它的若虫在地下靠吸食树根汁液生活数年，出土后蜕壳羽化为成虫，地面上的寿命却只有数周。',
     facts: [
@@ -286,7 +286,7 @@ export const INSECTS: Insect[] = [
     name: '东亚飞蝗',
     latin: 'Locusta migratoria',
     epithet: '拥挤到变身的旅行者',
-    order: '直翅目',
+    order: 'orthoptera',
     summary:
       '东亚飞蝗是分布最广的蝗虫之一，同一物种会因种群密度不同呈现散居型与群居型两种截然不同的外观与习性。密度较低时它们独居、体色暗淡；一旦种群拥挤，便会转变为体色鲜艳、结群迁飞的类型。',
     facts: [
@@ -321,7 +321,7 @@ export const INSECTS: Insect[] = [
     name: '中华黄萤',
     latin: 'Lampyris sp.',
     epithet: '会打灯语的黑夜信使',
-    order: '鞘翅目',
+    order: 'coleoptera',
     summary:
       '中华黄萤是常见的陆生萤火虫，成虫腹部末端的发光器能发出规律闪烁的冷光用于求偶。它的幼虫同样能发光，白天蛰伏在落叶与苔藓间，夜晚出没于潮湿林地捕食蜗牛与蛞蝓。',
     facts: [
@@ -356,7 +356,7 @@ export const INSECTS: Insect[] = [
     name: '星天牛',
     latin: 'Anoplophora chinensis',
     epithet: '把树干当摇篮的长须客',
-    order: '鞘翅目',
+    order: 'coleoptera',
     summary:
       '星天牛是身披黑底白斑鞘翅、触角长达体长两倍以上的大型天牛，因幼虫蛀食活树树干和根部而成为柑橘、杨柳等树木的重要蛀干害虫。雌虫在树皮上咬出产卵刻槽，孵化的幼虫钻入木质部取食一至两年后化蛹。',
     facts: [
@@ -391,7 +391,7 @@ export const INSECTS: Insect[] = [
     name: '中华修竹节虫',
     latin: 'Phasmatodea sp.',
     epithet: '把自己活成一根树枝',
-    order: '䗛目',
+    order: 'phasmatodea',
     summary:
       '中华修竹节虫是外形拟态成细枝的植食性昆虫，体态修长，静止时几乎与栖息的植物枝条融为一体。受到惊扰时，它常靠轻微摇晃身体模仿风中摆动的枝叶，以此蒙混天敌的注意。',
     facts: [
@@ -426,7 +426,7 @@ export const INSECTS: Insect[] = [
     name: '玉带凤蝶',
     latin: 'Papilio polytes',
     epithet: '把毒蝶画在自己翅上',
-    order: '鳞翅目',
+    order: 'lepidoptera',
     summary:
       '玉带凤蝶雄虫黑翅缀一道显眼白带，雌虫却常演化出多种拟态型，其中一型翅纹几乎复刻剧毒的红珠凤蝶。这种雌雄两态、雌性拟态他种的现象，是研究昆虫拟态与遗传机制的经典案例。',
     facts: [
@@ -461,7 +461,7 @@ export const INSECTS: Insect[] = [
     name: '柞蚕蛾',
     latin: 'Antheraea pernyi',
     epithet: '两千年丝绸背后的沉默者',
-    order: '鳞翅目',
+    order: 'lepidoptera',
     summary:
       '柞蚕蛾是体形硕大的赤褐色蚕蛾，前后翅各有一枚透明眼斑，是中国传统柞蚕丝绸产业的核心昆虫。成虫羽化后口器已经退化，终生不再取食，全部气力都用于交配和产卵。',
     facts: [
@@ -496,7 +496,7 @@ export const INSECTS: Insect[] = [
     name: '金环胡蜂',
     latin: 'Vespa mandarinia',
     epithet: '蜂群头顶最沉的阴影',
-    order: '膜翅目',
+    order: 'hymenoptera',
     summary:
       '金环胡蜂是世界上体型最大的胡蜂，上颚粗壮如镰刀，猎食时能迅速咬断猎物头胸部。数十只工蜂集群突袭一处蜂巢，可在数小时内将整窝蜜蜂屠戮殆尽，是蜜蜂最致命的天敌之一。',
     facts: [
@@ -531,7 +531,7 @@ export const INSECTS: Insect[] = [
     name: '中华虎甲',
     latin: 'Cicindela chinensis',
     epithet: '林间小径上的短跑冠军',
-    order: '鞘翅目',
+    order: 'coleoptera',
     summary:
       '中华虎甲是泛着金绿色金属光泽的小型甲虫，成虫和幼虫都是活跃的肉食者。它奔跑速度极快，常在裸露的沙土小径上疾冲几步又骤然停下，等复眼重新捕捉清晰影像后再度出击。',
     facts: [
@@ -566,7 +566,7 @@ export const INSECTS: Insect[] = [
     name: '中华大锹甲',
     latin: 'Dorcus hopei',
     epithet: '为一口树液较劲的角力士',
-    order: '鞘翅目',
+    order: 'coleoptera',
     summary:
       '中华大锹甲雄虫头顶一对粗壮大颚，是同类间格斗争夺树液和配偶的武器。大颚长度深受幼虫期营养影响，同一窝兄弟羽化后颚型可能相差悬殊，个体命运也因此分出高下。',
     facts: [
@@ -601,7 +601,7 @@ export const INSECTS: Insect[] = [
     name: '日本吉丁',
     latin: 'Chrysochroa fulgidissima',
     epithet: '千年不褪色的虹彩铠甲',
-    order: '鞘翅目',
+    order: 'coleoptera',
     summary:
       '日本吉丁鞘翅泛着金绿泛红的结构色光泽，色彩不是色素而是多层薄膜干涉光线所致。它的幼虫蛀食衰弱树木或枯木，成虫取食寄主叶片，鲜艳的鞘翅历史上还被用作工艺镶嵌材料。',
     facts: [
@@ -636,7 +636,7 @@ export const INSECTS: Insect[] = [
     name: '优雅蝈螽',
     latin: 'Gampsocleis gratiosa',
     epithet: '前足听雷、长须辨路的歌者',
-    order: '直翅目',
+    order: 'orthoptera',
     summary:
       '优雅蝈螽体态粗壮，雄虫以左右前翅摩擦发出洪亮鸣声求偶占域，是中国民间笼养鸣虫文化的主角。它的「耳朵」开在前足胫节上，触角也远长于体长，是与蝗虫最好的区分点。',
     facts: [
@@ -671,7 +671,7 @@ export const INSECTS: Insect[] = [
     name: '东方蝼蛄',
     latin: 'Gryllotalpa orientalis',
     epithet: '地道深处的挖掘工程师',
-    order: '直翅目',
+    order: 'orthoptera',
     summary:
       '东方蝼蛄体表密被短绒毛，前足特化成宽扁如铲的挖掘足，专职破土而不擅跳跃。它常年在松软的农田土壤里凿穴取食植物根系与幼苗，是农人最熟悉的地下害虫之一。',
     facts: [
@@ -706,7 +706,7 @@ export const INSECTS: Insect[] = [
     name: '水黾',
     latin: 'Aquarius elongatus',
     epithet: '踩着水面张力滑行的猎手',
-    order: '半翅目',
+    order: 'hemiptera',
     summary:
       '水黾体形细长，中后足密生疏水微毛，借助水面张力得以站立并滑行取食，而非仅凭体重轻盈。它靠水面波纹定位落水昆虫，前足抓握、中后足划水，是水面上活跃的伏击型捕食者。',
     facts: [
@@ -741,7 +741,7 @@ export const INSECTS: Insect[] = [
     name: '黑带食蚜蝇',
     latin: 'Episyrphus balteatus',
     epithet: '不带针的蜂纹伪装客',
-    order: '双翅目',
+    order: 'diptera',
     summary:
       '黑带食蚜蝇体色黑黄相间拟态蜂类，实则只有一对翅膀、没有螫针，是彻头彻尾的伪装。它能悬停、倒退、瞬间转向，飞行控制远比多数蜂类精细，幼虫更是蚜虫种群的重要天敌。',
     facts: [
@@ -776,7 +776,7 @@ export const INSECTS: Insect[] = [
     name: '中华草蛉',
     latin: 'Chrysoperla sinica',
     epithet: '背着猎物残骸潜行的绿衣客',
-    order: '脉翅目',
+    order: 'neuroptera',
     summary:
       '中华草蛉体态纤细，翅脉如网、复眼泛金铜色光泽，是花园和农田中常见的柔弱飞虫。它的幼虫却是凶猛的蚜虫杀手，捕食后常把猎物空壳背在身上作伪装，人称「蚜狮」。',
     facts: [
@@ -811,7 +811,7 @@ export const INSECTS: Insect[] = [
     name: '海滨蠼螋',
     latin: 'Labidura riparia',
     epithet: '海礁石缝里的持铗守夜人',
-    order: '革翅目',
+    order: 'dermaptera',
     summary:
       '海滨蠼螋栖息在海岸潮间带的石块与浮木下，腹末一对形态雌雄有别的尾铗是它的招牌武器，用于御敌和制服小型猎物。前翅退化成一对很短的革质鞘片，只盖住腹部前段，其余腹节完全裸露。',
     facts: [
@@ -846,7 +846,7 @@ export const INSECTS: Insect[] = [
     name: '神农洁蜣螂',
     latin: 'Catharsius molossus',
     epithet: '把粪球滚成摇篮的匠人',
-    order: '鞘翅目',
+    order: 'coleoptera',
     summary:
       '神农洁蜣螂是中国常见的大型蜣螂，通体漆黑发亮，雄虫头顶生一根后弯的角状突起用于打斗。它在牛粪、猪粪堆下方掘穴筑巢，将粪便搓成球状供幼虫取食，是加速草地粪便分解、促进养分回归土壤的重要分解者。',
     facts: [
@@ -881,7 +881,7 @@ export const INSECTS: Insect[] = [
     name: '竹象',
     latin: 'Cyrtotrachelus buqueti',
     epithet: '喙上挂着触角的钻笋客',
-    order: '鞘翅目',
+    order: 'coleoptera',
     summary:
       '竹象是体形健壮的大型象甲，喙状口器细长弯曲，触角就长在喙的中段而非头部。雌虫用喙在嫩竹笋上钻孔产卵，孵化的幼虫蛀入笋心取食，是南方竹林常见的蛀笋害虫。',
     facts: [
@@ -916,7 +916,7 @@ export const INSECTS: Insect[] = [
     name: '沟叩头虫',
     latin: 'Agrypnus binodulus',
     epithet: '腹底藏着一副弹簧机关',
-    order: '鞘翅目',
+    order: 'coleoptera',
     summary:
       '沟叩头虫是体态狭长的叩甲，鞘翅具规则纵沟，仰面朝天时能靠前胸腹突弹入中胸凹槽的机械储能猛然弹起翻正。幼虫栖息土中，即俗称的金针虫，是常见的地下害虫。',
     facts: [
@@ -951,7 +951,7 @@ export const INSECTS: Insect[] = [
     name: '黄缘龙虱',
     latin: 'Cybister japonicus',
     epithet: '背着一泡空气潜水的桨手',
-    order: '鞘翅目',
+    order: 'coleoptera',
     summary:
       '黄缘龙虱是水生的大型龙虱，体态椭圆流线，鞘翅与前胸背板边缘镶一圈醒目黄边。它虽终生离不开水，靠的却是气管呼吸，需定期把腹部末端伸出水面，在鞘翅下补充一泡空气再潜回水中。',
     facts: [
@@ -986,7 +986,7 @@ export const INSECTS: Insect[] = [
     name: '梭毒隐翅虫',
     latin: 'Paederus fuscipes',
     epithet: '身披警戒色的稻田卫士',
-    order: '鞘翅目',
+    order: 'coleoptera',
     summary:
       '梭毒隐翅虫体形细长，前胸与腹部橙红相间，短鞘翅下露出可自由弯曲的长腹部。它本身不咬不螫，是稻田里的捕食性益虫，但体液含隐翅虫素，一旦被拍死在皮肤上就会引发线状皮炎。',
     facts: [
@@ -1021,7 +1021,7 @@ export const INSECTS: Insect[] = [
     name: '白星花金龟',
     latin: 'Protaetia brevitarsis',
     epithet: '鞘翅不掀也能起飞的访花客',
-    order: '鞘翅目',
+    order: 'coleoptera',
     summary:
       '白星花金龟是常见的中型金龟子，铜黑色鞘翅上散布不规则白色斑点。鞘翅基部两侧各具一处凹缺，让后翅能不掀开鞘翅就直接展开飞行，这是它与犀金龟等近亲的关键区别。',
     facts: [
@@ -1056,7 +1056,7 @@ export const INSECTS: Insect[] = [
     name: '日本埋葬虫',
     latin: 'Nicrophorus japonicus',
     epithet: '合力筑坟育幼的黑衣夫妻',
-    order: '鞘翅目',
+    order: 'coleoptera',
     summary:
       '日本埋葬虫是黑底橙红斑纹的中型甲虫，一对成虫合作把小型动物尸体埋入地下做成育儿球。它们不仅照看虫卵孵化，幼虫孵出后双亲还会反刍消化过的肉糜直接喂食，这在昆虫里十分罕见。',
     facts: [
@@ -1091,7 +1091,7 @@ export const INSECTS: Insect[] = [
     name: '甘薯腊龟甲',
     latin: 'Cassida circumdata',
     epithet: '鞘翅撑出一顶透明龟壳',
-    order: '鞘翅目',
+    order: 'coleoptera',
     summary:
       '甘薯腊龟甲是外形酷似微型龟壳的小型叶甲，鞘翅与前胸背板向外扩展出一圈半透明裙边，把头和足都罩在下方。受惊时它紧贴叶面纹丝不动，扩展的裙边让天敌难以从边缘将它撬起。',
     facts: [
@@ -1126,7 +1126,7 @@ export const INSECTS: Insect[] = [
     name: '长戟大兜虫',
     latin: 'Dynastes hercules',
     epithet: '以身量称霸雨林的双角巨人',
-    order: '鞘翅目',
+    order: 'coleoptera',
     summary:
       '长戟大兜虫产于中南美洲热带雨林，雄虫连角体长可达约17厘米，是世界体长最长的甲虫。胸角与头角上下相对形成一副巨钳，格斗时用来夹起对手将其掀翻摔落；鞘翅颜色还会随湿度变化，干燥时泛黄绿，潮湿时转为深色。',
     facts: [
@@ -1161,7 +1161,7 @@ export const INSECTS: Insect[] = [
     name: '豉甲',
     latin: 'Gyrinus sp.',
     epithet: '水面画螺旋的分眼旋者',
-    order: '鞘翅目',
+    order: 'coleoptera',
     summary:
       '豉甲是常聚集成群、在静水面高速打旋的小型甲虫，复眼分成上下两对，能同时看清水上与水下的动静。它划水时以极快频率转向却极少相撞，靠的是感知自身与同伴激起的水面波纹反射，如同声呐一般探测前方障碍。',
     facts: [
@@ -1196,7 +1196,7 @@ export const INSECTS: Insect[] = [
     name: '中华金星步甲',
     latin: 'Carabus sp.',
     epithet: '鞘翅嵌金星的夜行猎手',
-    order: '鞘翅目',
+    order: 'coleoptera',
     summary:
       '中华金星步甲鞘翅密布金绿色圆点状刻纹如缀满金星，是行动敏捷的地面捕食者。它的后翅退化、鞘翅在中缝愈合无法飞行，终生只能疾走于地表猎捕蜗牛、昆虫幼虫等猎物，幼虫同样凶猛善捕。',
     facts: [
@@ -1231,7 +1231,7 @@ export const INSECTS: Insect[] = [
     name: '中华豆芫菁',
     latin: 'Epicauta chinensis',
     epithet: '以毒液护身的黑衣客',
-    order: '鞘翅目',
+    order: 'coleoptera',
     summary:
       '中华豆芫菁是体态修长的黑色小甲虫，因幼虫期形态多次剧变而成为复变态昆虫的代表。成虫常成群取食豆科植物花叶，体内含有毒的斑蝥素，受惊时会从足关节渗出黄色血淋巴自卫。',
     facts: [
@@ -1266,7 +1266,7 @@ export const INSECTS: Insect[] = [
     name: '阎甲',
     latin: 'Hister sp.',
     epithet: '腐土里屏息装死的黑甲士',
-    order: '鞘翅目',
+    order: 'coleoptera',
     summary:
       '阎甲是体壁坚硬、通体漆黑发亮的小型甲虫，常出没于腐尸、粪堆等腐败物中捕食蝇类幼虫。受到惊扰时，它能把足与触角完全收进体下的凹槽，蜷成一枚光滑硬壳装死，因此也是法医昆虫学观测尸体分解阶段的参考类群。',
     facts: [
@@ -1301,7 +1301,7 @@ export const INSECTS: Insect[] = [
     name: '角蝉',
     latin: 'Centrotus sp.',
     epithet: '顶盔戴甲扮荆棘的微躯客',
-    order: '半翅目',
+    order: 'hemiptera',
     summary:
       '角蝉是半翅目小型昆虫，头顶那顶造型夸张的盔状突起其实是前胸背板向后向上的极度延伸，并非头部或翅膀。多数种类与蚂蚁存在互利关系，靠分泌蜜露换取蚂蚁提供的保护，以刺吸式口器取食植物茎干汁液为生。',
     facts: [
@@ -1336,7 +1336,7 @@ export const INSECTS: Insect[] = [
     name: '姬蜂',
     latin: 'Megarhyssa sp.',
     epithet: '隔着树皮下针的寄生客',
-    order: '膜翅目',
+    order: 'hymenoptera',
     summary:
       '姬蜂是体态修长的寄生蜂，雌虫尾端拖着一根远长于体长的产卵器，能穿透数厘米厚的树干，把卵产在树蜂等蛀木昆虫的幼虫体内或附近。它并不蜇人——那根细长如针的构造是产卵器而非螫针，成虫本身对人几乎无害。',
     facts: [
@@ -1371,7 +1371,7 @@ export const INSECTS: Insect[] = [
     name: '中华齿蛉',
     latin: 'Acanthacorydalis sp.',
     epithet: '颚如枯枝的溪涧夜客',
-    order: '广翅目',
+    order: 'megaloptera',
     summary:
       '中华齿蛉是广翅目大型昆虫，雄虫具一对夸张延长如枯枝的上颚，主要用于同性间的求偶炫示与格斗，咬合力其实较弱；雌虫上颚短小却更有力。幼虫俗称水蜈蚣，水生肉食，是山涧水质清洁程度的指示生物。',
     facts: [
@@ -1406,7 +1406,7 @@ export const INSECTS: Insect[] = [
     name: '大王花金龟',
     latin: 'Goliathus goliatus',
     epithet: '顶着雕纹盾牌的雨林巨人',
-    order: '鞘翅目',
+    order: 'coleoptera',
     summary:
       '大王花金龟产于非洲赤道雨林，是世界上最重的甲虫之一。雄虫头部生有一枚Y形分叉的扁角，用来撬开争食的对手；宽阔的前胸背板上是黑白相间的纵条纹，鞘翅则呈天鹅绒质感的栗褐色。',
     facts: [
@@ -1441,7 +1441,7 @@ export const INSECTS: Insect[] = [
     name: '屁步甲',
     latin: 'Pheropsophus jessoensis',
     epithet: '灼热喷雾的地表狙击手',
-    order: '鞘翅目',
+    order: 'coleoptera',
     summary:
       '屁步甲是头胸橙黄、鞘翅蓝黑的中型步甲，腹末藏着一间「爆炸室」。受到威胁时，两种前体物质在其中瞬间反应，喷出接近100°C的苯醌雾并能精准调整方向，是昆虫化学防御的经典案例。',
     facts: [
@@ -1476,7 +1476,7 @@ export const INSECTS: Insect[] = [
     name: '甘肃鳖甲',
     latin: 'Anatolica sp.',
     epithet: '荒漠里锁住水分的黑甲',
-    order: '鞘翅目',
+    order: 'coleoptera',
     summary:
       '甘肃鳖甲是中国西北荒漠常见的拟步甲，体态浑圆漆黑，左右鞘翅在中缝完全愈合、后翅退化，终生不能飞行。愈合的鞘翅下方形成密闭空腔，大幅减少体表水分蒸发，是应对极端干旱环境的适应结果。',
     facts: [
@@ -1511,7 +1511,7 @@ export const INSECTS: Insect[] = [
     name: '红萤',
     latin: 'Lycostomus sp.',
     epithet: '穿警戒红衣的网翅使者',
-    order: '鞘翅目',
+    order: 'coleoptera',
     summary:
       '红萤鞘翅鲜红柔软，表面纵横交错的脊纹如网格。它体内含有令天敌不悦的化学物质，鲜红体色是写给天敌的警戒信号，也是多种无毒昆虫争相模仿的贝氏拟态模板。',
     facts: [
@@ -1546,7 +1546,7 @@ export const INSECTS: Insect[] = [
     name: '榆蓝叶甲',
     latin: 'Pyrrhalta aenescens',
     epithet: '啃秃榆树梢的古铜小甲',
-    order: '鞘翅目',
+    order: 'coleoptera',
     summary:
       '榆蓝叶甲是常见的小型叶甲，体短圆近半球形，鞘翅带蓝绿至古铜的金属光泽。成虫与幼虫都取食榆树叶片，是榆树的重要害虫；幼虫只啃食叶肉、留下网状叶脉，严重发生时可致整株榆树提早落叶。',
     facts: [
@@ -1581,7 +1581,7 @@ export const INSECTS: Insect[] = [
     name: '豆娘',
     latin: 'Ischnura sp.',
     epithet: '水边穿针引线的细腰客',
-    order: '蜻蜓目',
+    order: 'odonata',
     summary:
       '豆娘体态纤细，腹部细长如针，静息时四片翅收拢竖立于背上，与蜻蜓平展停栖明显不同，左右复眼也分离而不相接。它飞行力较弱，多在水边植物间短距离穿梭，捕食蚊蝇等小型飞虫。',
     facts: [
@@ -1616,7 +1616,7 @@ export const INSECTS: Insect[] = [
     name: '兰花螳螂',
     latin: 'Hymenopus coronatus',
     epithet: '比真花更会骗蜂的伪装者',
-    order: '螳螂目',
+    order: 'mantodea',
     summary:
       '兰花螳螂粉白相间，中后足腿节扩展成花瓣状叶片，本身就「长成」一朵花，而非躲在真花上伏击。研究显示，它对访花昆虫的吸引力甚至超过附近真正的花朵，是攻击性拟态最典型的案例之一。',
     facts: [
@@ -1651,7 +1651,7 @@ export const INSECTS: Insect[] = [
     name: '枯叶蛱蝶',
     latin: 'Kallima inachus',
     epithet: '翻个面就是一片枯叶',
-    order: '鳞翅目',
+    order: 'lepidoptera',
     summary:
       '枯叶蛱蝶前翅正面亮橙色带斜贯黑边，翅反面却酷似一片枯叶，连主脉与霉斑都逼真复刻。停栖收拢双翅后几乎难以察觉，受惊振翅时忽艳忽枯的反差，常让追击的鸟类瞬间跟丢目标。',
     facts: [
@@ -1686,7 +1686,7 @@ export const INSECTS: Insect[] = [
     name: '小豆长喙天蛾',
     latin: 'Macroglossum stellatarum',
     epithet: '白日悬停吸蜜的伪蜂鸟',
-    order: '鳞翅目',
+    order: 'lepidoptera',
     summary:
       '小豆长喙天蛾体态短粗如纺锤，白天活动，能像蜂鸟一样原地悬停取蜜，振翅频率每秒可达70–90次。喙管极细长，展开时可超过自身体长，中国本无蜂鸟，它常被误认成这种鸟类。',
     facts: [
@@ -1721,7 +1721,7 @@ export const INSECTS: Insect[] = [
     name: '黑翅土白蚁（兵蚁）',
     latin: 'Odontotermes formosanus',
     epithet: '生来失明的持钳守门人',
-    order: '蜚蠊目',
+    order: 'blattodea',
     summary:
       '兵蚁是白蚁群体里的守卫，头部硕大坚硬得几乎抵得上胸腹之和，一对镰刀状上颚只能夹断不能咀嚼。它天生无翅、没有复眼，终生看不见，也无法自己进食，全靠工蚁口对口喂养。',
     facts: [
@@ -1756,7 +1756,7 @@ export const INSECTS: Insect[] = [
     name: '大黑水龟虫',
     latin: 'Hydrophilus acuminatus',
     epithet: '自带气瓶的水下清道夫',
-    order: '鞘翅目',
+    order: 'coleoptera',
     summary:
       '大黑水龟虫是体型最大的水生甲虫之一，黑亮的体背圆滑呈流线型。它与凶猛的龙虱形似而性情迥异：成虫以水草和腐败有机质为主食，游泳时左右足交替划水，像在水底不紧不慢地踱步。',
     facts: [
@@ -1791,7 +1791,7 @@ export const INSECTS: Insect[] = [
     name: '中华郭公虫',
     latin: 'Trichodes sinae',
     epithet: '蜂巢里长大的花间猎手',
-    order: '鞘翅目',
+    order: 'coleoptera',
     summary:
       '中华郭公虫是鞘翅上横贯红黑相间宽带的小型甲虫，全身覆有细密绒毛。成虫白天流连花间，既取食花粉也顺势捕捉访花的小昆虫，一身醒目的警戒色让鸟类不敢轻易下口。',
     facts: [
@@ -1826,7 +1826,7 @@ export const INSECTS: Insect[] = [
     name: '铜绿丽金龟',
     latin: 'Anomala corpulenta',
     epithet: '披铜绿铠甲的夜行客',
-    order: '鞘翅目',
+    order: 'coleoptera',
     summary:
       '铜绿丽金龟通体闪着铜绿色金属光泽，是华北平原果园里最常见的食叶甲虫之一。成虫昼伏夜出、趋光性强，入夜后群集啃食苹果、杨树和榆树的叶片；幼虫就是土里咬根的蛴螬，两个阶段分头为害。',
     facts: [
@@ -1861,7 +1861,7 @@ export const INSECTS: Insect[] = [
     name: '猎蝽',
     latin: 'Sycanus croceovittatus',
     epithet: '揣着注射器的刺客',
-    order: '半翅目',
+    order: 'hemiptera',
     summary:
       '猎蝽是伏击型的捕食性蝽类，弯刀状的刺吸喙平时折收在头胸下方的纵沟里。捕猎时它悄然逼近，一喙刺入猎物体内注入含酶唾液，先把组织在体外消化成汁，再从容吸回，猎物往往顷刻瘫软。',
     facts: [
@@ -1896,7 +1896,7 @@ export const INSECTS: Insect[] = [
     name: '熊蜂',
     latin: 'Bombus lucorum',
     epithet: '会发抖取暖的传粉员',
-    order: '膜翅目',
+    order: 'hymenoptera',
     summary:
       '熊蜂是圆滚滚、周身密披绒毛的社会性蜂类，飞行时嗡声低沉。它能靠飞行肌剧烈颤动给自己预热，在蜜蜂尚不能出勤的低温清晨与早春率先出巢访花，是高山草甸和北方春天最可靠的传粉者。',
     facts: [
@@ -1931,7 +1931,7 @@ export const INSECTS: Insect[] = [
     name: '迷卡斗蟋',
     latin: 'Velarifictorus micado',
     epithet: '秋夜擂台上的鸣琴斗士',
-    order: '直翅目',
+    order: 'orthoptera',
     summary:
       '迷卡斗蟋俗称蛐蛐，体色黑褐、头圆牙利，是中国斗蟋民俗的主角。雄虫界域性极强，两雄相遇便张牙振翅一决高下；入夜后它举起前翅相互摩擦，奏出清亮的鸣声，既宣示领地也招引雌虫。',
     facts: [
@@ -1966,7 +1966,7 @@ export const INSECTS: Insect[] = [
     name: '食虫虻',
     latin: 'Promachus yesonicus',
     epithet: '敢劫蜻蜓的空中大盗',
-    order: '双翅目',
+    order: 'diptera',
     summary:
       '食虫虻是双翅目里最凶悍的空中猎手，浑身刚毛、复眼硕大，喜停在向阳的枝头守望。有飞虫掠过便腾空而起，从侧后方拦截，用多刺的长足一把抱住，连蜂类与蜻蜓这样的狠角色也敢下手。',
     facts: [
@@ -2001,7 +2001,7 @@ export const INSECTS: Insect[] = [
     name: '大蚊',
     latin: 'Tipula sp.',
     epithet: '被错当蚊子的长腿隐士',
-    order: '双翅目',
+    order: 'diptera',
     summary:
       '大蚊像一只放大数倍的蚊子，六条细腿长得夸张，飞行摇摇晃晃，夏夜常出现在灯下与墙角。它其实与吸血无缘——口器柔弱得连皮肤都刺不破，多数成虫几乎不进食，短短一生只为交配产卵。',
     facts: [
@@ -2036,7 +2036,7 @@ export const INSECTS: Insect[] = [
     name: '螳蛉',
     latin: 'Mantispa sp.',
     epithet: '长着螳臂的草蛉近亲',
-    order: '脉翅目',
+    order: 'neuroptera',
     summary:
       '螳蛉乍看像一只小螳螂：前足同样特化成带刺的捕捉足，前胸同样拉长如颈。但它两对翅上密布网状细脉，实为脉翅目成员，与草蛉的血缘远比与螳螂近，这身「螳螂装」是趋同演化的杰作。',
     facts: [
@@ -2071,7 +2071,7 @@ export const INSECTS: Insect[] = [
     name: '石蛾',
     latin: 'Limnephilus sp.',
     epithet: '用沙粒盖房的水中石匠',
-    order: '毛翅目',
+    order: 'trichoptera',
     summary:
       '石蛾外形似一只灰褐色的小蛾，翅面覆盖细毛而非鳞片，「毛翅目」之名正由此而来。幼虫俗称石蚕，栖息在溪流里，多数种类吐丝把沙粒枯枝缀成一节可背着走的巢筒，藏身其中缓缓爬行。',
     facts: [

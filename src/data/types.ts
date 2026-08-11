@@ -1,21 +1,15 @@
 /** 昆虫图鉴的数据契约 */
 
-/** 分类目 —— 决定左栏分组与配色 */
-export type Order =
-  | '鞘翅目'
-  | '鳞翅目'
-  | '膜翅目'
-  | '蜻蜓目'
-  | '螳螂目'
-  | '直翅目'
-  | '半翅目'
-  | '双翅目'
-  | '脉翅目'
-  | '革翅目'
-  | '广翅目'
-  | '蜚蠊目'
-  | '毛翅目'
-  | '䗛目'
+import type { Metamorphosis, OrderKey } from '../i18n/types'
+
+/**
+ * 分类目 —— 决定左栏分组与配色。
+ *
+ * 值是中立键（'coleoptera' 等），显示名在 i18n/orders.ts 里按语言查。
+ * 这个别名保留是为了让数据层的读者不必跳到 i18n 目录去认类型。
+ */
+export type Order = OrderKey
+export type { OrderKey, Metamorphosis }
 
 /** 3D 模型上的一个可点击标注点 */
 export interface Hotspot {
