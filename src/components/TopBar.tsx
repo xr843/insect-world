@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import type { Insect, Order } from '../data/types'
+import { ORDER_LABEL } from '../i18n/orders'
 import {
   IconBook,
   IconChevronDown,
@@ -113,7 +114,7 @@ export function TopBar({
         (i) =>
           i.name.toLowerCase().includes(q) ||
           i.latin.toLowerCase().includes(q) ||
-          i.order.includes(q) ||
+          ORDER_LABEL.zh[i.order].toLowerCase().includes(q) ||
           i.epithet.includes(q),
       )
     : []
@@ -186,7 +187,7 @@ export function TopBar({
                   setMenu(null)
                 }}
               >
-                <span>{order}</span>
+                <span>{ORDER_LABEL.zh[order]}</span>
                 <span className={s.menuCount}>{n}</span>
               </button>
             ))}

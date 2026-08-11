@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { INSECTS } from './data/insects'
 import type { Order } from './data/types'
+import { ORDER_LABEL } from './i18n/orders'
 import { getGuide } from './data/guides'
 import { notesToMarkdown, useFieldNotes } from './hooks/useFieldNotes'
 import { NotesPanel } from './components/NotesPanel'
@@ -192,7 +193,7 @@ export default function App() {
           onSelect={select}
           onViewAll={() => setGalleryOpen(true)}
           totalCount={SPECIES.length}
-          filterLabel={orderFilter}
+          filterLabel={orderFilter && ORDER_LABEL.zh[orderFilter]}
           onClearFilter={() => setOrderFilter(null)}
           notedOnly={notedOnly}
           onToggleNotedOnly={() => setNotedOnly((v) => !v)}

@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { getInsect, INSECTS } from '../insects'
+import { ORDER_LABEL } from '../../i18n/orders'
 
 /** 两段文字里最长的一段一模一样的话，用来识别「换个说法又讲一遍」 */
 function longestCommonSubstring(a: string, b: string): string {
@@ -271,13 +272,17 @@ describe('INSECTS 数据完整性', () => {
     expect(new Set(accents).size).toBe(accents.length)
   })
 
-  it('order 覆盖了全部 14 个目', () => {
+  it('order 覆盖了全部 14 个目，且每个都有双语显示名', () => {
     const orders = new Set(INSECTS.map(i => i.order))
     expect(orders.size).toBe(14)
+    for (const o of orders) {
+      expect(ORDER_LABEL.zh[o], `${o} 缺中文显示名`).toBeTruthy()
+      expect(ORDER_LABEL.en[o], `${o} 缺英文显示名`).toBeTruthy()
+    }
   })
 
   it('鞘翅目物种数为 28', () => {
-    const beetles = INSECTS.filter(i => i.order === '鞘翅目')
+    const beetles = INSECTS.filter(i => i.order === 'coleoptera')
     expect(beetles).toHaveLength(28)
   })
 })

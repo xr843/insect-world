@@ -1,5 +1,6 @@
 import { useEffect, useMemo } from 'react'
 import type { Insect, Order } from '../data/types'
+import { ORDER_LABEL } from '../i18n/orders'
 import { InsectGlyph } from './InsectGlyph'
 import s from './Gallery.module.css'
 
@@ -59,7 +60,7 @@ export function Gallery({
         {groups.map(([order, list]) => (
           <div key={order}>
             <div className={s.groupTitle}>
-              <span className="eyebrow">{order}</span>
+              <span className="eyebrow">{ORDER_LABEL.zh[order]}</span>
               <span className={s.groupLine} />
               <span className="eyebrow">{list.length}</span>
             </div>
