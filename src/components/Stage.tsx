@@ -121,7 +121,7 @@ export function Stage({
 
       <div className={s.orderTag}>
         <span className={s.orderDot} style={{ background: insect.accent }} />
-        {insect.order}
+        {labels.order[insect.order]}
         <span style={{ color: 'var(--muted)' }}>·</span>
         <span style={{ color: 'var(--muted)' }}>{labels.metamorphosis[insect.metamorphosis]}</span>
       </div>

@@ -34,7 +34,7 @@ export function CompareBar({
         <span style={{ minWidth: 0 }}>
           <div className={s.eyebrow}>{t('compare.current')}</div>
           <div className={s.name}>{left.name}</div>
-          <div className={s.order}>{left.order}</div>
+          <div className={s.order}>{labels.order[left.order]}</div>
         </span>
       </div>
 
@@ -50,7 +50,7 @@ export function CompareBar({
         <span style={{ minWidth: 0 }}>
           <div className={s.eyebrow}>{t('compare.comparison')}</div>
           <div className={s.name}>{right.name}</div>
-          <div className={s.order}>{right.order}</div>
+          <div className={s.order}>{labels.order[right.order]}</div>
         </span>
       </div>
 
