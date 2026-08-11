@@ -6,3 +6,8 @@ dist/
 
 # wrangler pages dev 的本地缓存
 .wrangler/
+
+# 并行 agent 的一次性校验脚本，不该进仓库
+_tmp*.mjs
+.tmp-*.mjs
+scripts/_*.mjs
