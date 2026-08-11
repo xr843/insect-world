@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
-import { INSECTS, getInsect } from '../insects'
-import { GUIDES, getGuide } from '../guides'
+import { INSECTS, getInsect } from '../insects.zh'
+import { GUIDES, getGuide } from '../guides.zh'
 
 /** 字段长度约束，源自撰写任务书里对各字段的字数要求 */
 const BOUNDS = {

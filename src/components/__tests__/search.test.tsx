@@ -16,7 +16,7 @@ import { renderZh } from '../../i18n/testing'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { cleanup } from '@testing-library/react'
 import { TopBar } from '../TopBar'
-import { INSECTS } from '../../data/insects'
+import { INSECTS } from '../../data/insects.zh'
 
 afterEach(cleanup)
 

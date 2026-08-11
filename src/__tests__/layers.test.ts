@@ -15,8 +15,8 @@
  */
 import { describe, expect, it } from 'vitest'
 import type { ReactElement, ReactNode } from 'react'
-import { INSECTS } from '../data/insects'
-import { GUIDES } from '../data/guides'
+import { INSECTS } from '../data/insects.zh'
+import { GUIDES } from '../data/guides.zh'
 import { insectBody } from '../components/InsectGlyph'
 import { UTILITY_MODULES, isKnownSpecies, knownSpecies } from '../three/registry'
 

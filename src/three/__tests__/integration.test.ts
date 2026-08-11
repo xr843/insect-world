@@ -9,7 +9,7 @@
  */
 import { describe, expect, it } from 'vitest'
 import * as THREE from 'three'
-import { INSECTS } from '../../data/insects'
+import { INSECTS } from '../../data/insects.zh'
 import { loadInsectModel } from '../registry'
 
 describe('每个物种都能加载出模型', () => {

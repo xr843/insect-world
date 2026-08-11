@@ -12,7 +12,7 @@ import { ContactShadows, Environment, Grid, Lightformer, OrbitControls } from '@
 import * as THREE from 'three'
 import type { InsectModel } from './three/builders/kit'
 import { knownSpecies, loadInsectModel } from './three/registry'
-import { INSECTS } from './data/insects'
+import { INSECTS } from './data/insects.zh'
 import './styles/global.css'
 
 /**

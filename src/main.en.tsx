@@ -1,9 +1,8 @@
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import App from './App'
-// TODO(合并阶段)：英文数据齐了之后换成 ./data/insects.en 与 ./data/guides.en
-import { INSECTS } from './data/insects'
-import { getGuide } from './data/guides'
+import { INSECTS } from './data/insects.en'
+import { getGuide } from './data/guides.en'
 import { LocaleProvider } from './i18n/LocaleProvider'
 import { en } from './i18n/en'
 import './styles/global.css'

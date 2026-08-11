@@ -1,8 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import { INSECTS } from './data/insects'
 import type { Order } from './data/types'
-import { useLabels, useT } from './i18n/useT'
-import { getGuide } from './data/guides'
+import { useLabels, useSpecies, useT } from './i18n/useT'
 import { notesToMarkdown, useFieldNotes } from './hooks/useFieldNotes'
 import { NotesPanel } from './components/NotesPanel'
 import { BottomCards } from './components/BottomCards'
@@ -19,25 +17,29 @@ import { THEME_COLOR, THEME_KEY, resolveTheme, type Theme } from './theme'
 import { speciesFromSearch } from './i18n/hrefForLocale'
 import { LanguageHint } from './i18n/LanguageHint'
 
-/**
- * 只保留建模文件确实在产物里的物种。数据层与建模层是分头推进的，
- * 中途某一侧领先很正常 —— 这道过滤保证界面永远不会列出一个点开只会
- * 转圈的物种。`three/__tests__/integration.test.ts` 会在开发期把这种
- * 不一致大声报出来，这里是生产环境的兜底。
- */
-const SPECIES = INSECTS.filter((i) => isKnownSpecies(i.id))
-const SPECIES_IDS = SPECIES.map((i) => i.id)
 
 
 export default function App() {
   const t = useT()
   const labels = useLabels()
   /**
+   * 物种数据来自 LocaleProvider，不再是模块级常量 —— 中英两版是两份
+   * 不同的数据，写死在模块作用域的话英文入口拿到的永远是中文那份
+   * （真机上就是这么撞出来的：界面全英文，标本却叫「双叉犀金龟」）。
+   *
+   * 只保留建模文件确实在产物里的物种：数据层与建模层分头推进，
+   * 中途某一侧领先很正常，这道过滤保证界面不会列出一个点开只会转圈的
+   * 物种。`three/__tests__/integration.test.ts` 会在开发期把不一致
+   * 大声报出来，这里是生产环境的兜底。
+   */
+  const { insects: ALL, getGuide } = useSpecies()
+  const SPECIES = useMemo(() => ALL.filter((i) => isKnownSpecies(i.id)), [ALL])
+  /**
    * 初始物种可由地址里的 ?s= 指定 —— 语言切换靠它把上下文带过去，
    * 顺带让物种链接可以分享。认不出的 id 静默回落到首个物种。
    */
   const [activeId, setActiveId] = useState(
-    () => speciesFromSearch(location.search, SPECIES_IDS) ?? SPECIES[0].id,
+    () => speciesFromSearch(location.search, SPECIES.map((i) => i.id)) ?? SPECIES[0].id,
   )
   const [galleryOpen, setGalleryOpen] = useState(false)
   const [notesOpen, setNotesOpen] = useState(false)
@@ -79,7 +81,7 @@ export default function App() {
     if (orderFilter) out = out.filter((i) => i.order === orderFilter)
     if (notedOnly) out = out.filter((i) => i.id in notes)
     return out
-  }, [orderFilter, notedOnly, notes])
+  }, [orderFilter, notedOnly, notes, SPECIES])
 
   /** 顶栏「探索」：收起所有浮层，回到干净的观察状态 */
   const backToExplore = useCallback(() => {
@@ -96,10 +98,10 @@ export default function App() {
     void navigator.clipboard?.writeText(md).catch(() => {
       /* 剪贴板被拒就算了，不打断用户 */
     })
-  }, [notes])
+  }, [notes, SPECIES])
   const compareWith = useMemo(
     () => (compareId ? SPECIES.find((i) => i.id === compareId) ?? null : null),
-    [compareId],
+    [compareId, SPECIES],
   )
 
   const select = useCallback((id: string) => {
@@ -110,7 +112,7 @@ export default function App() {
     for (const n of [idx + 1, idx - 1]) {
       if (SPECIES[n]) prefetchInsectModel(SPECIES[n].id)
     }
-  }, [])
+  }, [SPECIES])
 
   /**
    * 方向键在**可见列表**里走，不在全量列表里走 —— 筛到蜚蠊目还按全量翻，
@@ -124,7 +126,7 @@ export default function App() {
       const next = idx === -1 ? (delta > 0 ? 0 : pool.length - 1) : (idx + delta + pool.length) % pool.length
       select(pool[next].id)
     },
-    [activeId, select, listed],
+    [activeId, select, listed, SPECIES],
   )
 
   // 上下键翻图鉴。逐只看过去是这个产品的主要用法，不该每次都回去点列表。
@@ -151,7 +153,7 @@ export default function App() {
       const idx = SPECIES.findIndex((i) => i.id === activeId)
       return SPECIES[(idx + offset + SPECIES.length) % SPECIES.length].id
     },
-    [activeId],
+    [activeId, SPECIES],
   )
 
   const toggleCompare = useCallback(() => {
@@ -166,7 +168,7 @@ export default function App() {
       if (SPECIES[next].id === activeId) next = (next + 1) % SPECIES.length
       return SPECIES[next].id
     })
-  }, [activeId, pickPeer])
+  }, [activeId, pickPeer, SPECIES])
 
   // 换物种时，之前挑的对照对象若正好是新选中的，就顺延一个
   useEffect(() => {
@@ -177,7 +179,7 @@ export default function App() {
     // 用当前索引推进而非 Math.random：连点两次不会撞回同一只
     const idx = SPECIES.findIndex((i) => i.id === activeId)
     select(SPECIES[(idx * 5 + 3) % SPECIES.length].id)
-  }, [activeId, select])
+  }, [activeId, select, SPECIES])
 
   return (
     <div className="app">
