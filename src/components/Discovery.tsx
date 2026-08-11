@@ -84,8 +84,10 @@ export function Discovery({
   )
 
   const shell = (children: React.ReactNode, wide = false) => (
-    <div className={s.backdrop} onClick={close}>
-      <div className={s.sheet} data-wide={wide} onClick={(e) => e.stopPropagation()}>
+    // 这一层不再吃指针事件（见 Discovery.module.css）：讲解开着时台面照样能转，
+    // 所以也没有「点遮罩关闭」了 —— 关闭走右上角 × 或 Esc。
+    <div className={s.backdrop}>
+      <div className={s.sheet} data-wide={wide}>
         <button className={s.close} onClick={close} aria-label={t('common.close')}>
           ×
         </button>
