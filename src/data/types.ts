@@ -36,8 +36,7 @@ export interface Fact {
 
 /**
  * 讲解弹窗的一步。带 anchor 时，3D 展台会把镜头移到那个部位上，
- * 让「读到哪里、看到哪里」对上 —— 参考站的讲解弹窗只是静态文字，
- * 这里让它和模型联动。
+ * 让「读到哪里、看到哪里」对上。
  */
 export interface LessonStep {
   title: string
