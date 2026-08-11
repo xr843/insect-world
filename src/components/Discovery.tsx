@@ -8,6 +8,7 @@
  */
 import { useCallback, useEffect, useState } from 'react'
 import type { Guide, Insect } from '../data/types'
+import { useT } from '../i18n/useT'
 import { InsectGlyph } from './InsectGlyph'
 import { IconArrowRight, IconGlobe, IconPlay, IconQuiz, IconSparkle } from './icons'
 import s from './Discovery.module.css'
@@ -35,6 +36,7 @@ export function Discovery({
   /** 把镜头移到某个部位；传 null 表示回到全身取景 */
   onFocusAnchor: (anchor: string | null) => void
 }) {
+  const t = useT()
   const [step, setStep] = useState(0)
   // 作答槽位按实际题数开，写死长度会在题数不是 2 时错位
   const [picked, setPicked] = useState<(number | null)[]>(() =>
@@ -85,22 +87,20 @@ export function Discovery({
   const shell = (children: React.ReactNode, wide = false) => (
     <div className={s.backdrop} onClick={close}>
       <div className={s.sheet} data-wide={wide} onClick={(e) => e.stopPropagation()}>
-        <button className={s.close} onClick={close} aria-label="关闭">
+        <button className={s.close} onClick={close} aria-label={t('common.close')}>
           ×
         </button>
         <span className={s.badge}>
           <Badge size={21} />
         </span>
-        <div className={s.kicker}>跟着看</div>
+        <div className={s.kicker}>{t('discovery.kicker')}</div>
         {children}
         {/*
           AI 声明贴在讲解正下方，而不是塞进页脚 —— 声明离被声明的对象越远
           越没用。这里是全站长篇讲解文字唯一出现的地方，四个变体共用这个
           shell，所以一处插入就覆盖讲解/动态/小测/栖境全部。
         */}
-        <p className={s.disclaimer}>
-          讲解由 AI 撰写，未经昆虫学文献逐条核校 —— 认个形态可以，别当资料引用
-        </p>
+        <p className={s.disclaimer}>{t('discovery.disclaimer')}</p>
       </div>
     </div>
   )
@@ -110,10 +110,10 @@ export function Discovery({
     return shell(
       <>
         <h2 className={s.title}>{insect.name}</h2>
-        <p className={s.body}>这一种的讲解内容还在整理中。</p>
+        <p className={s.body}>{t('discovery.noContent')}</p>
         <div className={s.actions}>
           <button className={s.primary} onClick={close}>
-            回到标本
+            {t('common.backToSpecimen')}
             <IconArrowRight size={15} />
           </button>
         </div>
@@ -128,13 +128,14 @@ export function Discovery({
       <>
         <h2 className={s.title}>{current?.title ?? insect.name}</h2>
         <div className={s.stepMeta}>
-          第 {step + 1} / {steps.length} 步 · {insect.name}
+          {t('discovery.stepOf', { cur: step + 1, total: steps.length, name: insect.name })}
         </div>
         <p className={s.stepBody}>{current?.body}</p>
         {current?.anchor && (
           <span className={s.anchorHint}>
-            ◎ 镜头已移到「
-            {insect.hotspots.find((h) => h.anchor === current.anchor)?.label ?? current.anchor}」
+            {t('discovery.anchorHint', {
+              label: insect.hotspots.find((h) => h.anchor === current.anchor)?.label ?? current.anchor,
+            })}
           </span>
         )}
         <div className={s.steps}>
@@ -144,13 +145,13 @@ export function Discovery({
         </div>
         <div className={s.actions}>
           <button className={s.secondary} onClick={() => setStep((i) => i - 1)} disabled={step === 0}>
-            上一步
+            {t('discovery.back')}
           </button>
           <button
             className={s.primary}
             onClick={() => (last ? close() : setStep((i) => i + 1))}
           >
-            {last ? '看完了' : '下一步'}
+            {last ? t('discovery.done') : t('discovery.next')}
             <IconArrowRight size={15} />
           </button>
         </div>
@@ -165,11 +166,11 @@ export function Discovery({
     if (!q) {
       return shell(
         <>
-          <h2 className={s.title}>{insect.name}小测</h2>
-          <p className={s.body}>这一种的题目还在出。</p>
+          <h2 className={s.title}>{t('quiz.title', { name: insect.name })}</h2>
+          <p className={s.body}>{t('quiz.noContent')}</p>
           <div className={s.actions}>
             <button className={s.primary} onClick={close}>
-              回到标本
+              {t('common.backToSpecimen')}
               <IconArrowRight size={15} />
             </button>
           </div>
@@ -183,10 +184,8 @@ export function Discovery({
 
     return shell(
       <>
-        <h2 className={s.title}>{insect.name}小测</h2>
-        <div className={s.stepMeta}>
-          第 {step + 1} / {qs.length} 题
-        </div>
+        <h2 className={s.title}>{t('quiz.title', { name: insect.name })}</h2>
+        <div className={s.stepMeta}>{t('quiz.stepOf', { cur: step + 1, total: qs.length })}</div>
         <p className={s.question}>{q.question}</p>
         <div className={s.options}>
           {q.options.map((opt, i) => {
@@ -218,20 +217,18 @@ export function Discovery({
         </div>
         {answered && <div className={s.explain}>{q.explain}</div>}
         {done && (
-          <div className={s.score}>
-            答对 {score} / {qs.length}
-          </div>
+          <div className={s.score}>{t('quiz.score', { score, total: qs.length })}</div>
         )}
         <div className={s.actions}>
           <button className={s.secondary} onClick={() => setStep((i) => i - 1)} disabled={step === 0}>
-            上一题
+            {t('quiz.back')}
           </button>
           <button
             className={s.primary}
             onClick={() => (step >= qs.length - 1 ? close() : setStep((i) => i + 1))}
             disabled={!answered}
           >
-            {step >= qs.length - 1 ? '结束' : '下一题'}
+            {step >= qs.length - 1 ? t('quiz.finish') : t('quiz.next')}
             <IconArrowRight size={15} />
           </button>
         </div>
@@ -249,7 +246,7 @@ export function Discovery({
       {portrait}
       <div className={s.actions}>
         <button className={s.primary} onClick={close}>
-          回到标本
+          {t('common.backToSpecimen')}
           <IconArrowRight size={15} />
         </button>
       </div>

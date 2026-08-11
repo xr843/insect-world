@@ -7,7 +7,7 @@ export default defineConfig({
   build: {
     rollupOptions: {
       // preview.html 是模型调试台，与主站一起构建以免它悄悄失效
-      input: { main: 'index.html', preview: 'preview.html' },
+      input: { main: 'index.html', en: 'en/index.html', preview: 'preview.html' },
     },
   },
 })

@@ -12,7 +12,8 @@
  * 一处插入、四处生效。但共用不等于永远共用 —— 哪天有人给某个变体单独
  * 写一个返回分支绕开 shell()，这里就会红。这正是要守的东西。
  */
-import { render, screen, cleanup } from '@testing-library/react'
+import { screen, cleanup } from '@testing-library/react'
+import { renderZh } from '../../i18n/testing'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { Discovery, type DiscoveryKind } from '../Discovery'
 import { INSECTS } from '../../data/insects'
@@ -25,7 +26,7 @@ const insect = INSECTS.find((i) => getGuide(i.id))!
 const guide = getGuide(insect.id)
 
 function mount(kind: DiscoveryKind, g = guide) {
-  render(
+  renderZh(
     <Discovery
       kind={kind}
       insect={insect}

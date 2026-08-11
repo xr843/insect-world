@@ -13,7 +13,8 @@
  * 3. 年份取当前年，不是写死的常量 —— 写死的那种要等到跨年才露馅，
  *    而跨年那天没人在看页脚。
  */
-import { render, screen, cleanup } from '@testing-library/react'
+import { screen, cleanup } from '@testing-library/react'
+import { renderZh } from '../../i18n/testing'
 import { afterEach, describe, expect, it } from 'vitest'
 import { readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
@@ -29,19 +30,19 @@ const repoUrl = pkg.repository.url.replace(/^git\+/, '').replace(/\.git$/, '')
 
 describe('页脚', () => {
   it('GitHub 链接与 package.json 里的仓库地址一致', () => {
-    render(<SiteFooter />)
+    renderZh(<SiteFooter />)
     expect(screen.getByRole('link', { name: /github/i }).getAttribute('href')).toBe(repoUrl)
   })
 
   it('外链带 rel="noreferrer"（防 tabnabbing）', () => {
-    render(<SiteFooter />)
+    renderZh(<SiteFooter />)
     const link = screen.getByRole('link', { name: /github/i })
     expect(link.getAttribute('target')).toBe('_blank')
     expect(link.getAttribute('rel')).toContain('noreferrer')
   })
 
   it('版权年份是当前年份，不是写死的', () => {
-    render(<SiteFooter />)
+    renderZh(<SiteFooter />)
     expect(screen.getByText(new RegExp(`© *${new Date().getFullYear()}`))).toBeTruthy()
   })
 })

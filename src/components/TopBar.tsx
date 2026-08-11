@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import type { Insect, Order } from '../data/types'
-import { ORDER_LABEL } from '../i18n/orders'
+import { useLabels, useT } from '../i18n/useT'
 import {
   IconBook,
   IconChevronDown,
@@ -17,11 +17,11 @@ import {
 import s from './TopBar.module.css'
 
 const NAV = [
-  { key: 'explore', label: '探索', Icon: IconCompass },
-  { key: 'orders', label: '分类', Icon: IconLayers },
-  { key: 'lessons', label: '课程', Icon: IconBook },
-  { key: 'library', label: '图鉴库', Icon: IconLibrary },
-  { key: 'notes', label: '笔记', Icon: IconNote },
+  { key: 'explore', labelKey: 'nav.explore', Icon: IconCompass },
+  { key: 'orders', labelKey: 'nav.orders', Icon: IconLayers },
+  { key: 'lessons', labelKey: 'nav.lessons', Icon: IconBook },
+  { key: 'library', labelKey: 'nav.library', Icon: IconLibrary },
+  { key: 'notes', labelKey: 'nav.notes', Icon: IconNote },
 ] as const
 
 export function TopBar({
@@ -58,6 +58,8 @@ export function TopBar({
   onCopyNotes: () => void
   onClearNotes: () => void
 }) {
+  const t = useT()
+  const labels = useLabels()
   const [active, setActive] = useState<string>('explore')
   const [query, setQuery] = useState('')
   const [open, setOpen] = useState(false)
@@ -114,7 +116,7 @@ export function TopBar({
         (i) =>
           i.name.toLowerCase().includes(q) ||
           i.latin.toLowerCase().includes(q) ||
-          ORDER_LABEL.zh[i.order].toLowerCase().includes(q) ||
+          labels.order[i.order].toLowerCase().includes(q) ||
           i.epithet.includes(q),
       )
     : []
@@ -128,13 +130,13 @@ export function TopBar({
   return (
     <header className={s.bar}>
       <div className={s.brand}>
-        <span className={s.wordmark}>昆虫世界</span>
+        <span className={s.wordmark}>{t('brand.name')}</span>
         <IconSparkle size={13} className={s.spark} />
-        <span className={s.tagline}>像博物学家一样观察</span>
+        <span className={s.tagline}>{t('brand.tagline')}</span>
       </div>
 
       <nav className={s.nav} ref={navRef}>
-        {NAV.map(({ key, label, Icon }) => (
+        {NAV.map(({ key, labelKey, Icon }) => (
           <button
             key={key}
             className={s.navItem}
@@ -158,7 +160,7 @@ export function TopBar({
             }}
           >
             <Icon size={15} />
-            {label}
+            {t(labelKey)}
             {key === 'orders' && orderFilter && <span className={s.dot} />}
             {key === 'notes' && noteCount > 0 && <span className={s.badge}>{noteCount}</span>}
           </button>
@@ -174,7 +176,7 @@ export function TopBar({
                 setMenu(null)
               }}
             >
-              <span>全部</span>
+              <span>{t('orders.all')}</span>
               <span className={s.menuCount}>{insects.length}</span>
             </button>
             {orderCounts.map(([order, n]) => (
@@ -187,7 +189,7 @@ export function TopBar({
                   setMenu(null)
                 }}
               >
-                <span>{ORDER_LABEL.zh[order]}</span>
+                <span>{labels.order[order]}</span>
                 <span className={s.menuCount}>{n}</span>
               </button>
             ))}
@@ -199,8 +201,8 @@ export function TopBar({
         <button
           className={s.themeToggle}
           onClick={onToggleTheme}
-          aria-label={theme === 'dark' ? '切换到浅色主题' : '切换到深色主题'}
-          title={theme === 'dark' ? '浅色 · 纸感图鉴' : '深色 · 博物馆之夜'}
+          aria-label={theme === 'dark' ? t('theme.toLight') : t('theme.toDark')}
+          title={theme === 'dark' ? t('theme.light') : t('theme.dark')}
         >
           {theme === 'dark' ? <IconSun size={16} /> : <IconMoon size={16} />}
         </button>
@@ -209,7 +211,7 @@ export function TopBar({
             <IconSearch size={15} />
             <input
               value={query}
-              placeholder="搜索昆虫、目、特征…"
+              placeholder={t('search.placeholder')}
               onChange={(e) => {
                 setQuery(e.target.value)
                 setOpen(true)
@@ -220,7 +222,7 @@ export function TopBar({
           {open && q.length > 0 && (
             <div className={`card ${s.results}`}>
               {hits.length === 0 ? (
-                <div className={s.empty}>没有找到「{query}」</div>
+                <div className={s.empty}>{t('search.noResults', { query })}</div>
               ) : (
                 hits.map((i) => (
                   <button
@@ -250,8 +252,8 @@ export function TopBar({
             onClick={() => setMenu((m) => (m === 'account' ? null : 'account'))}
             aria-haspopup="menu"
             aria-expanded={menu === 'account'}
-            aria-label="观察记录"
-            title="观察记录"
+            aria-label={t('account.observationLog')}
+            title={t('account.observationLog')}
           >
             {/*
               这里原来放的是一个「昆」字。圆底 + 单字是头像的写法，
@@ -268,7 +270,7 @@ export function TopBar({
           {menu === 'account' && (
             <div className={`card ${s.menu} ${s.accountMenu}`}>
               <div className={s.menuHead}>
-                {noteCount > 0 ? `已记录 ${noteCount} 种` : '还没有观察笔记'}
+                {noteCount > 0 ? t('notes.recorded', { n: noteCount }) : t('notes.empty')}
               </div>
               <button
                 className={s.menuItem}
@@ -277,7 +279,7 @@ export function TopBar({
                   setMenu(null)
                 }}
               >
-                <span>打开笔记</span>
+                <span>{t('notes.open')}</span>
               </button>
               <button
                 className={s.menuItem}
@@ -287,7 +289,7 @@ export function TopBar({
                   setMenu(null)
                 }}
               >
-                <span>复制为 Markdown</span>
+                <span>{t('notes.copyMarkdown')}</span>
               </button>
               <button
                 className={s.menuItem}
@@ -297,7 +299,7 @@ export function TopBar({
                   setMenu(null)
                 }}
               >
-                <span className={s.danger}>清空笔记</span>
+                <span className={s.danger}>{t('notes.clear')}</span>
               </button>
             </div>
           )}

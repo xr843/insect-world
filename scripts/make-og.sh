@@ -14,15 +14,51 @@
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
-SERIF=/mnt/c/Windows/Fonts/NotoSerifSC-VF.ttf
-SANS=/mnt/c/Windows/Fonts/NotoSansSC-VF.ttf
-for f in "$SERIF" "$SANS"; do
-  [ -r "$f" ] || { echo "缺字体：$f（见脚本头注释）" >&2; exit 1; }
-done
+# 语言：不带参数出中文卡，`make-og.sh en` 出英文卡。
+# 英文卡不需要中文字体，所以那两个 Windows 字体的存在性检查只在中文分支做 ——
+# 否则在没挂 /mnt/c 的机器上，连英文卡都生成不了。
+LANG_ARG="${1:-zh}"
 
-TITLE='昆虫世界'
-SUBTITLE='60 种昆虫的可交互 3D 图鉴'
-TAGLINE='旋转 · 剖切 · 标注点 —— 像博物学家一样观察'
+if [ "$LANG_ARG" = "en" ]; then
+  OUT=public/og-en.png
+  TITLE='Insect World'
+  SUBTITLE='An interactive 3D field guide to 60 insects'
+  TAGLINE='Rotate · Dissect · Annotate'
+  # 站点 h1 用的 Playfair Display 是 Google Fonts 下发的，本机通常没装。
+  # 退到 Georgia —— 它本来就排在 global.css 的 --serif 栈里 Playfair 之后，
+  # 是这个站「拿不到 Playfair 时该长什么样」的既定答案，不是临时凑数。
+  # fc-match 拿不到目标字体时会返回默认族（多半是 DejaVu Sans），
+  # 那就成了无衬线，所以这里按文件路径逐个探，不用 fc-match。
+  for f in \
+    /usr/share/fonts/truetype/playfair/PlayfairDisplay-Regular.ttf \
+    /mnt/c/Windows/Fonts/georgia.ttf \
+    /usr/share/fonts/truetype/dejavu/DejaVuSerif.ttf
+  do [ -r "$f" ] && SERIF="$f" && break; done
+  for f in \
+    /mnt/c/Windows/Fonts/segoeui.ttf \
+    /usr/share/fonts/truetype/dejavu/DejaVuSans.ttf
+  do [ -r "$f" ] && SANS="$f" && break; done
+  [ -n "${SERIF:-}" ] || { echo "找不到任何可用衬线字体" >&2; exit 1; }
+  [ -n "${SANS:-}" ] || { echo "找不到任何可用无衬线字体" >&2; exit 1; }
+  # 英文在同字号下比中文宽得多，副标题按中文的 38pt 会直接溢出右边界；
+  # 描边归零是因为它本是给可变字体补字重的，Georgia 是静态字体不需要
+  PT_SUB=30
+  PT_TAG=24
+  STROKE=0
+else
+  OUT=public/og.png
+  SERIF=/mnt/c/Windows/Fonts/NotoSerifSC-VF.ttf
+  SANS=/mnt/c/Windows/Fonts/NotoSansSC-VF.ttf
+  for f in "$SERIF" "$SANS"; do
+    [ -r "$f" ] || { echo "缺字体：$f（见脚本头注释）" >&2; exit 1; }
+  done
+  TITLE='昆虫世界'
+  SUBTITLE='60 种昆虫的可交互 3D 图鉴'
+  TAGLINE='旋转 · 剖切 · 标注点 —— 像博物学家一样观察'
+  PT_SUB=38
+  PT_TAG=27
+  STROKE=1.1
+fi
 
 TMP=$(mktemp -d)
 trap 'rm -rf "$TMP"' EXIT
@@ -57,14 +93,14 @@ convert "$TMP/bg.png" \
 # -depth 8 同样不是可选项：默认 16 位让这张图 850KB（原版 245KB）。
 convert "$TMP/canvas.png" \
   "$TMP/badge.png" -geometry +96+165 -composite \
-  -font "$SERIF" -pointsize 96 -fill '#23282a' -stroke '#23282a' -strokewidth 1.1 \
+  -font "$SERIF" -pointsize 96 -fill '#23282a' -stroke '#23282a' -strokewidth "$STROKE" \
   -annotate +452+270 "$TITLE" \
   -stroke none \
-  -font "$SANS" -pointsize 38 -fill '#3c4446' \
+  -font "$SANS" -pointsize "$PT_SUB" -fill '#3c4446' \
   -annotate +452+352 "$SUBTITLE" \
-  -font "$SANS" -pointsize 27 -fill '#3f5199' \
+  -font "$SANS" -pointsize "$PT_TAG" -fill '#3f5199' \
   -annotate +452+430 "$TAGLINE" \
-  -depth 8 -strip public/og.png
+  -depth 8 -strip "$OUT"
 
 
 # 图标三件套复用同一个圆盘：favicon.svg 是手写源（渐变给浏览器看），
@@ -72,4 +108,4 @@ convert "$TMP/canvas.png" \
 convert "$TMP/badge.png" -resize 180x180 -depth 8 -strip public/apple-touch-icon.png
 convert "$TMP/badge.png" -resize 48x48 -depth 8 -strip public/favicon.ico
 
-identify public/og.png public/apple-touch-icon.png public/favicon.ico
+identify "$OUT" public/apple-touch-icon.png public/favicon.ico

@@ -1,5 +1,6 @@
 import { IconGithub } from './icons'
 import s from './SiteFooter.module.css'
+import { useT } from '../i18n/useT'
 
 /**
  * 页面最下端的一行：站名、年份、源码出口。
@@ -14,9 +15,12 @@ import s from './SiteFooter.module.css'
 const REPO_URL = 'https://github.com/xr843/insect-world'
 
 export function SiteFooter() {
+  const t = useT()
   return (
     <footer className={s.footer}>
-      <span>昆虫世界 © {new Date().getFullYear()}</span>
+      <span>
+        {t('brand.name')} © {new Date().getFullYear()}
+      </span>
       <span className={s.sep} aria-hidden="true">
         ·
       </span>
