@@ -25,6 +25,7 @@ function mount(overrides: Partial<Parameters<typeof TopBar>[0]> = {}) {
   renderZh(
     <TopBar
       insects={INSECTS}
+      activeId={INSECTS[0].id}
       onPick={onPick}
       onLessons={vi.fn()}
       onLibrary={vi.fn()}
