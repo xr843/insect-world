@@ -187,8 +187,23 @@ interface MandibleOpts {
   /** 控制点 p1 在长度方向的位置（0~1）。越靠后，"外张"越能在曲线的大半程
    * 压住"末端内钩"的拉力，两颚中前段的间隙才留得住——见 mandiblePath() 注释。 */
   bendAt: number
-  outBulge: number
-  cross: number
+  /** 中段控制点的 z（本侧绝对值）。略大于基部 z，撑出镰刀的外弧。 */
+  midZ: number
+  /** 末端越过中线的深度（正值即交叉）。乳白蚁兵蚁的镰刀颚本就交叉，这点是对的。 */
+  crossZ: number
+  /**
+   * 两颚末端在 Y 上的错开量 —— **这是 2026-08-12 返工的关键**。
+   *
+   * 上一版两颚共面（droop 相同）、中段外张 0.12（头半宽才 0.1，等于向外撑到
+   * 头宽两倍）、末端又相接，镜像之后整体围成一个闭合椭圆环，渲染出来像个
+   * 手提包。而 vitest 全绿：几何合法、无 NaN、面数达标、anchor 齐全，连
+   * 「两颚投影之间要有空隙」那条都过了 —— 因为环的中间恰好就是空的。
+   * 断言问对了方向，却没问到末端。
+   *
+   * 真实的兵蚁两颚交叉时一上一下错开，不在同一平面。让 side 直接参与 Y 偏移，
+   * 两颚就成了剪刀式交错，一眼能数出是两把，而不是熔成一个圈。
+   */
+  scissor: number
   droop: number
   baseR: { ry: number; rz: number }
   tipR: { ry: number; rz: number }
@@ -214,9 +229,13 @@ function mandiblePath(base: { x: number; y: number; z: number }, side: 1 | -1, o
   const p1 = new THREE.Vector3(
     base.x + opts.length * opts.bendAt,
     base.y - opts.droop * opts.bendAt * 0.6,
-    side * (base.z + opts.outBulge),
+    side * opts.midZ,
   )
-  const p2 = new THREE.Vector3(base.x + opts.length, base.y - opts.droop, -side * opts.cross)
+  const p2 = new THREE.Vector3(
+    base.x + opts.length,
+    base.y - opts.droop + side * opts.scissor,
+    -side * opts.crossZ,
+  )
   const pts: THREE.Vector3[] = []
   for (let i = 0; i <= steps; i++) {
     const t = i / steps
@@ -229,7 +248,11 @@ function mandiblePath(base: { x: number; y: number; z: number }, side: 1 | -1, o
 
 /** 大颚路径的末端点（t=1，即贝塞尔的 p2），复刻 mandiblePath() 内部公式，供 anchor 用。 */
 function mandibleTipPoint(base: { x: number; y: number; z: number }, side: 1 | -1, opts: MandibleOpts): THREE.Vector3 {
-  return new THREE.Vector3(base.x + opts.length, base.y - opts.droop, -side * opts.cross)
+  return new THREE.Vector3(
+    base.x + opts.length,
+    base.y - opts.droop + side * opts.scissor,
+    -side * opts.crossZ,
+  )
 }
 
 /** 兵蚁大颚（一侧）：有厚度的弯钩，基部粗、向末端渐收但不收尖成针，内缘光滑不加碎齿。 */
@@ -341,7 +364,10 @@ export function buildTermiteSoldier(): InsectModel {
     const { ry, rz } = headRadiusProfile(t, headHeight / 2, headWidth / 2)
     headSections.push({ at: new THREE.Vector3(headBackX + t * headLen, headY, 0), ry, rz })
   }
-  const headMesh = new THREE.Mesh(squircleLoft(headSections, 6, 32), headMat)
+  // squareness 从 6 降到 3.2：指数 6 的超椭圆已经几乎是直角矩形，实拍下整个头
+  // 读成一块方砖。3.2 仍明显「长方」（兵蚁头确实方），但棱角圆润下来，配合上面
+  // 两端收窄的 profile 才像一枚骨化头壳而不是工业零件。
+  const headMesh = new THREE.Mesh(squircleLoft(headSections, 3.2, 32), headMat)
   headMesh.name = 'head'
   g.add(headMesh)
 
@@ -386,13 +412,14 @@ export function buildTermiteSoldier(): InsectModel {
     z: 0.088, // 头部该处半宽是 0.1，留 0.012 安全边际，大颚基部因此仍嵌在头壳里，不会飘在外面
   }
   const mandibleOpts: MandibleOpts = {
-    length: 0.28,
-    bendAt: 0.9, // 外张控制点推到长度方向 90% 处，让"分开"的状态一直保持到接近末梢
-    outBulge: 0.12, // 外张幅度加大——这是弥补"基部间距受头宽限制、不能再拉大"的主要手段
-    cross: 0.01, // 只需要越过中线（哪怕很浅），不必深入交叠；交叉越浅，糊在一起的那一小截路径越短
-    droop: 0.012,
-    baseR: { ry: 0.024, rz: 0.02 }, // 基部半径比上一版砍掉一半左右——"看得出是两支"优先于"够粗壮"
-    tipR: { ry: 0.007, rz: 0.006 },
+    length: 0.3,
+    bendAt: 0.5, // 外弧顶点放在中段，做出匀称的镰刀弧，而不是末端急转
+    midZ: 0.106, // 只比基部 0.088 略外张。上一版是 0.208 —— 头半宽才 0.1，等于撑到头宽两倍，环形观感主要来自这里
+    crossZ: 0.012, // 末端越过中线：兵蚁的颚本就交叉，保留
+    scissor: 0.02, // 两颚末端在 Y 上一上一下错开，交叉处不再共面熔成闭环
+    droop: 0.014,
+    baseR: { ry: 0.026, rz: 0.018 }, // ry>rz：截面竖高横窄，读起来是「刃」而不是圆管
+    tipR: { ry: 0.008, rz: 0.005 },
   }
   g.add(soldierMandible(mandibleBase, 1, mandibleOpts, mandibleMat))
   g.add(soldierMandible(mandibleBase, -1, mandibleOpts, mandibleMat))
