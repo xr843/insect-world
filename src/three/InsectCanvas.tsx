@@ -347,7 +347,17 @@ function Framing({
         target.applyMatrix4(g.matrixWorld)
       }
       goal.current = { target, dist: radius * 0.62 }
-      c.minDistance = radius * 0.18
+      /*
+       * 聚焦态的最近距离 —— 2026-08-12 从 0.18 抬到 0.5。
+       *
+       * 0.18×radius 允许相机进到包围球深处。聚焦时 target 是标注点（贴在体表），
+       * 再往里滚轮就会穿进虫体：近裁剪面把鞘翅切开、露出背面与内部结构、附肢
+       * 被拦腰截断。用户实测七星瓢虫时撞到，反馈「比较吓人，是不是穿模了」——
+       * 几何本身没问题，是镜头被放进了身体里。
+       *
+       * 0.5 仍比初始取景的 0.62 近，聚焦细看的余量还在，但相机停在体表之外。
+       */
+      c.minDistance = radius * 0.5
     } else {
       // 退出聚焦要回到与初次取景相同的距离，否则镜头会一直停在偏近的位置
       goal.current = {
