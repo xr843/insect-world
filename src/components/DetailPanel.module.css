@@ -242,19 +242,26 @@
   line-height: 1.5;
 }
 
-/* 实物照片外链：站内唯一的外跳入口，用 --brass 与其余中性灰的 meta 行区分开，
-   让人一眼看出这一行点得动。对比度由 contrast.test.ts 守着。 */
-.metaLink {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
+/* 实物照片外链：站内唯一一个会离开本站的入口。
+   与其余 ghost 按钮同尺寸以免打乱按钮组的节奏，但字号提到 13px、字重加粗、
+   描边与图标换成 --brass —— 它要比「对比」显眼，因为程序化模型看不出真实
+   质感，这是用户唯一能看到实物的出口。对比度由 contrast.test.ts 守着。 */
+.external {
+  font-size: 13px;
+  font-weight: 600;
   color: var(--brass);
-  transition: opacity 0.16s ease;
+  border-color: color-mix(in srgb, var(--brass) 42%, var(--line));
+  background: color-mix(in srgb, var(--brass) 7%, var(--field));
 }
 
-.metaLink:hover {
-  opacity: 0.75;
-  text-decoration: underline;
+.external:hover {
+  border-color: var(--brass);
+  background: color-mix(in srgb, var(--brass) 13%, var(--field));
+}
+
+/* ghost 默认把图标染成薰衣草紫，外链这里要跟着文字走 */
+.external svg {
+  color: var(--brass);
 }
 
 
