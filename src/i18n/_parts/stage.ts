@@ -30,6 +30,8 @@ export const PART = definePart(
     'detail.range': '分布',
     'detail.status': '现状',
     'detail.relatives': '近缘',
+    'detail.photos': '实物照片',
+    'detail.photosLink': '在 iNaturalist 上看',
   },
   {
     'stage.canvasLabel':
@@ -55,5 +57,7 @@ export const PART = definePart(
     'detail.range': 'Range',
     'detail.status': 'Status',
     'detail.relatives': 'Relatives',
+    'detail.photos': 'Photographs',
+    'detail.photosLink': 'View on iNaturalist',
   },
 )

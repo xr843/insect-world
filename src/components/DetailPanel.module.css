@@ -242,6 +242,21 @@
   line-height: 1.5;
 }
 
+/* 实物照片外链：站内唯一的外跳入口，用 --brass 与其余中性灰的 meta 行区分开，
+   让人一眼看出这一行点得动。对比度由 contrast.test.ts 守着。 */
+.metaLink {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--brass);
+  transition: opacity 0.16s ease;
+}
+
+.metaLink:hover {
+  opacity: 0.75;
+  text-decoration: underline;
+}
+
 
 /* ------------------------------------------------------- 切换物种的错峰入场 */
 

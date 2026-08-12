@@ -1,5 +1,5 @@
 /**
- * 中华草蛉 Chrysoperla sinica（脉翅目 Neuroptera，本项目第一个脉翅目物种）
+ * 中华草蛉 Chrysoperla nipponensis（脉翅目 Neuroptera，本项目第一个脉翅目物种）
  *
  * 造型要点：
  * - 脉翅目的定义特征是翅脉"密集成网"——草蛉的网翅正是它中文名的来源。

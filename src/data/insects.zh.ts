@@ -774,7 +774,7 @@ export const INSECTS: Insect[] = [
   {
     id: 'lacewing',
     name: '中华草蛉',
-    latin: 'Chrysoperla sinica',
+    latin: 'Chrysoperla nipponensis',
     epithet: '背着猎物残骸潜行的绿衣客',
     order: 'neuroptera',
     summary:
@@ -879,7 +879,7 @@ export const INSECTS: Insect[] = [
   {
     id: 'weevil',
     name: '竹象',
-    latin: 'Cyrtotrachelus buqueti',
+    latin: 'Cyrtotrachelus buquetii',
     epithet: '喙上挂着触角的钻笋客',
     order: 'coleoptera',
     summary:
@@ -949,7 +949,7 @@ export const INSECTS: Insect[] = [
   {
     id: 'diving-beetle',
     name: '黄缘龙虱',
-    latin: 'Cybister japonicus',
+    latin: 'Cybister chinensis',
     epithet: '背着一泡空气潜水的桨手',
     order: 'coleoptera',
     summary:

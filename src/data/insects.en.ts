@@ -785,7 +785,7 @@ export const INSECTS: Insect[] = [
   {
     id: 'lacewing',
     name: 'Green Lacewing',
-    latin: 'Chrysoperla sinica',
+    latin: 'Chrysoperla nipponensis',
     epithet: 'A green-clad stalker that carries its prey’s remains on its back',
     order: 'neuroptera',
     summary:
@@ -890,7 +890,7 @@ export const INSECTS: Insect[] = [
   {
     id: 'weevil',
     name: 'Bamboo Weevil',
-    latin: 'Cyrtotrachelus buqueti',
+    latin: 'Cyrtotrachelus buquetii',
     epithet: 'A shoot-borer with antennae mounted on its snout',
     order: 'coleoptera',
     summary:
@@ -960,7 +960,7 @@ export const INSECTS: Insect[] = [
   {
     id: 'diving-beetle',
     name: 'Japanese Diving Beetle',
-    latin: 'Cybister japonicus',
+    latin: 'Cybister chinensis',
     epithet: 'An oarsman that dives carrying a bubble of air',
     order: 'coleoptera',
     summary:

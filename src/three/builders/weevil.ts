@@ -1,5 +1,5 @@
 /**
- * 竹象 Cyrtotrachelus buqueti（鞘翅目·象甲科）
+ * 竹象 Cyrtotrachelus buquetii（鞘翅目·象甲科）
  *
  * 造型要点：
  * - 长喙（额喙）是象甲科最不会认错的特征，也是本种绝对主角：从头部

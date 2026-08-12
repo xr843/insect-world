@@ -13,6 +13,7 @@ import {
 } from './icons'
 import s from './DetailPanel.module.css'
 import { useT } from '../i18n/useT'
+import { photoUrl } from '../data/external'
 
 export function DetailPanel({
   insect,
@@ -124,6 +125,29 @@ export function DetailPanel({
           <span className={s.metaKey}>{t('detail.relatives')}</span>
           <span className={s.metaValue}>{insect.relatives.join(' · ')}</span>
         </div>
+        {/*
+          实物照片：本项目的模型是程序生成的，写实度有上限，想看真长什么样得去看照片。
+          不内置图片而是外链 —— 昆虫照片都有版权，60 张 CC 图要逐张署名、核对协议，
+          做漏一张就是侵权；而学名恰好是本图鉴唯一可靠的字段（AI 文案未经核校，
+          README 里写明了），正好拿它去指向真实观察记录。
+          taxon id 在构建期解析并校验过，见 data/external.ts；查不到的物种不渲染此行。
+        */}
+        {photoUrl(insect.id) && (
+          <div className={s.metaRow}>
+            <span className={s.metaKey}>{t('detail.photos')}</span>
+            <span className={s.metaValue}>
+              <a
+                className={s.metaLink}
+                href={photoUrl(insect.id) as string}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                {t('detail.photosLink')}
+                <IconArrowRight size={11} />
+              </a>
+            </span>
+          </div>
+        )}
       </div>
     </aside>
   )
