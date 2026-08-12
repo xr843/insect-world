@@ -2,20 +2,19 @@
  * 阎甲 Hister sp.（鞘翅目·阎甲科）
  *
  * 造型要点：
- * - 「压扁的黑色小方砖」是本种存在的全部理由：轮廓近乎矩形，前后缘
- *   都平截，不是常规甲虫那种纺锤/卵圆轮廓。kit.spindle()/loft() 的
- *   截面终归是椭圆（sin/cos 参数化），永远做不出「平截边」，因此
- *   身体不走 loft 路线，改用与 tortoise-beetle.ts 的 marginGeometry()
- *   同款手法——THREE.Shape 画一圈圆角矩形闭合轮廓，ExtrudeGeometry
- *   拉伸出扁薄实体，再 rotateX(90°) 摊平到 XZ 平面：这样「前后缘平
- *   截、四角只是小圆角」的方砖轮廓才做得出来，边缘的 bevel 只给一点
- *   点，避免看着像倒角夸张的工业零件。
- * - 头/前胸背板/鞘翅/腹末露出节四段沿 X 依次排列、共用同一个扁平
- *   高度（同一个 halfHeight），拼起来读成「一整块方砖」而不是几个
- *   分开的鼓包；鞘翅刻意比腹部本身短一截（roundedBlock 的 xTo 早于
- *   腹部真实末端），腹末露出的一小节单独再放一块同样方正、但更小的
- *   block，颜色/光泽与鞘翅一致（同样是硬质角质），表现「阎甲科鞘翅
- *   截短、露出 1~2 节坚硬腹节」。
+ * - 体形宽短、背面强烈隆起、腹面平贴地面。**注意这里有过一次教训**：
+ *   初版为了做出「方砖」的平直边，用 THREE.Shape + ExtrudeGeometry 让
+ *   四段各拉一个独立的圆角矩形棱柱。渲染出来是四个黑盒子摞在一起，
+ *   用户第一眼就说不像；而 vitest 全绿——几何合法、面数达标、包围盒
+ *   比例也在范围内，没有一条断言在问「它像不像一只甲虫」。
+ *   之后试过放大圆角、给顶面加拱起、让相邻段重叠，全都无效：四块独立
+ *   体块各有完整的轮廓边，圆角越大反而越像四个各自完整的盒子。
+ *   现在改为四段共用 halfWidthAt()/halfHeightAt() 两条**全身连续**的
+ *   包络函数，各自只在自己的 x 区间采样，交界处截面完全相同，
+ *   表面因此自然接上。方正的观感靠「宽短 + 陡侧壁」表达，而不是靠
+ *   平截边——挤出棱柱的平顶正是把它变成工业零件的根源。
+ * - 鞘翅刻意比腹部真实末端短一截，露出腹末 1~2 节（阎甲科的识别特征），
+ *   那一小节单独一段、材质光泽略有差异。
  * - 附肢能完全收进体侧凹槽：kit.leg()/legPair() 只会生成向外撑开
  *   站立的姿态、且四段肢体截面永远是圆形（seg() 内部 ry=rz=r，没有
  *   压扁的接口），画不出「胫节扁平如铲、贴体收拢」，因此自写
@@ -44,81 +43,56 @@ import * as THREE from 'three'
 import { chitin, compoundEyePair, finalize, loft, type InsectModel, type Section } from './kit'
 import { punctateMaps } from './surface'
 
-// ---------------------------------------------------------------- 局部辅助：方砖体块
+// ---------------------------------------------------------------- 全身连续包络
+//
+// 2026-08-12 重写。原先四段各自用 ExtrudeGeometry 拉一个独立的圆角矩形，
+// 拼起来渲染出的是**四个黑盒子摞在一起**，用户第一眼就说「明显不像」。
+// 症结不在参数：四块独立体块各有完整轮廓边，圆角调大只会让它们各自更完整、
+// 接缝更显眼（实测调过一轮，无效）。
+//
+// 现在四段共用下面两条**全身连续**的包络函数，各自只在自己的 x 区间上采样：
+// 相邻两段在交界处得到完全相同的截面，表面自然接上，整只虫成为一个连续形体。
+// 截面从「圆角矩形」换成椭圆——方正是阎甲的特征，但它是**隆起的方**，
+// 而挤出棱柱做出来的是平顶方砖，后者才是把它变成工业零件的真正原因。
+
+const BODY_FRONT = 0.4
+const BODY_BACK = -0.4
+
+/** 平滑台阶，0→1 */
+function ease(t: number): number {
+  const x = Math.min(1, Math.max(0, t))
+  return x * x * (3 - 2 * x)
+}
+
+/** 全身半宽包络：头部窄，前胸迅速展宽，鞘翅段最宽，尾端略收 */
+function halfWidthAt(x: number): number {
+  const t = (BODY_FRONT - x) / (BODY_FRONT - BODY_BACK) // 0=头前缘 1=腹末
+  const grow = ease(t / 0.28) // 头→前胸展开
+  const taper = 1 - 0.34 * ease((t - 0.72) / 0.28) // 尾端收窄
+  return (0.15 + (0.25 - 0.15) * grow) * taper
+}
+
+/** 全身半高包络：背面从头部低平隆到鞘翅最高，再向尾端滑落 */
+function halfHeightAt(x: number): number {
+  const t = (BODY_FRONT - x) / (BODY_FRONT - BODY_BACK)
+  const rise = ease(t / 0.34)
+  const fall = 1 - 0.52 * ease((t - 0.66) / 0.34)
+  return (0.055 + (0.115 - 0.055) * rise) * fall
+}
 
 /**
- * 圆角矩形闭合轮廓 + 极薄挤出，摊平到 XZ 平面——同 tortoise-beetle.ts
- * marginGeometry() 的手法，但轮廓换成「前后缘平截、四角小圆角」的
- * 矩形而非卵圆，这样才有「方砖」的平直边。
- * @param xFrom 前缘 x（大） @param xTo 后缘 x（小） @param halfWidth 半宽（z）
- * @param halfHeight 半高，决定挤出厚度 @param corner 圆角半径
+ * 从全身包络上取一段做成实体。底面恒定贴 y=0（阎甲腹面平贴地面），
+ * 只有背面随包络起伏 —— 与 ladybird.ts 的 domeSections 同一套做法。
  */
-function roundedBlock(
-  xFrom: number,
-  xTo: number,
-  halfWidth: number,
-  halfHeight: number,
-  corner: number,
-  crown = 0,
-): THREE.BufferGeometry {
-  const len = xFrom - xTo
-  const c = Math.min(corner, len * 0.4, halfWidth * 0.7)
-  const shape = new THREE.Shape()
-  // 在局部 (u,v) = (沿长度, 沿宽度) 平面画圆角矩形，之后整体当成 (x,z) 使用
-  shape.moveTo(-len / 2 + c, -halfWidth)
-  shape.lineTo(len / 2 - c, -halfWidth)
-  shape.quadraticCurveTo(len / 2, -halfWidth, len / 2, -halfWidth + c)
-  shape.lineTo(len / 2, halfWidth - c)
-  shape.quadraticCurveTo(len / 2, halfWidth, len / 2 - c, halfWidth)
-  shape.lineTo(-len / 2 + c, halfWidth)
-  shape.quadraticCurveTo(-len / 2, halfWidth, -len / 2, halfWidth - c)
-  shape.lineTo(-len / 2, -halfWidth + c)
-  shape.quadraticCurveTo(-len / 2, -halfWidth, -len / 2 + c, -halfWidth)
-
-  const g = new THREE.ExtrudeGeometry(shape, {
-    depth: halfHeight * 2,
-    bevelEnabled: true,
-    bevelSize: halfHeight * 0.22,
-    bevelThickness: halfHeight * 0.22,
-    bevelSegments: 2,
-    curveSegments: 10,
-  })
-  g.rotateX(Math.PI / 2) // 摊平到 XZ 平面：挤出深度方向(局部 z)变成世界 -Y
-  g.translate((xFrom + xTo) / 2, halfHeight, 0)
-
-  /*
-   * 背向拱起 —— 2026-08-12 返工加的。
-   *
-   * ExtrudeGeometry 给出的是**平顶棱柱**：四段共用同一个 halfHeight，拼起来
-   * 整个背面是一整片水平平板。实拍下这只虫读成了一块黑色工业塑料件，而
-   * vitest 全绿（几何合法、面数达标、包围盒比例也在范围内）—— 又一次
-   * 「数字对、长相不对」。
-   *
-   * 阎甲确实方，但它是**强烈隆起**的方：背面从中线向两侧和前后滑落。这里
-   * 把顶面顶点按到中心的距离抬高，纵向(u)拱得缓、横向(v)拱得急，正是鞘翅
-   * 横截面比纵剖面更弯的实际形状。
-   */
-  if (crown > 0) {
-    g.computeBoundingBox()
-    const bb = g.boundingBox as THREE.Box3
-    const yMid = (bb.min.y + bb.max.y) / 2
-    const span = Math.max(bb.max.y - yMid, 1e-6)
-    const cx = (xFrom + xTo) / 2
-    const halfLen = Math.max(len / 2, 1e-6)
-    const pos = g.attributes.position as THREE.BufferAttribute
-    for (let i = 0; i < pos.count; i++) {
-      const y = pos.getY(i)
-      if (y <= yMid) continue // 只动背面，腹面保持平坦——阎甲腹面本就平贴地面
-      const u = (pos.getX(i) - cx) / halfLen
-      const v = pos.getZ(i) / Math.max(halfWidth, 1e-6)
-      const r2 = Math.min(1, u * u * 0.5 + v * v)
-      const t = (y - yMid) / span // 越靠顶面抬得越多，侧壁几乎不动
-      pos.setY(i, y + crown * (1 - r2) * t)
-    }
-    pos.needsUpdate = true
-    g.computeVertexNormals()
+function bodySegment(xFrom: number, xTo: number, steps: number, widthScale = 1, heightScale = 1): THREE.BufferGeometry {
+  const sections: Section[] = []
+  for (let i = 0; i <= steps; i++) {
+    const x = THREE.MathUtils.lerp(xFrom, xTo, i / steps)
+    const ry = Math.max(halfHeightAt(x) * heightScale, 1e-4)
+    const rz = Math.max(halfWidthAt(x) * widthScale, 1e-4)
+    sections.push({ at: new THREE.Vector3(x, ry, 0), ry, rz })
   }
-  return g
+  return loft(sections, 30)
 }
 
 /**
@@ -256,28 +230,28 @@ export function buildHisterBeetle(): InsectModel {
   // abdomen 四段并集起来即可，不需要另外发明一个聚合用的 name。
   const headXFrom = 0.4
   const headXTo = 0.32
-  const headMesh = new THREE.Mesh(roundedBlock(headXFrom, headXTo, halfWidth * 0.62, halfHeight * 0.82, 0.055, 0.018), headMat)
+  const headMesh = new THREE.Mesh(bodySegment(headXFrom, headXTo, 8), headMat)
   headMesh.name = 'head'
   g.add(headMesh)
 
   // ---- 前胸背板：窄圆筒不适用于本种——改用与头部/鞘翅同高的方砖段
   const pronotumXFrom = headXTo + 0.03 // 前探进头部，填掉圆角在接缝处留下的凹口
   const pronotumXTo = 0.02
-  const pronotumMesh = new THREE.Mesh(roundedBlock(pronotumXFrom, pronotumXTo, halfWidth, halfHeight, 0.085, 0.05), pronotumMat)
+  const pronotumMesh = new THREE.Mesh(bodySegment(pronotumXFrom, pronotumXTo, 14), pronotumMat)
   pronotumMesh.name = 'pronotum'
   g.add(pronotumMesh)
 
   // ---- 鞘翅：截短——不覆盖到腹部真实末端，露出腹末 1~2 节
   const elytraXFrom = pronotumXTo + 0.035 // 同上，前探进前胸背板
   const elytraXTo = -0.28
-  const elytraMesh = new THREE.Mesh(roundedBlock(elytraXFrom, elytraXTo, halfWidth * 0.98, halfHeight, 0.09, 0.075), elytraMat)
+  const elytraMesh = new THREE.Mesh(bodySegment(elytraXFrom, elytraXTo, 20), elytraMat)
   elytraMesh.name = 'elytra'
   g.add(elytraMesh)
 
   // ---- 腹末露出节：比鞘翅段更小更方正，颜色光泽与鞘翅一致（同样硬质）
   const abdomenXFrom = elytraXTo + 0.03 // 同上，前探进鞘翅下方
   const abdomenXTo = -0.4
-  const abdomenMesh = new THREE.Mesh(roundedBlock(abdomenXFrom, abdomenXTo, halfWidth * 0.74, halfHeight * 0.86, 0.05, 0.03), abdomenMat)
+  const abdomenMesh = new THREE.Mesh(bodySegment(abdomenXFrom, abdomenXTo, 10), abdomenMat)
   abdomenMesh.name = 'abdomen'
   g.add(abdomenMesh)
 
@@ -296,11 +270,15 @@ export function buildHisterBeetle(): InsectModel {
   const antennaTip = antRigs[0].userData.tip as THREE.Vector3
 
   // ---- 六足：完全收拢贴体，胫节扁平如铲，Z 向展开跨度远小于站立姿态
-  const legBases: [number, number, number][] = [
-    [pronotumXFrom - 0.05, -0.09, 0.16],
-    [0.14, -0.095, 0.19],
-    [-0.06, -0.095, 0.17],
-  ]
+  // 基座贴在体侧下缘上：y/z 由包络函数算出（0.42 半高、0.82 半宽），不再手写常数。
+  // 旧值 y=-0.09 是按方砖时代摆的 —— 那时身体够宽够方，腿藏在体下看不出问题；
+  // 换成椭圆体后底面收窄，同一组坐标就变成六条腿悬空挂在体外。
+  const legX = [pronotumXFrom - 0.05, 0.14, -0.06]
+  const legBases: [number, number, number][] = legX.map((x) => [
+    x,
+    halfHeightAt(x) * 0.42,
+    halfWidthAt(x) * 0.82,
+  ])
   const legOpts = { femur: 0.16, tibiaLen: 0.15, thickness: 0.026, hug: 0.1 }
   const legRigs: THREE.Group[] = []
   for (const base of legBases) {
