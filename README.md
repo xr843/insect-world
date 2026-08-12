@@ -1,5 +1,7 @@
 # 昆虫世界
 
+**简体中文** · [English](README.en.md)
+
 [![CI](https://github.com/xr843/insect-world/actions/workflows/ci.yml/badge.svg)](https://github.com/xr843/insect-world/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-8a6318.svg)](LICENSE)
 [![LINUX DO](https://img.shields.io/badge/LINUX-DO-FFB003.svg?logo=data:image/svg%2bxml;base64,DQo8c3ZnIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyIgd2lkdGg9IjEwMCIgaGVpZ2h0PSIxMDAiPjxwYXRoIGQ9Ik00Ni44Mi0uMDU1aDYuMjVxMjMuOTY5IDIuMDYyIDM4IDIxLjQyNmM1LjI1OCA3LjY3NiA4LjIxNSAxNi4xNTYgOC44NzUgMjUuNDV2Ni4yNXEtMi4wNjQgMjMuOTY4LTIxLjQzIDM4LTExLjUxMiA3Ljg4NS0yNS40NDUgOC44NzRoLTYuMjVxLTIzLjk3LTIuMDY0LTM4LjAwNC0yMS40M1EuOTcxIDY3LjA1Ni0uMDU0IDUzLjE4di02LjQ3M0MxLjM2MiAzMC43ODEgOC41MDMgMTguMTQ4IDIxLjM3IDguODE3IDI5LjA0NyAzLjU2MiAzNy41MjcuNjA0IDQ2LjgyMS0uMDU2IiBzdHlsZT0ic3Ryb2tlOm5vbmU7ZmlsbC1ydWxlOmV2ZW5vZGQ7ZmlsbDojZWNlY2VjO2ZpbGwtb3BhY2l0eToxIi8+PHBhdGggZD0iTTQ3LjI2NiAyLjk1N3EyMi41My0uNjUgMzcuNzc3IDE1LjczOGE0OS43IDQ5LjcgMCAwIDEgNi44NjcgMTAuMTU3cS00MS45NjQuMjIyLTgzLjkzIDAgOS43NS0xOC42MTYgMzAuMDI0LTI0LjM4N2E2MSA2MSAwIDAgMSA5LjI2Mi0xLjUwOCIgc3R5bGU9InN0cm9rZTpub25lO2ZpbGwtcnVsZTpldmVub2RkO2ZpbGw6IzE5MTkxOTtmaWxsLW9wYWNpdHk6MSIvPjxwYXRoIGQ9Ik03Ljk4IDcwLjkyNmMyNy45NzctLjAzNSA1NS45NTQgMCA4My45My4xMTNRODMuNDI2IDg3LjQ3MyA2Ni4xMyA5NC4wODZxLTE4LjgxIDYuNTQ0LTM2LjgzMi0xLjg5OC0xNC4yMDMtNy4wOS0yMS4zMTctMjEuMjYyIiBzdHlsZT0ic3Ryb2tlOm5vbmU7ZmlsbC1ydWxlOmV2ZW5vZGQ7ZmlsbDojZjlhZjAwO2ZpbGwtb3BhY2l0eToxIi8+PC9zdmc+)](https://linux.do)
@@ -34,7 +36,7 @@
 npm install
 npm run dev          # 主站      http://localhost:5178
                      # 模型调试台 http://localhost:5178/preview.html
-npm test             # 3116 个测试
+npm test             # 4030 个测试
 npm run build        # tsc --noEmit + vite build
 npm run deploy       # 构建并发布到 Cloudflare Pages（需先 npx wrangler login）
 ```
@@ -114,8 +116,8 @@ src/
     InsectGlyph.tsx       60 个手写 SVG 剪影
   data/
     types.ts              数据契约
-    insects.ts            60 种昆虫的图鉴数据
-    guides.ts             60 种的分步讲解与测验
+    insects.zh.ts / insects.en.ts   60 种昆虫的图鉴数据（中英各一份）
+    guides.zh.ts / guides.en.ts     60 种的分步讲解与测验（中英各一份）
   preview.tsx             模型调试台（/preview.html）
 ```
 
@@ -140,7 +142,7 @@ src/
 
 `finalize()` 把模型居中并同步平移锚点，返回 `{ group, anchors, radius }`。`radius` 供相机自动取景 —— 竹节虫 10 cm 和瓢虫 0.7 cm 差着 20 倍，靠它归一化。
 
-`anchors` 的 key 是建模层与数据层之间唯一的耦合点：`insects.ts` 里每个 `hotspot.anchor`、`guides.ts` 里每个 `LessonStep.anchor`，都必须能在对应物种的 `anchors` 里找到，否则那个标注点会**静默消失** —— 页面不报错、两边各自的测试也都是绿的。`three/__tests__/integration.test.ts` 专门钉住了这层接缝。
+`anchors` 的 key 是建模层与数据层之间唯一的耦合点：`insects.*.ts` 里每个 `hotspot.anchor`、`guides.*.ts` 里每个 `LessonStep.anchor`，都必须能在对应物种的 `anchors` 里找到，否则那个标注点会**静默消失** —— 页面不报错、两边各自的测试也都是绿的。`three/__tests__/integration.test.ts` 专门钉住了这层接缝。
 
 ## 加一个物种要做什么
 
@@ -151,8 +153,8 @@ src/
 | 写什么 | 放哪 | 分量 |
 | --- | --- | --- |
 | 3D 几何生成代码 | `src/three/builders/<id>.ts` | 200–400 行，最费事 |
-| 图鉴数据（学名、6 条关键数据、5–6 个标注点、生态、冷知识…） | `src/data/insects.ts` | 一条记录 |
-| 讲解与测验（3–4 步 + 2 道题） | `src/data/guides.ts` | 一条记录 |
+| 图鉴数据（学名、6 条关键数据、5–6 个标注点、生态、冷知识…） | `src/data/insects.zh.ts` + `insects.en.ts` | 各一条记录 |
+| 讲解与测验（3–4 步 + 2 道题） | `src/data/guides.zh.ts` + `guides.en.ts` | 各一条记录 |
 | 24×24 剪影图标 | `src/components/InsectGlyph.tsx` | 一个小组件 |
 
 漏了会被测试拦下：数据里有记录却没有 builder 文件 → 集成测试失败；某个 `anchor` 在模型上找不到 → 接缝测试失败。
@@ -192,18 +194,22 @@ rAF 计数为 0，就别再排查渲染代码了。出图改走无头 Chromium�
 npm test
 ```
 
-39 个文件、3004 个测试：
+54 个文件、4030 个测试：
 
 | 文件 | 数量 | 管什么 |
 | --- | --- | --- |
 | `data/__tests__/guides.test.ts` | 1026 | 讲解与测验的结构、字数、anchor 逐物种校验 |
 | `data/__tests__/insects.test.ts` | 907 | 图鉴数据契约、anchor 白名单、trivia 不得复述 summary |
+| `data/__tests__/parity.test.ts` | 602 | 中英两版逐字段对齐（学名一致、条目不缺不多） |
+| `data/__tests__/lengths.en.test.ts` | 240 | 英文文案长度闸门 —— 并行翻译的验收线 |
 | `components/__tests__/glyph.test.tsx` | 183 | 60 个剪影的结构与坐标越界 |
 | `three/__tests__/integration.test.ts` | 183 | 建模层 × 数据层的接缝 |
 | `__tests__/layers.test.ts` | 65 | 三层齐备性 + 展示文案字符白名单 |
+| `three/__tests__/anchors-have-geometry.test.ts` | 61 | 每个 anchor 落点上真有几何体 |
 | `builders/__tests__/kit.test.ts` | 30 | 放样地基与退化输入 |
-| `builders/__tests__/*.test.ts`（其余 31 个） | 598 | 各物种形态断言、表面材质落位、翅脉/节间膜/触角钩子普查 |
+| `builders/__tests__/*.test.ts`（其余 30 个） | 585 | 各物种形态断言、表面材质落位、翅脉/节间膜/触角钩子普查 |
 | `builders/__tests__/mirror.test.ts` | 12 | 成对附肢对称性、`wing` 的 `spread` 语义与方向 |
+| 其余零散文件 | 136 | 搜索、滚动、页脚、对比度、免责声明等 |
 
 形态类断言写的时候有个自检标准：**把代码改回出问题的版本，这条断言会失败吗？** 不会就等于没写。
 
