@@ -76,6 +76,16 @@
   color: var(--ink);
 }
 
+/* 名称拼音：比目名再小半档并压低不透明度，让「名字 → 拼音 → 目名」三行有清晰的
+   主次，不至于把 60 行的列表撑得太松。 */
+.pinyin {
+  font-size: 10.5px;
+  color: var(--muted);
+  opacity: 0.85;
+  margin-top: 2px;
+  letter-spacing: 0.04em;
+}
+
 .order {
   font-size: 11px;
   color: var(--muted);

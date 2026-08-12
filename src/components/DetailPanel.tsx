@@ -12,8 +12,9 @@ import {
   IconSparkle,
 } from './icons'
 import s from './DetailPanel.module.css'
-import { useT } from '../i18n/useT'
+import { useT, useLocale } from '../i18n/useT'
 import { photoUrl } from '../data/external'
+import { pinyinOf } from '../data/pinyin'
 
 export function DetailPanel({
   insect,
@@ -25,6 +26,8 @@ export function DetailPanel({
   onDiscover: (kind: DiscoveryKind) => void
 }) {
   const t = useT()
+  // 拼音只在中文版有意义：英文读者要的是学名，注音反而是噪声
+  const pinyin = useLocale() === 'zh' ? pinyinOf(insect.id) : null
   return (
     <aside className={`card stage-height ${s.panel} detail-panel`} key={insect.id}>
       <div className={s.eyebrow}>
@@ -44,6 +47,12 @@ export function DetailPanel({
         </span>
       </div>
 
+      {/*
+        名称拼音 —— 起因是「有拼音的话小孩子就可以自己看了」。
+        放在大标题正下方、别称之上，那是读完名字视线自然落到的地方。
+        只注名字不注正文：正文 7.2 万字，多音字自动判读必错（见 data/pinyin.ts）。
+      */}
+      {pinyin && <div className={s.pinyin}>{pinyin}</div>}
       <div className={s.epithet}>{insect.epithet}</div>
       <p className={s.summary}>{insect.summary}</p>
 

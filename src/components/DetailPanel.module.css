@@ -42,6 +42,15 @@
   box-shadow: var(--shadow-inset), var(--soft-shadow);
 }
 
+/* 名称拼音：给还不认字的小读者。用无衬线 + 字距拉开，与下面衬线体的别称拉开层次，
+   读起来像标本标签上的注音而不是正文的一部分。--muted 的对比度由 contrast.test.ts 守着。 */
+.pinyin {
+  font-size: 13px;
+  letter-spacing: 0.06em;
+  color: var(--muted);
+  margin-top: 7px;
+}
+
 .epithet {
   font-family: var(--serif);
   font-size: 15px;
