@@ -95,6 +95,9 @@ function cases(theme: 'dark' | 'light'): Case[] {
     { what: '次级字 --muted / 页面底', fg: t('muted'), layers: [canvas], min: 4.5 },
     { what: '展签小字 --brass / 卡片面', fg: t('brass'), layers: [paper], min: 4.5 },
     { what: '展签小字 --brass / 页面底', fg: t('brass'), layers: [canvas], min: 4.5 },
+    // 实物照片外链是黄铜实底按钮，靠 --on-primary 在两套主题里反向取值来保证可读；
+    // 这条断言就是钉住那个「反向」——哪天有人把 --on-primary 调成中间灰就会红。
+    { what: '外链按钮字 --on-primary / --brass 实底', fg: t('on-primary'), layers: [t('brass')], min: 4.5 },
     // 选中态：--active-bg 是半透明的，必须先叠到底色上再比
     {
       what: '选中字 --active-fg / 页面上的选中底',

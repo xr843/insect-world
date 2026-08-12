@@ -249,19 +249,23 @@
 .external {
   font-size: 13px;
   font-weight: 600;
-  color: var(--brass);
-  border-color: color-mix(in srgb, var(--brass) 42%, var(--line));
-  background: color-mix(in srgb, var(--brass) 7%, var(--field));
+  /* 黄铜实底。--on-primary 在两套主题里正好反向（浅色近白、暗色近黑），
+     所以同一组声明在日夜两版都够对比，不必写主题分支。 */
+  color: var(--on-primary);
+  background: var(--brass);
+  border-color: transparent;
+  box-shadow: var(--soft-shadow);
 }
 
 .external:hover {
-  border-color: var(--brass);
-  background: color-mix(in srgb, var(--brass) 13%, var(--field));
+  background: var(--brass-bright);
+  border-color: transparent;
+  transform: translateY(-1px);
 }
 
-/* ghost 默认把图标染成薰衣草紫，外链这里要跟着文字走 */
+/* ghost 默认把图标染成薰衣草紫，实底上要跟着文字走 */
 .external svg {
-  color: var(--brass);
+  color: var(--on-primary);
 }
 
 
