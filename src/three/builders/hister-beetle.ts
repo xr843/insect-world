@@ -67,17 +67,21 @@ function ease(t: number): number {
 /** 全身半宽包络：头部窄，前胸迅速展宽，鞘翅段最宽，尾端略收 */
 function halfWidthAt(x: number): number {
   const t = (BODY_FRONT - x) / (BODY_FRONT - BODY_BACK) // 0=头前缘 1=腹末
-  const grow = ease(t / 0.28) // 头→前胸展开
-  const taper = 1 - 0.34 * ease((t - 0.72) / 0.28) // 尾端收窄
-  return (0.15 + (0.25 - 0.15) * grow) * taper
+  // 头(窄) → 前胸(展宽) → 一道浅腰 → 鞘翅(最宽) → 尾端收细
+  const grow = ease(t / 0.22)
+  const waist = 1 - 0.1 * Math.exp(-(((t - 0.3) / 0.06) ** 2)) // 前胸/鞘翅交界的浅收腰，让两段读得出分界
+  const taper = 1 - 0.86 * ease((t - 0.7) / 0.3) // 尾端收到近乎收尖，避免 loft 端面盖出一刀平切
+  return (0.115 + (0.25 - 0.115) * grow) * waist * taper
 }
 
 /** 全身半高包络：背面从头部低平隆到鞘翅最高，再向尾端滑落 */
 function halfHeightAt(x: number): number {
   const t = (BODY_FRONT - x) / (BODY_FRONT - BODY_BACK)
-  const rise = ease(t / 0.34)
-  const fall = 1 - 0.52 * ease((t - 0.66) / 0.34)
-  return (0.055 + (0.115 - 0.055) * rise) * fall
+  // 头部低平 → 前胸抬起 → 鞘翅最高 → 尾端滑落到近乎贴地
+  const rise = ease(t / 0.3)
+  const waist = 1 - 0.12 * Math.exp(-(((t - 0.3) / 0.06) ** 2))
+  const fall = 1 - 0.82 * ease((t - 0.68) / 0.32)
+  return (0.04 + (0.115 - 0.04) * rise) * waist * fall
 }
 
 /**
