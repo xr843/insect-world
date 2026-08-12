@@ -232,9 +232,13 @@ export function buildHisterBeetle(): InsectModel {
   // ---- 头部：小，前缘 X 最大。mesh.name 与 anchor key 对齐（同 rove-beetle/
   // tortoise-beetle 的约定），测试要量「躯干宽度」时把 head/pronotum/elytra/
   // abdomen 四段并集起来即可，不需要另外发明一个聚合用的 name。
+  // 头**不走**共用包络的原尺寸：宽 0.72×、高仅 0.5×。
+  // 真实阎甲的头缩在前胸前缘之下，两者之间是一道有阴影的落差，不是平滑过渡。
+  // 上一版把头也按全包络采样，结果整只虫成了一根没有特征的光滑黑条——
+  // 「消灭接缝」和「保留分段」是两个目标，前者不该以牺牲后者为代价。
   const headXFrom = 0.4
   const headXTo = 0.32
-  const headMesh = new THREE.Mesh(bodySegment(headXFrom, headXTo, 8), headMat)
+  const headMesh = new THREE.Mesh(bodySegment(headXFrom, headXTo, 10, 0.72, 0.5), headMat)
   headMesh.name = 'head'
   g.add(headMesh)
 
