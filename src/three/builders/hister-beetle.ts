@@ -53,7 +53,14 @@ import { punctateMaps } from './surface'
  * @param xFrom 前缘 x（大） @param xTo 后缘 x（小） @param halfWidth 半宽（z）
  * @param halfHeight 半高，决定挤出厚度 @param corner 圆角半径
  */
-function roundedBlock(xFrom: number, xTo: number, halfWidth: number, halfHeight: number, corner: number): THREE.BufferGeometry {
+function roundedBlock(
+  xFrom: number,
+  xTo: number,
+  halfWidth: number,
+  halfHeight: number,
+  corner: number,
+  crown = 0,
+): THREE.BufferGeometry {
   const len = xFrom - xTo
   const c = Math.min(corner, len * 0.4, halfWidth * 0.7)
   const shape = new THREE.Shape()
@@ -78,6 +85,39 @@ function roundedBlock(xFrom: number, xTo: number, halfWidth: number, halfHeight:
   })
   g.rotateX(Math.PI / 2) // 摊平到 XZ 平面：挤出深度方向(局部 z)变成世界 -Y
   g.translate((xFrom + xTo) / 2, halfHeight, 0)
+
+  /*
+   * 背向拱起 —— 2026-08-12 返工加的。
+   *
+   * ExtrudeGeometry 给出的是**平顶棱柱**：四段共用同一个 halfHeight，拼起来
+   * 整个背面是一整片水平平板。实拍下这只虫读成了一块黑色工业塑料件，而
+   * vitest 全绿（几何合法、面数达标、包围盒比例也在范围内）—— 又一次
+   * 「数字对、长相不对」。
+   *
+   * 阎甲确实方，但它是**强烈隆起**的方：背面从中线向两侧和前后滑落。这里
+   * 把顶面顶点按到中心的距离抬高，纵向(u)拱得缓、横向(v)拱得急，正是鞘翅
+   * 横截面比纵剖面更弯的实际形状。
+   */
+  if (crown > 0) {
+    g.computeBoundingBox()
+    const bb = g.boundingBox as THREE.Box3
+    const yMid = (bb.min.y + bb.max.y) / 2
+    const span = Math.max(bb.max.y - yMid, 1e-6)
+    const cx = (xFrom + xTo) / 2
+    const halfLen = Math.max(len / 2, 1e-6)
+    const pos = g.attributes.position as THREE.BufferAttribute
+    for (let i = 0; i < pos.count; i++) {
+      const y = pos.getY(i)
+      if (y <= yMid) continue // 只动背面，腹面保持平坦——阎甲腹面本就平贴地面
+      const u = (pos.getX(i) - cx) / halfLen
+      const v = pos.getZ(i) / Math.max(halfWidth, 1e-6)
+      const r2 = Math.min(1, u * u * 0.5 + v * v)
+      const t = (y - yMid) / span // 越靠顶面抬得越多，侧壁几乎不动
+      pos.setY(i, y + crown * (1 - r2) * t)
+    }
+    pos.needsUpdate = true
+    g.computeVertexNormals()
+  }
   return g
 }
 
@@ -216,28 +256,28 @@ export function buildHisterBeetle(): InsectModel {
   // abdomen 四段并集起来即可，不需要另外发明一个聚合用的 name。
   const headXFrom = 0.4
   const headXTo = 0.32
-  const headMesh = new THREE.Mesh(roundedBlock(headXFrom, headXTo, halfWidth * 0.62, halfHeight * 0.82, 0.03), headMat)
+  const headMesh = new THREE.Mesh(roundedBlock(headXFrom, headXTo, halfWidth * 0.62, halfHeight * 0.82, 0.055, 0.018), headMat)
   headMesh.name = 'head'
   g.add(headMesh)
 
   // ---- 前胸背板：窄圆筒不适用于本种——改用与头部/鞘翅同高的方砖段
-  const pronotumXFrom = headXTo
+  const pronotumXFrom = headXTo + 0.03 // 前探进头部，填掉圆角在接缝处留下的凹口
   const pronotumXTo = 0.02
-  const pronotumMesh = new THREE.Mesh(roundedBlock(pronotumXFrom, pronotumXTo, halfWidth, halfHeight, 0.035), pronotumMat)
+  const pronotumMesh = new THREE.Mesh(roundedBlock(pronotumXFrom, pronotumXTo, halfWidth, halfHeight, 0.085, 0.05), pronotumMat)
   pronotumMesh.name = 'pronotum'
   g.add(pronotumMesh)
 
   // ---- 鞘翅：截短——不覆盖到腹部真实末端，露出腹末 1~2 节
-  const elytraXFrom = pronotumXTo
+  const elytraXFrom = pronotumXTo + 0.035 // 同上，前探进前胸背板
   const elytraXTo = -0.28
-  const elytraMesh = new THREE.Mesh(roundedBlock(elytraXFrom, elytraXTo, halfWidth * 0.98, halfHeight, 0.035), elytraMat)
+  const elytraMesh = new THREE.Mesh(roundedBlock(elytraXFrom, elytraXTo, halfWidth * 0.98, halfHeight, 0.09, 0.075), elytraMat)
   elytraMesh.name = 'elytra'
   g.add(elytraMesh)
 
   // ---- 腹末露出节：比鞘翅段更小更方正，颜色光泽与鞘翅一致（同样硬质）
-  const abdomenXFrom = elytraXTo
+  const abdomenXFrom = elytraXTo + 0.03 // 同上，前探进鞘翅下方
   const abdomenXTo = -0.4
-  const abdomenMesh = new THREE.Mesh(roundedBlock(abdomenXFrom, abdomenXTo, halfWidth * 0.74, halfHeight * 0.86, 0.025), abdomenMat)
+  const abdomenMesh = new THREE.Mesh(roundedBlock(abdomenXFrom, abdomenXTo, halfWidth * 0.74, halfHeight * 0.86, 0.05, 0.03), abdomenMat)
   abdomenMesh.name = 'abdomen'
   g.add(abdomenMesh)
 
