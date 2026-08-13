@@ -194,6 +194,22 @@ export function buildTortoiseBeetle(): InsectModel {
   // 前胸背板与鞘翅在 x 上各自只覆盖背甲的一段，且在 seamX 两侧留一小段
   // 重叠（overlap）——两段用的是同一个 carapaceProfile，重叠区内两片
   // 曲面完全重合，因此接缝处半径连续、贴紧甚至微微咬合，不会露出缝隙。
+  /*
+   * 拱顶的横向展宽 —— 2026-08-12 修。
+   *
+   * 原值 1.3：拱顶 z 半宽 = profile 峰值 0.06 × 1.3 = 0.078，而裙边半宽 0.27，
+   * **裙边比拱顶宽了 3.5 倍**。渲染出来是一小条深色隆起摆在一张大得多的
+   * 奶白色圆盘上，像一块巧克力放在盘子里，看不出是一只虫。
+   * 纵向本来是对的（拱顶已覆盖裙边长度的 81%），错的只有横向这一个数。
+   *
+   * 真实的 Cassida 背面近圆形，中央有色拱顶占去大部分盘面，半透明的只是
+   * 一圈**边**。3.1 让拱顶 z 半宽到 0.186，两侧各留约 0.084 的透明裙边。
+   *
+   * 注：domeSections 里 ry=profile、rz=profile×aspect，所以只加宽不增高，
+   * 「从侧面看是一条平滑低矮拱线」的原设定不受影响。
+   */
+  const DOME_ASPECT = 3.1
+
   const seamX = 0.0
   const overlap = 0.015
   const pronotumXFrom = carapaceXFront
@@ -206,12 +222,12 @@ export function buildTortoiseBeetle(): InsectModel {
   // ---- 前胸背板：前缘盖住头部（足印覆盖头部足印，正背面看不见头）。
   // steps 比初版加密（16→24），三角面预算远没花完，加密换取更平滑的
   // 拱线，也让接缝附近的离散采样点更贴近连续曲线的真实值。
-  const pronotumDome = new THREE.Mesh(loft(domeSections(pronotumXFrom, pronotumXTo, domeBaseY, pronotumProfile, 1.3, 24), 26), carapaceMat)
+  const pronotumDome = new THREE.Mesh(loft(domeSections(pronotumXFrom, pronotumXTo, domeBaseY, pronotumProfile, DOME_ASPECT, 24), 26), carapaceMat)
   pronotumDome.name = 'pronotum'
   g.add(pronotumDome)
 
   // ---- 鞘翅：覆盖胸腹大部（steps 同样加密，22→30）
-  const elytraDome = new THREE.Mesh(loft(domeSections(elytraXFrom, elytraXTo, domeBaseY, elytraProfile, 1.3, 30), 28), carapaceMat)
+  const elytraDome = new THREE.Mesh(loft(domeSections(elytraXFrom, elytraXTo, domeBaseY, elytraProfile, DOME_ASPECT, 30), 28), carapaceMat)
   elytraDome.name = 'elytra'
   g.add(elytraDome)
 
