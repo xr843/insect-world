@@ -84,12 +84,31 @@ function humpProfile(bulge: number, startR: number, maxR: number, endR: number, 
 }
 
 /** "平底圆顶"截面组：底边始终贴在 groundY，只有顶部随半径起伏 */
-function domeSections(xFrom: number, xTo: number, groundY: number, profile: (t: number) => number, aspect: number, steps: number): Section[] {
+/**
+ * @param width 半宽包络。**必须与高度包络分开给**——2026-08-12 的教训：
+ * 原先只有一个 aspect 系数，宽度等于「高度曲线 × 常数」。而高度曲线两端收得
+ * 很尖（0.012→0.06→0.016，因为侧面看龟甲是一条低矮拱线），横向一拉就成了
+ * 前后尖、中间鼓的**梭形**，不是龟甲俯视该有的近圆轮廓。
+ * 先前把 aspect 从 1.3 提到 3.1，只是把一条又窄又尖的脊背换成了一条又宽又尖的，
+ * 用户一眼还是说不像。宽度自己有包络，才能做出「近圆盘 + 低拱」这个真实组合。
+ */
+function domeSections(
+  xFrom: number,
+  xTo: number,
+  groundY: number,
+  profile: (t: number) => number,
+  width: (t: number) => number,
+  steps: number,
+): Section[] {
   const sections: Section[] = []
   for (let i = 0; i <= steps; i++) {
     const t = i / steps
     const r = Math.max(profile(t), 1e-4)
-    sections.push({ at: new THREE.Vector3(THREE.MathUtils.lerp(xFrom, xTo, t), groundY + r, 0), ry: r, rz: r * aspect })
+    sections.push({
+      at: new THREE.Vector3(THREE.MathUtils.lerp(xFrom, xTo, t), groundY + r, 0),
+      ry: r,
+      rz: Math.max(width(t), 1e-4),
+    })
   }
   return sections
 }
@@ -195,20 +214,19 @@ export function buildTortoiseBeetle(): InsectModel {
   // 重叠（overlap）——两段用的是同一个 carapaceProfile，重叠区内两片
   // 曲面完全重合，因此接缝处半径连续、贴紧甚至微微咬合，不会露出缝隙。
   /*
-   * 拱顶的横向展宽 —— 2026-08-12 修。
+   * 拱顶的**半宽包络** —— 与高度包络彻底分开（见 domeSections 注释）。
    *
-   * 原值 1.3：拱顶 z 半宽 = profile 峰值 0.06 × 1.3 = 0.078，而裙边半宽 0.27，
-   * **裙边比拱顶宽了 3.5 倍**。渲染出来是一小条深色隆起摆在一张大得多的
-   * 奶白色圆盘上，像一块巧克力放在盘子里，看不出是一只虫。
-   * 纵向本来是对的（拱顶已覆盖裙边长度的 81%），错的只有横向这一个数。
-   *
-   * 真实的 Cassida 背面近圆形，中央有色拱顶占去大部分盘面，半透明的只是
-   * 一圈**边**。3.1 让拱顶 z 半宽到 0.186，两侧各留约 0.084 的透明裙边。
-   *
-   * 注：domeSections 里 ry=profile、rz=profile×aspect，所以只加宽不增高，
-   * 「从侧面看是一条平滑低矮拱线」的原设定不受影响。
+   * 龟甲俯视近圆形：从前缘很快展宽，中后段维持最宽，再向尾端圆钝收拢。
+   * 这条曲线用 sin 起手保证前缘不是尖角，用 1-t² 收尾保证尾端圆钝而非收尖。
+   * 峰值 0.19，裙边半宽 0.27，两侧因此各留约 0.08 的半透明边 —— 中央有色
+   * 拱顶占去大部分盘面，透明的只是一圈边，这才是 Cassida 的真实比例。
    */
-  const DOME_ASPECT = 3.1
+  const DOME_HALF_WIDTH = 0.19
+  const carapaceWidth = (gt: number) => {
+    const rise = Math.sin(Math.min(1, gt / 0.22) * Math.PI * 0.5) // 前缘迅速展宽，不留尖角
+    const tail = 1 - 0.42 * Math.pow(Math.max(0, (gt - 0.68) / 0.32), 2) // 尾端圆钝收拢
+    return DOME_HALF_WIDTH * rise * tail
+  }
 
   const seamX = 0.0
   const overlap = 0.015
@@ -217,23 +235,30 @@ export function buildTortoiseBeetle(): InsectModel {
   const elytraXFrom = seamX + overlap
   const elytraXTo = carapaceXBack
   const pronotumProfile = (t: number) => carapaceProfile(globalT(THREE.MathUtils.lerp(pronotumXFrom, pronotumXTo, t)))
+  const pronotumWidth = (t: number) => carapaceWidth(globalT(THREE.MathUtils.lerp(pronotumXFrom, pronotumXTo, t)))
   const elytraProfile = (t: number) => carapaceProfile(globalT(THREE.MathUtils.lerp(elytraXFrom, elytraXTo, t)))
+  const elytraWidth = (t: number) => carapaceWidth(globalT(THREE.MathUtils.lerp(elytraXFrom, elytraXTo, t)))
 
   // ---- 前胸背板：前缘盖住头部（足印覆盖头部足印，正背面看不见头）。
   // steps 比初版加密（16→24），三角面预算远没花完，加密换取更平滑的
   // 拱线，也让接缝附近的离散采样点更贴近连续曲线的真实值。
-  const pronotumDome = new THREE.Mesh(loft(domeSections(pronotumXFrom, pronotumXTo, domeBaseY, pronotumProfile, DOME_ASPECT, 24), 26), carapaceMat)
+  const pronotumDome = new THREE.Mesh(loft(domeSections(pronotumXFrom, pronotumXTo, domeBaseY, pronotumProfile, pronotumWidth, 24), 26), carapaceMat)
   pronotumDome.name = 'pronotum'
   g.add(pronotumDome)
 
   // ---- 鞘翅：覆盖胸腹大部（steps 同样加密，22→30）
-  const elytraDome = new THREE.Mesh(loft(domeSections(elytraXFrom, elytraXTo, domeBaseY, elytraProfile, DOME_ASPECT, 30), 28), carapaceMat)
+  const elytraDome = new THREE.Mesh(loft(domeSections(elytraXFrom, elytraXTo, domeBaseY, elytraProfile, elytraWidth, 30), 28), carapaceMat)
   elytraDome.name = 'elytra'
   g.add(elytraDome)
 
   // ---- 半透明裙边：一整片扁平薄檐，足印明显大于两枚拱起圆顶（更远大于 trunk）
   const marginMesh = new THREE.Mesh(marginGeometry(0.31, 0.27, 0.014), marginMat)
-  marginMesh.position.set(0.0, 0.03, 0)
+  // y 从 0.03 降到 0.0235 —— 2026-08-12 修。
+  // 裙边厚 0.014，原位置顶面在 0.037，而拱顶底边 domeBaseY=0.035：这片半透明
+  // 平板从拱顶下缘**切了进去**，交叠处透出一块浅色楔形缺口，像壳上破了个洞。
+  // 拱顶加宽后交叠面积变大，这块缺口也更显眼。降到顶面 0.0305 < 0.035，
+  // 裙边从拱顶下缘「探出」而不是「切入」。
+  marginMesh.position.set(0.0, 0.0235, 0)
   marginMesh.name = 'margin'
   g.add(marginMesh)
 
