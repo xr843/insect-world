@@ -45,6 +45,24 @@ function countTriangles(obj: THREE.Object3D): number {
 function Rig({ model, wire }: { model: InsectModel; wire: boolean }) {
   const { camera } = useThree()
   const controls = useThree((s) => s.controls)
+  const scene = useThree((s) => s.scene)
+  const gl = useThree((s) => s.gl)
+
+  /*
+   * 调试出口：把场景/相机/渲染器挂到 window 上。
+   *
+   * 这个页面存在的意义就是「肉眼验收几何」，而肉眼验收的下一步往往是
+   * 「这块看着不对的像素到底属于哪个网格」。没有出口时只能从 React fiber
+   * 里反向刨（实测刨不出来，r3f 不把 THREE 对象放在 stateNode 上），
+   * 于是只能靠改参数—重渲—对比去猜，七星瓢虫那片白就这样连猜六轮全落空。
+   *
+   * 有了这个出口，自动化脚本可以给每个 mesh 换上唯一色的无光照材质渲一张
+   * 「ID 图」，直接按像素读出归属 —— 一次就能定位，不必再猜。
+   * 只在调试台（/preview.html）暴露，主站不受影响。
+   */
+  useEffect(() => {
+    ;(window as unknown as Record<string, unknown>).__preview = { scene, camera, gl, model }
+  }, [scene, camera, gl, model])
 
   useEffect(() => {
     const fov = ((camera as THREE.PerspectiveCamera).fov * Math.PI) / 180
