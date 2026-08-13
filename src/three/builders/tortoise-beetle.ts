@@ -160,9 +160,30 @@ export function buildTortoiseBeetle(): InsectModel {
   carapaceMat.iridescence = 0.4
   carapaceMat.iridescenceIOR = 1.8
   carapaceMat.iridescenceThicknessRange = [250, 500]
+  // 蜡龟甲的壳是半透的蜡质，不是金属漆。elytra() 的默认高光（roughness 0.32 /
+  // metalness 0.58 / clearcoat 0.55）是照深色鞘翅调的——深壳吃得下，这种中间调
+  // 的橄榄壳吃不下：舞台顶光把整个拱顶炸成白铬，#8c8438 只在一道金脊上露头，
+  // 用户看到的是"盘子上摆了块灰白塑料"。ID 图已确认那整块浅色就是 elytra 自身，
+  // 且 envMapIntensity=0 零像素变化（该材质无环境贴图），高光全来自直射光。
+  // 实测灵敏度很陡：roughness 0.78 仍是灰的，0.85 才让壳色整片透出来。
+  // 与七星瓢虫（roughness 0.319→0.56）是同一类过曝，此处壳色更浅故压得更狠。
+  carapaceMat.roughness = 0.85
+  carapaceMat.metalness = 0.05
+  carapaceMat.clearcoat = 0.08
+  carapaceMat.clearcoatRoughness = 0.42
+  // 双面渲染 —— 2026-08-13 修，这是这只虫"看着不像"的最大一项。
+  // loft(capEnds=true) 给拱顶两端封了口，但端盖的绕向朝内，单面渲染下被背面
+  // 剔除：从斜后方直接看穿进空壳里，尾端露出一个背景色的黑洞，洞口的内壁边缘
+  // 读成一片"卷起来的浅色薄片"，接缝处还多出一道亮金楔形。改双面后壳整个闭合，
+  // 接缝退成一条细线。ID 图确认过那块黑就是背景，不是任何 mesh。
+  // 只改这一枚材质：其他虫的 loft 端盖多被别的部件挡住，没有暴露此问题。
+  carapaceMat.side = THREE.DoubleSide
 
   // 半透明裙边：opacity 压到 0.42（<0.75）+ translucent，读出来是真正的半透明薄檐
-  const marginMat = chitin({ color: '#dce6ab', gloss: 0.55, opacity: 0.42, translucent: true, side: THREE.DoubleSide })
+  // gloss 0.55→0.28、色相由偏绿的 #dce6ab 转暖到琥珀色 —— 2026-08-13 修。
+  // 原值下这片平板被顶光整片洗成不透明白，读成瓷盘而不是半透薄檐；真实蜡龟甲
+  // 的薄檐是透着琥珀的。和背甲的过曝是同一个病（见上方 carapaceMat 注释）。
+  const marginMat = chitin({ color: '#d3c085', gloss: 0.28, opacity: 0.42, translucent: true, side: THREE.DoubleSide })
 
   const bodyMat = chitin({ color: '#3a3222', gloss: 0.4, metal: 0.1 })
   const legMat = chitin({ color: '#2c2618', gloss: 0.35 })
@@ -234,8 +255,18 @@ export function buildTortoiseBeetle(): InsectModel {
   const pronotumXTo = seamX - overlap
   const elytraXFrom = seamX + overlap
   const elytraXTo = carapaceXBack
-  const pronotumProfile = (t: number) => carapaceProfile(globalT(THREE.MathUtils.lerp(pronotumXFrom, pronotumXTo, t)))
-  const pronotumWidth = (t: number) => carapaceWidth(globalT(THREE.MathUtils.lerp(pronotumXFrom, pronotumXTo, t)))
+  // 前胸背板尾端整体收细，塞进鞘翅前缘之下 —— 2026-08-13 修。
+  // 两段共用同一条包络，理论上重叠区严丝合缝；但 loft 是折线近似，而两段的
+  // 采样密度不同（24 步 vs 30 步），弦高不一样，重叠区里两片互相穿插、交替
+  // 露出对方，顶视图上读成一道贯穿背甲的裂缝，斜视图上读成一道亮"金脊"。
+  // 让前胸尾端缩进去后，重叠区永远是鞘翅在外，缝退化成鞘翅前缘压住前胸后缘
+  // 的一道台阶——真甲虫的鞘翅基部本来就是这样搭在前胸背板后缘上的。
+  // 幅度 7.5%：seamDiff 由 0.0029 升到约 0.009，门槛是 refHeight×0.2≈0.023。
+  const pronotumTuck = (t: number) => 1 - 0.075 * Math.pow(Math.max(0, (t - 0.7) / 0.3), 2)
+  const pronotumProfile = (t: number) =>
+    carapaceProfile(globalT(THREE.MathUtils.lerp(pronotumXFrom, pronotumXTo, t))) * pronotumTuck(t)
+  const pronotumWidth = (t: number) =>
+    carapaceWidth(globalT(THREE.MathUtils.lerp(pronotumXFrom, pronotumXTo, t))) * pronotumTuck(t)
   const elytraProfile = (t: number) => carapaceProfile(globalT(THREE.MathUtils.lerp(elytraXFrom, elytraXTo, t)))
   const elytraWidth = (t: number) => carapaceWidth(globalT(THREE.MathUtils.lerp(elytraXFrom, elytraXTo, t)))
 
@@ -252,13 +283,21 @@ export function buildTortoiseBeetle(): InsectModel {
   g.add(elytraDome)
 
   // ---- 半透明裙边：一整片扁平薄檐，足印明显大于两枚拱起圆顶（更远大于 trunk）
-  const marginMesh = new THREE.Mesh(marginGeometry(0.31, 0.27, 0.014), marginMat)
+  // 尺寸从 0.31×0.27 收到 0.29×0.238 —— 2026-08-13 修。裙边原本比拱顶（半宽
+  // 0.19）向外多出 42%，整只虫读成「盘子上摆了块巧克力」，裙边喧宾夺主。真实
+  // 蜡龟甲的薄檐只外扩约四分之一个拱顶半宽，收窄后拱起才是主体。gate 是
+  // marginSpanZ ≥ trunkSpanZ×1.5（trunk 0.186），收窄后仍有 2.56 倍余量。
+  const marginMesh = new THREE.Mesh(marginGeometry(0.29, 0.238, 0.014), marginMat)
   // y 从 0.03 降到 0.0235 —— 2026-08-12 修。
   // 裙边厚 0.014，原位置顶面在 0.037，而拱顶底边 domeBaseY=0.035：这片半透明
   // 平板从拱顶下缘**切了进去**，交叠处透出一块浅色楔形缺口，像壳上破了个洞。
   // 拱顶加宽后交叠面积变大，这块缺口也更显眼。降到顶面 0.0305 < 0.035，
   // 裙边从拱顶下缘「探出」而不是「切入」。
-  marginMesh.position.set(0.0, 0.0235, 0)
+  // x 由 0 后移到 -0.02 —— 2026-08-13 修。背甲跨 [-0.27, 0.23]，中心在 -0.02，
+  // 而裙边原本以 x=0 为中心，于是前面多伸出 0.06、后面只多 0.02：前端裸露一大片
+  // 空薄檐，正好接在拱顶收尖的前缘外侧，斜视图上读成"壳前面缺了一块、翘起一片"。
+  // 后移后前后各多伸 0.02，薄檐才是均匀绕一圈的。
+  marginMesh.position.set(-0.02, 0.0235, 0)
   marginMesh.name = 'margin'
   g.add(marginMesh)
 
