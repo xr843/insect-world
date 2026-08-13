@@ -182,10 +182,24 @@ export function buildDarklingBeetle(): InsectModel {
   // ---- 六足：极高、近乎伸直——knee 开大（74~78°）让胫节真正折向
   // 地面，配合较长的 femur/tibia/tarsus，撑出"腹面离地≈体高"的
   // 踮脚站姿（数值依据见文件头注释，已用真实测量校准）。
+  /*
+   * 腿的粗细与长度 —— 2026-08-12 返工。
+   *
+   * 原值 femur/tibia 0.76~0.82、thickness 0.03，长径比约 26:1，而躯干半径才 0.3。
+   * 渲染出来六条针一样的细腿把身体高高架起，整只读成**蜘蛛**而不是甲虫，
+   * 而 vitest 全绿（腿的几何、对称性、比例断言都在各自的合理区间里，
+   * 没有一条在问「这个粗细配这个长度像不像昆虫的腿」）。
+   *
+   * 鳖甲的腿确实长（沙漠里踮高躯干散热），问题从来不是长度而是**太细**。
+   * 第一次返工时连长度一起收了四分之一，立刻被 beetles7.test.ts 的
+   * 「腹面离地 ≥ 体高 0.6 倍」拦下 —— 那条断言钉的正是这个物种的踮脚站姿，
+   * 拦得对。所以长度原样保留，只把粗细近乎翻倍：长径比从 ~26:1 降到 ~14:1，
+   * 站姿不变，蜘蛛感消失。
+   */
   const legSpecs: LegSpec[] = [
-    { base: [0.18, 0.02, 0.24], femur: 0.76, tibia: 0.78, tarsus: 0.32, thickness: 0.03, splay: 28, sweep: -24, knee: 76, ankle: 30 },
-    { base: [-0.2, 0.0, 0.26], femur: 0.82, tibia: 0.82, tarsus: 0.34, thickness: 0.032, splay: 27, sweep: 4, knee: 78, ankle: 30 },
-    { base: [-0.58, 0.0, 0.24], femur: 0.78, tibia: 0.8, tarsus: 0.33, thickness: 0.031, splay: 28, sweep: 30, knee: 76, ankle: 30 },
+    { base: [0.18, 0.02, 0.24], femur: 0.76, tibia: 0.78, tarsus: 0.32, thickness: 0.055, splay: 28, sweep: -24, knee: 76, ankle: 30 },
+    { base: [-0.2, 0.0, 0.26], femur: 0.82, tibia: 0.82, tarsus: 0.34, thickness: 0.058, splay: 27, sweep: 4, knee: 78, ankle: 30 },
+    { base: [-0.58, 0.0, 0.24], femur: 0.78, tibia: 0.8, tarsus: 0.33, thickness: 0.056, splay: 28, sweep: 30, knee: 76, ankle: 30 },
   ]
   const legRigs = legSpecs.map((spec) => legPair(spec, legMat))
   legRigs[1].name = 'stilt-leg-rig'

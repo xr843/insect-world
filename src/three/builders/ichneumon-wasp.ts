@@ -327,5 +327,15 @@ export function buildIchneumonWasp(): InsectModel {
     leg: new THREE.Vector3(legMid.base[0], legMid.base[1] - 0.12, legMid.base[2] + 0.1),
   }
 
-  return finalize(g, anchors)
+  /*
+   * 取景半径覆写 —— 2026-08-12 加，同 crane-fly.ts 的做法。
+   *
+   * 产卵器让整体长度从 4.68 涨到 14.28，包围半径 7.58。按包围球取景时虫体只
+   * 占画面约三成，默认视图里几乎看不清这是什么虫 —— 而产卵器本该是主角，
+   * 结果反而把主角挤没了。
+   *
+   * 5.2 让虫体与大部分产卵器占满画面，只有末梢出画：这正是真实微距摄影
+   * 拍长产卵器姬蜂的取法，也和大蚊「腿尖出画」是同一个权衡。
+   */
+  return finalize(g, anchors, { frameRadius: 5.2 })
 }

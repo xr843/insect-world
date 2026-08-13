@@ -164,7 +164,12 @@ export function buildMoleCricket(): InsectModel {
       bulge: 0.42,
       flat: 1.1,
       taperStart: 0.55,
-      taperEnd: 0.4,
+      // taperEnd 由 0.4 提到 0.56 —— 2026-08-12 修。
+      // 前胸后端半径 = 0.5×taperEnd，腹部起点半径 = 0.4×0.7 = 0.28。
+      // 原值 0.4 使前胸收到 0.20，比它后面的腹部还细，交界处出现台阶，
+      // 整只虫因此读成「几个分开的光滑鼓包」而不是一条连续躯干。
+      // 0.56 让两侧在 x=0.5 处半径精确相等（0.28），接缝消失。
+      taperEnd: 0.56,
     }),
     bodyMat,
   )
@@ -185,7 +190,8 @@ export function buildMoleCricket(): InsectModel {
           const sections: Section[] = []
           for (let i = 0; i <= steps; i++) {
             const t = i / steps
-            const taperEnd = t > 0.78 ? 1 - ((t - 0.78) / 0.22) * 0.72 : 1
+            // 收得更狠（0.72→0.9）：原值让腹末留下半径 0.112 的平切端盖，侧面看是一刀平口
+            const taperEnd = t > 0.78 ? 1 - ((t - 0.78) / 0.22) * 0.9 : 1
             const taperStart = t < 0.06 ? 0.7 + 0.3 * (t / 0.06) : 1
             const r = 0.4 * taperStart * taperEnd
             sections.push({ at: new THREE.Vector3().lerpVectors(from, to, t), ry: r / 1.08, rz: r * 1.08 })

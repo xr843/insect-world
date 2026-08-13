@@ -165,8 +165,19 @@ export function buildHoverfly(): InsectModel {
   )
 
   // ---- 复眼：硕大，holoptic——两眼在头顶几乎相接
-  const eyeAt: [number, number, number] = [0.53, 0.14, 0.095]
-  g.add(compoundEyePair({ at: eyeAt, radius: 0.185, color: eyeColor, flatten: 0.92, stretch: 1.08, facets: true }))
+  /*
+   * 复眼尺寸 —— 2026-08-12 收窄。
+   *
+   * 原值 radius 0.185，而头部 spindle 半径只有 0.1、胸部 0.135：两只眼各自
+   * 比整个头还大近一倍，又在中线重叠，渲染出来融成**一颗棕色浆果粘在前端**，
+   * 看不出是眼睛，也看不出有头。vitest 全绿（眼睛的几何、成对性、锚点都合法）。
+   *
+   * 食蚜蝇的复眼确实硕大、雄虫两眼在头顶相接（holoptic），文件头注释没错；
+   * 但「占满头部」不等于「比头大一倍」。0.12 让两眼仍在中线附近相接、仍占满
+   * 头部，却读得出是一对眼睛长在一个头上。
+   */
+  const eyeAt: [number, number, number] = [0.53, 0.14, 0.072]
+  g.add(compoundEyePair({ at: eyeAt, radius: 0.12, color: eyeColor, flatten: 0.92, stretch: 1.08, facets: true }))
 
   // ---- 触角：三节短锥 + 芒毛
   const antBase = new THREE.Vector3(0.58, 0.13, 0.04)
@@ -201,7 +212,7 @@ export function buildHoverfly(): InsectModel {
   const anchors: Record<string, THREE.Vector3> = {
     haltere: haltereBase.clone().add(new THREE.Vector3(-0.05, -0.05, 0.06)),
     wing: wingTip,
-    eye: new THREE.Vector3(eyeAt[0], eyeAt[1], eyeAt[2] + 0.185),
+    eye: new THREE.Vector3(eyeAt[0], eyeAt[1], eyeAt[2] + 0.12),
     abdomen: new THREE.Vector3().lerpVectors(abdomenFrom, abdomenTo, 0.4),
     antenna: antBase.clone().add(new THREE.Vector3(0.09, 0.05, 0)),
     thorax: thoraxCenter,
