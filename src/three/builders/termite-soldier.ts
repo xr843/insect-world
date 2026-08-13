@@ -174,12 +174,20 @@ function squircleLoft(sections: RadialSection[], squareness = 6, radialSegments 
  * 满尺寸处决定，两端收窄不会缩小它。
  */
 function headRadiusProfile(t: number, ryMax: number, rzMax: number): { ry: number; rz: number } {
-  const shoulder = 0.12
+  // 前后肩不再对称 —— 2026-08-13 改。原先两端都只收到 62%，后端于是以一堵
+  // 直径 0.62 的平墙撞上身体，接头像机加工出来的。后端改成收到 34% 并把收窄
+  // 段拉长（0.12→0.26），头壳后缘圆钝地缩进前胸里，接头就看不见了。
   const minScale = 0.62
-  const backEase = smooth(Math.min(1, t / shoulder))
-  const frontEase = smooth(Math.min(1, (1 - t) / shoulder))
-  const scale = minScale + (1 - minScale) * Math.min(backEase, frontEase)
-  return { ry: ryMax * scale, rz: rzMax * scale }
+  const backEase = smooth(Math.min(1, t / 0.26))
+  const frontEase = smooth(Math.min(1, (1 - t) / 0.12))
+  const back = 0.34 + (1 - 0.34) * backEase
+  const front = minScale + (1 - minScale) * frontEase
+  const scale = Math.min(back, front)
+  // 前窄后宽 —— 2026-08-13 加。原先 ry/rz 全程等比缩放，横截面的宽高比从头到尾
+  // 恒定，整颗头读成一段等径的管子；真兵蚁的头壳最宽处在中后段，向大颚关节
+  // 那一侧缓缓收窄。收窄只发生在 t>0.3 之后，所以包围盒尺寸不变（体积断言不受影响）。
+  const taper = 1 - 0.16 * smooth(Math.max(0, (t - 0.3) / 0.7))
+  return { ry: ryMax * scale * (0.94 + 0.06 * taper), rz: rzMax * scale * taper }
 }
 
 interface MandibleOpts {
@@ -355,8 +363,11 @@ export function buildTermiteSoldier(): InsectModel {
   // 长度/宽度都明显超过胸腹之和——这是"一个大头拖着一小截软身子"观感
   // 的全部来源，中段维持满尺寸保证这一点不受两端收窄影响
   const headLen = headFrontX - headBackX // 0.26
-  const headWidth = 0.2 // 局部 Z（体宽方向）
-  const headHeight = 0.17 // 局部 Y（背腹方向）
+  // 0.2×0.17 改成 0.22×0.135 —— 2026-08-13 修。原尺寸配上 0.26 的长度几乎是个
+  // 正方体，横截面近圆，超椭圆一倒角就读成一只带倒角的褐色圆桶（大图重扫时
+  // 60 只里唯一一只不像虫的）。兵蚁头壳是背腹压扁的，宽高比接近 1.6:1。
+  const headWidth = 0.22 // 局部 Z（体宽方向）
+  const headHeight = 0.135 // 局部 Y（背腹方向）
   const HEAD_STATIONS = 18
   const headSections: RadialSection[] = []
   for (let i = 0; i < HEAD_STATIONS; i++) {
@@ -367,7 +378,9 @@ export function buildTermiteSoldier(): InsectModel {
   // squareness 从 6 降到 3.2：指数 6 的超椭圆已经几乎是直角矩形，实拍下整个头
   // 读成一块方砖。3.2 仍明显「长方」（兵蚁头确实方），但棱角圆润下来，配合上面
   // 两端收窄的 profile 才像一枚骨化头壳而不是工业零件。
-  const headMesh = new THREE.Mesh(squircleLoft(headSections, 3.2, 32), headMat)
+  // 再从 3.2 降到 2.4 —— 2026-08-13。3.2 配上近圆的横截面，棱线仍然清晰可见，
+  // 读成机加工的倒角；压扁之后 2.4 已经足够"长方"，棱角也真正圆钝下来了。
+  const headMesh = new THREE.Mesh(squircleLoft(headSections, 2.4, 32), headMat)
   headMesh.name = 'head'
   g.add(headMesh)
 
@@ -439,11 +452,14 @@ export function buildTermiteSoldier(): InsectModel {
     segmentedAbdomen({
       from: [abdomenFrom.x, abdomenFrom.y, abdomenFrom.z],
       to: [abdomenTo.x, abdomenTo.y, abdomenTo.z],
+      // 2026-08-13 修：原值 r1=0.018 把腹部收成一个尖锥，groove=0.17 又把节间沟
+      // 切成一圈锋利的鳍，整段读成松果/螺丝而不是腹部。兵蚁的腹是软而胖的腊肠，
+      // 中段最粗、尾端圆钝收口，节间只是浅浅的褶。
       r0: 0.075,
-      r1: 0.018,
-      segments: 6,
-      groove: 0.17,
-      bulge: 0.2,
+      r1: 0.046,
+      segments: 7,
+      groove: 0.085,
+      bulge: 0.42,
     }),
     softMat,
   )
