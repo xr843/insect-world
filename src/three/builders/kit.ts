@@ -1097,6 +1097,18 @@ export function finalize(
     if ((o as THREE.Mesh).isMesh) {
       o.castShadow = true
       o.receiveShadow = true
+      // 不透明材质一律双面 —— 2026-08-13。
+      // loft() 的三角面绕向与它自己算出的外法线不一致：凸而闭合的壳看不出来
+      // （法线是按椭圆截面单独算的，光照正常，轮廓也一样），但只要两片壳交叠、
+      // 或壳有开口，背面剔除就会把该画的面丢掉，露出背景色——用户报的七星瓢虫
+      // "壳裂开露白"、甘薯腊龟甲尾端的黑洞、榆蓝叶甲绿壳上的土黄楔形，都是这一个病。
+      // 逐只调材质查了很多轮都没找到，因为它根本不是材质参数问题。
+      // 只对不透明材质开：半透明件（翅膜、龟甲裙边）自己已按需设过 side，
+      // 且双面会打乱它们的绘制顺序。60 个模型都是万级面数的静态几何，代价可忽略。
+      const mats = (o as THREE.Mesh).material
+      for (const m of Array.isArray(mats) ? mats : [mats]) {
+        if (m && !m.transparent) m.side = THREE.DoubleSide
+      }
     }
   })
 

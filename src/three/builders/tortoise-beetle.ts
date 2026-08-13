@@ -171,13 +171,9 @@ export function buildTortoiseBeetle(): InsectModel {
   carapaceMat.metalness = 0.05
   carapaceMat.clearcoat = 0.08
   carapaceMat.clearcoatRoughness = 0.42
-  // 双面渲染 —— 2026-08-13 修，这是这只虫"看着不像"的最大一项。
-  // loft(capEnds=true) 给拱顶两端封了口，但端盖的绕向朝内，单面渲染下被背面
-  // 剔除：从斜后方直接看穿进空壳里，尾端露出一个背景色的黑洞，洞口的内壁边缘
-  // 读成一片"卷起来的浅色薄片"，接缝处还多出一道亮金楔形。改双面后壳整个闭合，
-  // 接缝退成一条细线。ID 图确认过那块黑就是背景，不是任何 mesh。
-  // 只改这一枚材质：其他虫的 loft 端盖多被别的部件挡住，没有暴露此问题。
-  carapaceMat.side = THREE.DoubleSide
+  // 这只虫是"壳能看穿"那个全局缺陷暴露得最狠的一只：单面渲染下从斜后方
+  // 直接看进空壳，尾端一个背景色的黑洞，洞口内壁读成一片卷起的浅色薄片。
+  // 根因与统一修法在 kit.ts finalize() 里（不透明材质一律双面），此处不再单独设。
 
   // 半透明裙边：opacity 压到 0.42（<0.75）+ translucent，读出来是真正的半透明薄檐
   // gloss 0.55→0.28、色相由偏绿的 #dce6ab 转暖到琥珀色 —— 2026-08-13 修。
