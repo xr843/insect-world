@@ -46,7 +46,7 @@ The trade-off is realism: this will not match a 3D scan. What it buys is zero as
 npm install
 npm run dev          # main site    http://localhost:5178
                      # model bench  http://localhost:5178/preview.html
-npm test             # 4030 tests
+npm test             # 4,000+ tests
 npm run build        # tsc --noEmit + vite build
 npm run deploy       # build and publish to Cloudflare Pages (run npx wrangler login first)
 ```
@@ -112,14 +112,14 @@ Miss one and the tests will catch it: a data record with no builder file fails t
 ## Tests
 
 ```bash
-npm test     # 4030 tests across 54 files
+npm test     # 4,000+ tests across 50+ files
 ```
 
 One self-check when writing a morphology assertion: **if I revert the code to the broken version, does this assertion fail?** If not, it is not really an assertion.
 
 There is a harder failure mode the self-check does not cover: **assertions measure numbers, people look at shapes, and the two can be unrelated.** The orchid mantis's petal-like femora asserted "width ≥ 3.5× thickness" and measured 5.75 — green — yet rendered as a few thin plates seen edge-on, making the whole insect look like a pale shrimp, because the quaternion fixing their orientation constrained only the long axis and left roll free. The width-to-thickness *number* was entirely unaffected. Assertions that pin this class of bug have to measure **the quantity the user actually sees**.
 
-The Chinese README documents these lessons in full, including a long list of bugs that only surface at runtime and are caught by neither type-checking nor NaN checks — `<Environment>` suspending an entire subtree, inline callbacks causing infinite reloads, `legPair` not actually mirroring, and the counter-intuitive `spread` semantics in `wing()`.
+The audit methodology that catches what tests cannot — render-size requirements, the silhouette-diff sweep for backface culling, ID-map pixel attribution — is written up in [docs/model-audit-notes.md](docs/model-audit-notes.md) (Chinese). The Chinese README documents these lessons in full, including a long list of bugs that only surface at runtime and are caught by neither type-checking nor NaN checks — `<Environment>` suspending an entire subtree, inline callbacks causing infinite reloads, `legPair` not actually mirroring, and the counter-intuitive `spread` semantics in `wing()`.
 
 ## Known limitations
 

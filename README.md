@@ -14,7 +14,7 @@
 
 60 个物种覆盖 14 个目：鞘翅目 28、鳞翅目 5、膜翅目 5、半翅目 4、直翅目 4、双翅目 3，蜻蜓目、螳螂目、脉翅目各 2，䗛目、革翅目、广翅目、蜚蠊目、毛翅目各 1。
 
-**长期目标 60 种 / 14 目已达成**；物种史与打磨史见 [docs/roadmap.md](docs/roadmap.md) 与 [docs/polish-plan.md](docs/polish-plan.md)。
+**长期目标 60 种 / 14 目已达成**；物种史与打磨史见 [docs/roadmap.md](docs/roadmap.md) 与 [docs/polish-plan.md](docs/polish-plan.md)，模型审计方法见 [docs/model-audit-notes.md](docs/model-audit-notes.md)。
 
 ![图鉴总览 —— 60 种 / 14 个目](docs/screenshots/05-gallery.jpg)
 
@@ -36,7 +36,7 @@
 npm install
 npm run dev          # 主站      http://localhost:5178
                      # 模型调试台 http://localhost:5178/preview.html
-npm test             # 4030 个测试
+npm test             # 4000 多个测试
 npm run build        # tsc --noEmit + vite build
 npm run deploy       # 构建并发布到 Cloudflare Pages（需先 npx wrangler login）
 ```
@@ -194,7 +194,7 @@ rAF 计数为 0，就别再排查渲染代码了。出图改走无头 Chromium�
 npm test
 ```
 
-54 个文件、4030 个测试：
+50 多个文件、4000 多个测试。下表是一次快照，示意各层的分量（逐项数字随迭代漂移，以 `npm test` 实际输出为准）：
 
 | 文件 | 数量 | 管什么 |
 | --- | --- | --- |
@@ -227,6 +227,9 @@ npm test
 白蚁兵蚁改成把两颚顶点投影到默认机位的成像平面上，沿颚长切 20 段，
 断言其中有连续一长段两者的投影包围盒**不相交**。
 写形态断言前值得先问一句：这个数字，和我要看的那件事是同一件事吗？
+
+这一类「测试查不出长相」的完整审计方法 —— 出图规格、扫背面剔除的剪影差集、
+定位像素归属的 ID 图 —— 沉淀在 [docs/model-audit-notes.md](docs/model-audit-notes.md)。
 
 ## 已知不足
 
