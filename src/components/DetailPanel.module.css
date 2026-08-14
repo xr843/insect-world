@@ -236,6 +236,17 @@
   color: var(--muted);
 }
 
+/* 复制成功的短暂确认态：整钮转苔绿 2 秒。变色而不弹 toast ——
+   反馈就发生在手指按下去的那个位置，视线不用移开 */
+.share[data-copied] {
+  color: var(--sage);
+  border-color: var(--sage);
+}
+
+.share[data-copied] svg {
+  color: var(--sage);
+}
+
 /* ---------------------------------------------------------------- 页脚元数据 */
 
 .meta {

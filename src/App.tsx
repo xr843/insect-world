@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import type { Order } from './data/types'
-import { useLabels, useSpecies, useT } from './i18n/useT'
+import { useLabels, useLocale, useSpecies, useT } from './i18n/useT'
 import { notesToMarkdown, useFieldNotes } from './hooks/useFieldNotes'
 import { NotesPanel } from './components/NotesPanel'
 import { BottomCards } from './components/BottomCards'
@@ -14,7 +14,7 @@ import { TopBar } from './components/TopBar'
 import { IconGrid, IconSparkle } from './components/icons'
 import { isKnownSpecies, prefetchInsectModel } from './three/registry'
 import { THEME_COLOR, THEME_KEY, resolveTheme, type Theme } from './theme'
-import { speciesFromSearch } from './i18n/hrefForLocale'
+import { canonicalPath, speciesFromUrl } from './i18n/hrefForLocale'
 import { LanguageHint } from './i18n/LanguageHint'
 
 
@@ -22,6 +22,7 @@ import { LanguageHint } from './i18n/LanguageHint'
 export default function App() {
   const t = useT()
   const labels = useLabels()
+  const locale = useLocale()
   /**
    * 物种数据来自 LocaleProvider，不再是模块级常量 —— 中英两版是两份
    * 不同的数据，写死在模块作用域的话英文入口拿到的永远是中文那份
@@ -35,11 +36,12 @@ export default function App() {
   const { insects: ALL, getGuide } = useSpecies()
   const SPECIES = useMemo(() => ALL.filter((i) => isKnownSpecies(i.id)), [ALL])
   /**
-   * 初始物种可由地址里的 ?s= 指定 —— 语言切换靠它把上下文带过去，
-   * 顺带让物种链接可以分享。认不出的 id 静默回落到首个物种。
+   * 初始物种可由地址指定：规范路径 /s/<id>/（或 /en/s/<id>/），旧格式
+   * ?s= 继续兼容 —— 语言切换靠它把上下文带过去，顺带让物种链接可以分享。
+   * 认不出的 id 静默回落到首个物种。
    */
   const [activeId, setActiveId] = useState(
-    () => speciesFromSearch(location.search, SPECIES.map((i) => i.id)) ?? SPECIES[0].id,
+    () => speciesFromUrl(location.pathname, location.search, SPECIES.map((i) => i.id)) ?? SPECIES[0].id,
   )
   const [galleryOpen, setGalleryOpen] = useState(false)
   const [notesOpen, setNotesOpen] = useState(false)
@@ -69,6 +71,22 @@ export default function App() {
     () => SPECIES.find((i) => i.id === activeId) ?? SPECIES[0],
     [activeId],
   )
+
+  /**
+   * 选中的物种写回地址栏与标题 —— 地址栏随时可复制转发，标签页多开时
+   * 靠标题分得清谁是谁。用 replaceState 不用 pushState：逐只翻 60 种
+   * 会堆出 60 层历史，「后退」变成原路倒带、永远退不出本站。
+   * 首次加载也会跑一遍，顺带把旧格式 ?s= 归一成规范路径。
+   * 只动 pathname 与 s 参数，别的查询参数（如调试用的 ?pdb=1）不碰。
+   */
+  useEffect(() => {
+    const url = new URL(location.href)
+    url.pathname = canonicalPath(locale, insect.id)
+    url.searchParams.delete('s')
+    history.replaceState(null, '', url)
+    document.title = t('doc.title', { name: insect.name })
+    // t 是每次渲染新建的闭包，不进依赖 —— 它实际只随 locale 变
+  }, [insect.id, insect.name, locale])
 
   /**
    * 左栏列表按「分类」与书签两个条件过滤。

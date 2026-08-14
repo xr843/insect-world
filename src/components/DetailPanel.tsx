@@ -1,9 +1,12 @@
+import { useEffect, useRef, useState } from 'react'
 import type { Insect } from '../data/types'
 import type { DiscoveryKind } from './Discovery'
 import { InsectGlyph } from './InsectGlyph'
 import {
   FactIcon,
   IconArrowRight,
+  IconBox,
+  IconCheck,
   IconGlobe,
   IconLeaf,
   IconPlay,
@@ -14,6 +17,7 @@ import {
 import { fitName } from './fitName'
 import s from './DetailPanel.module.css'
 import { useT, useLocale } from '../i18n/useT'
+import { canonicalPath } from '../i18n/hrefForLocale'
 import { photoUrl } from '../data/external'
 import { pinyinOf } from '../data/pinyin'
 
@@ -27,8 +31,38 @@ export function DetailPanel({
   onDiscover: (kind: DiscoveryKind) => void
 }) {
   const t = useT()
+  const locale = useLocale()
   // 拼音只在中文版有意义：英文读者要的是学名，注音反而是噪声
-  const pinyin = useLocale() === 'zh' ? pinyinOf(insect.id) : null
+  const pinyin = locale === 'zh' ? pinyinOf(insect.id) : null
+
+  /**
+   * 分享当前物种。有系统分享面板（手机、部分桌面浏览器）就用它 ——
+   * 那是能直达微信/短信的路；没有就复制规范链接并在按钮上亮 2 秒确认。
+   * 分享的地址用 location.origin 拼规范路径，而不是照抄 location.href：
+   * 当前地址可能带着 ?pdb=1 这类调试参数，别把它们转发出去。
+   */
+  const canShare = typeof navigator !== 'undefined' && typeof navigator.share === 'function'
+  const [copied, setCopied] = useState(false)
+  const copyTimer = useRef<number>()
+  useEffect(() => () => window.clearTimeout(copyTimer.current), [])
+  const share = () => {
+    const url = location.origin + canonicalPath(locale, insect.id)
+    if (canShare) {
+      // 用户在系统面板里点了取消会 reject（AbortError），不是故障，安静吞掉
+      void navigator.share({ title: insect.name, url }).catch(() => {})
+      return
+    }
+    void navigator.clipboard?.writeText(url).then(
+      () => {
+        setCopied(true)
+        window.clearTimeout(copyTimer.current)
+        copyTimer.current = window.setTimeout(() => setCopied(false), 2000)
+      },
+      () => {
+        /* 剪贴板被拒就算了，不打断用户 */
+      },
+    )
+  }
   return (
     <aside className={`card stage-height ${s.panel} detail-panel`} key={insect.id}>
       {/*
@@ -122,9 +156,15 @@ export function DetailPanel({
             {t('detail.quiz')}
           </button>
         </div>
+        {/* 对比原先借用的是分享图标 —— 真的分享按钮来了，把它还回去，改用
+            与展台工具条「对比」一致的方盒图标，免得两个按钮长一个样 */}
         <button className={`${s.ghost} ${s.wide}`} onClick={onCompare}>
-          <IconShare size={13} />
+          <IconBox size={13} />
           {t('detail.compareOthers')}
+        </button>
+        <button className={`${s.ghost} ${s.wide} ${s.share}`} onClick={share} data-copied={copied || undefined}>
+          {copied ? <IconCheck size={13} /> : <IconShare size={13} />}
+          {copied ? t('detail.linkCopied') : canShare ? t('detail.share') : t('detail.copyLink')}
         </button>
         {/*
           实物照片放在按钮组而不是下面的 meta 区：那三行（分布/现状/近缘）是静态属性，

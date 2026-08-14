@@ -147,6 +147,12 @@ export const IconShare = ({ size, className, strokeWidth }: P) => (
   </svg>
 )
 
+export const IconCheck = ({ size, className, strokeWidth }: P) => (
+  <svg {...base(size, strokeWidth)} className={className}>
+    <path d="m4.5 12.5 5 5L19.5 6.5" />
+  </svg>
+)
+
 export const IconSparkle = ({ size, className, strokeWidth }: P) => (
   <svg {...base(size, strokeWidth)} className={className}>
     <path d="M12 3.5c.6 4 1.9 5.3 5.9 5.9-4 .6-5.3 1.9-5.9 5.9-.6-4-1.9-5.3-5.9-5.9 4-.6 5.3-1.9 5.9-5.9Z" />

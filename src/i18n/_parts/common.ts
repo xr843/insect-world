@@ -10,11 +10,14 @@ import { definePart } from './part'
 export const PART = definePart(
   {
     'brand.name': '昆虫世界',
+    /** 标签页标题：物种名在前，多开几个标签时先看到的是虫不是站名 */
+    'doc.title': '{name} — 昆虫世界',
     'common.close': '关闭',
     'common.backToSpecimen': '回到标本',
   },
   {
     'brand.name': 'Insect World',
+    'doc.title': '{name} — Insect World',
     'common.close': 'Close',
     'common.backToSpecimen': 'Back to the specimen',
   },
