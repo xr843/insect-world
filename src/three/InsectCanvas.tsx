@@ -6,7 +6,7 @@
  * 甲虫的鞘翅靠 Environment 里的几片 lightformer 出高光，没有它们
  * clearcoat 材质会显得像塑料。
  */
-import { Suspense, lazy, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
+import { Suspense, lazy, memo, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { Canvas, useFrame, useThree } from '@react-three/fiber'
 import { Environment, Html, Lightformer, OrbitControls } from '@react-three/drei'
 import * as THREE from 'three'
@@ -718,7 +718,15 @@ function Scene({
   )
 }
 
-export function InsectCanvas({
+/**
+ * ⚠️ 必须 memo（真机模拟丢上下文撞出来的）：上下文丢失后 Stage 会 set 一个
+ * 状态来盖提示层，这次重渲染若穿透进 Canvas 子树，postprocessing 的
+ * EffectComposer.addPass 会去读 getContextAttributes() —— 规范规定丢失态下
+ * 它返回 null，于是 TypeError，r3f 内部重建两次仍炸，最终被外层错误边界
+ * 当成「WebGL 不可用」降级掉，恢复通道就此报废。memo 之下提示层的开/撤
+ * 不再触碰 Canvas 子树，canvas 原地等浏览器的恢复事件。
+ */
+export const InsectCanvas = memo(function InsectCanvas({
   insect,
   mode,
   spin,
@@ -811,4 +819,4 @@ export function InsectCanvas({
       </Suspense>
     </Canvas>
   )
-}
+})
