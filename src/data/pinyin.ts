@@ -83,3 +83,64 @@ export const NAME_PINYIN: Record<string, string> = {
 export function pinyinOf(insectId: string): string | null {
   return NAME_PINYIN[insectId] ?? null
 }
+
+// ---------------------------------------------------------------- 拼音搜索
+
+/**
+ * 搜索用的归一化键。上面的数据是注音用的（带声调、带空格），
+ * 键盘上没人打得出 `shuǐ mǐn` —— 搜索要的是 `shuimin` 和 `sm` 这两种形态。
+ */
+interface PinyinKeys {
+  /** 去声调、去空格的全拼；ü 的两种键盘写法（lu / lv）都收 */
+  full: string[]
+  /** 每个音节的首字母连写，如 shuāng chā xī jīn guī → scxjg */
+  initials: string
+}
+
+const keysCache = new Map<string, PinyinKeys | null>()
+
+function keysOf(insectId: string): PinyinKeys | null {
+  const hit = keysCache.get(insectId)
+  if (hit !== undefined) return hit
+  const raw = NAME_PINYIN[insectId]
+  let keys: PinyinKeys | null = null
+  if (raw) {
+    /**
+     * NFD 把带调字母拆成基字母 + 组合符号（ǔ → u + U+030C），删掉组合符号区
+     * （U+0300–U+036F）就是去声调。ü 一族要在删符号**之前**换成 v：NFD 后它是
+     * u + 分音符（U+0308）+ 声调，直接删会塌成 u，而键盘上「绿」通常打 lv ——
+     * 先记成 v，再补一份 v→u 的变体，两头都认。
+     */
+    const flat = raw
+      .normalize('NFD')
+      .replace(/u\u0308/g, 'v')
+      .replace(/[\u0300-\u036f]/g, '')
+    // 全角括号是「黑翅土白蚁（兵蚁）」这类备注的一部分，与空格同视为音节分隔
+    const syllables = flat.split(/[\s（）()]+/).filter(Boolean)
+    const joined = syllables.join('')
+    keys = {
+      full: joined.includes('v') ? [joined, joined.replace(/v/g, 'u')] : [joined],
+      initials: syllables.map((s) => s[0]).join(''),
+    }
+  }
+  keysCache.set(insectId, keys)
+  return keys
+}
+
+/**
+ * 物种名的拼音匹配：全拼与首字母缩写各做一路 contains。
+ *
+ * 为「棒䗛、水黾、海滨蠼螋」这类多数成年人打不出字的名字而设 ——
+ * 打得出拼音就搜得到。query 里的空格与隔音号（shui min / xi'an 风格）
+ * 一并去掉再比。
+ *
+ * 单个字母不启动：几乎每只虫的缩写里都有 s/c/j，一个字母会把列表填满，
+ * 而没有人用一个字母表达「我在搜拼音」。
+ */
+export function matchesPinyin(insectId: string, query: string): boolean {
+  const q = query.toLowerCase().replace(/[\s']/g, '')
+  if (q.length < 2 || !/^[a-z]+$/.test(q)) return false
+  const keys = keysOf(insectId)
+  if (!keys) return false
+  return keys.full.some((f) => f.includes(q)) || keys.initials.includes(q)
+}

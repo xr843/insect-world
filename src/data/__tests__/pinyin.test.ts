@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { NAME_PINYIN, pinyinOf } from '../pinyin'
+import { matchesPinyin, NAME_PINYIN, pinyinOf } from '../pinyin'
 import { INSECTS } from '../insects.zh'
 
 /**
@@ -54,5 +54,54 @@ describe('物种名注音', () => {
 
   it('pinyinOf 对未知 id 返回 null', () => {
     expect(pinyinOf('not-a-species')).toBeNull()
+  })
+})
+
+/**
+ * 搜索用的拼音匹配。数据带声调（shuǐ mǐn），键盘敲出来的没有（shuimin）——
+ * 归一化就是这两个世界之间唯一的桥，这里逐种敲一遍桥上的坑。
+ */
+describe('拼音搜索匹配', () => {
+  it('全拼：去声调、去空格后 contains（水黾 → shuimin）', () => {
+    expect(matchesPinyin('water-strider', 'shuimin')).toBe(true)
+    expect(matchesPinyin('water-strider', 'uimi')).toBe(true) // contains，不要求从头
+    expect(matchesPinyin('stick-insect', 'bangxiu')).toBe(true)
+  })
+
+  it('带空格或隔音号的输入也认（shui min 与撇号写法）', () => {
+    expect(matchesPinyin('water-strider', 'shui min')).toBe(true)
+    expect(matchesPinyin('water-strider', "shui'min")).toBe(true)
+  })
+
+  it('首字母缩写：双叉犀金龟 → scxjg，海滨蠼螋 → hbqs', () => {
+    expect(matchesPinyin('rhinoceros-beetle', 'scxjg')).toBe(true)
+    expect(matchesPinyin('earwig', 'hbqs')).toBe(true)
+  })
+
+  /** ǖǘǚǜ 剥掉声调后是 ü，键盘上通常打 v（lv）也有人打 u —— 两种都得认 */
+  it('ü 的两种键盘写法都认（铜绿 → tonglv / tonglu）', () => {
+    expect(matchesPinyin('shining-chafer', 'tonglv')).toBe(true)
+    expect(matchesPinyin('shining-chafer', 'tonglu')).toBe(true)
+  })
+
+  /** 数据里唯一带全角括号的条目：括号当音节分隔，不能混进拼音串 */
+  it('黑翅土白蚁（兵蚁）的括号不碍事', () => {
+    expect(matchesPinyin('termite-soldier', 'bingyi')).toBe(true)
+    expect(matchesPinyin('termite-soldier', 'hctbyby')).toBe(true)
+  })
+
+  it('单个字母不启动 —— 否则 s/c/j 会把结果列表填满', () => {
+    expect(matchesPinyin('rhinoceros-beetle', 's')).toBe(false)
+  })
+
+  it('非拼音输入（汉字、数字、空串）直接不匹配', () => {
+    expect(matchesPinyin('water-strider', '水黾')).toBe(false)
+    expect(matchesPinyin('water-strider', 'shui3')).toBe(false)
+    expect(matchesPinyin('water-strider', '')).toBe(false)
+  })
+
+  it('不相干的拼音不误报', () => {
+    expect(matchesPinyin('water-strider', 'tangl')).toBe(false)
+    expect(matchesPinyin('unknown-id', 'shuimin')).toBe(false)
   })
 })

@@ -3,6 +3,7 @@ import type { Insect, Order } from '../data/types'
 import { useLabels, useLocale, useT } from '../i18n/useT'
 import { hrefForLocale } from '../i18n/hrefForLocale'
 import { LOCALE_AUTONYM } from '../i18n/locales'
+import { matchesPinyin } from '../data/pinyin'
 import {
   IconBook,
   IconChevronDown,
@@ -116,6 +117,10 @@ export function TopBar({
    * 只有第一档时，搜「萤火虫」「甲虫」这类俗名会一无所获 ——
    * 图鉴用的是「山窗萤」这样的正式名，俗名只出现在正文里（实测撞到过）。
    * 第二档排在后面并整体截断到 12 条，避免常见字把列表撑爆。
+   *
+   * 拼音也算第一档（仅中文版）：「棒䗛、水黾、海滨蠼螋」这些字多数
+   * 成年人打不出来，全拼（shuimin）或首字母（hbqs）是唯一能敲进
+   * 搜索框的形态。英文版不接 —— 英文读者面对的本来就是英文名。
    */
   const primary = q
     ? insects.filter(
@@ -123,7 +128,8 @@ export function TopBar({
           i.name.toLowerCase().includes(q) ||
           i.latin.toLowerCase().includes(q) ||
           labels.order[i.order].toLowerCase().includes(q) ||
-          i.epithet.includes(q),
+          i.epithet.includes(q) ||
+          (locale === 'zh' && matchesPinyin(i.id, q)),
       )
     : []
   const seen = new Set(primary.map((i) => i.id))

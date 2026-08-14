@@ -12,7 +12,7 @@
  * 按我以为的方式跑，用真数据才能证明「搜萤火虫真的搜得到」。
  */
 import { fireEvent, screen } from '@testing-library/react'
-import { renderZh } from '../../i18n/testing'
+import { renderEn, renderZh } from '../../i18n/testing'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { cleanup } from '@testing-library/react'
 import { TopBar } from '../TopBar'
@@ -71,6 +71,55 @@ describe('第一档：名称 / 学名 / 目 / 雅称', () => {
     const hits = names()
     expect(hits).toContain('碧伟蜓')
     expect(hits).toContain('豆娘')
+  })
+})
+
+describe('拼音进第一档 —— 打不出「黾」「䗛」的人打得出拼音', () => {
+  it('全拼搜得到（shuimin → 水黾）', () => {
+    const { type, names } = mount()
+    type('shuimin')
+    expect(names()).toContain('水黾')
+  })
+
+  it('首字母缩写搜得到（hbqs → 海滨蠼螋）', () => {
+    const { type, names } = mount()
+    type('hbqs')
+    expect(names()).toContain('海滨蠼螋')
+  })
+
+  /** 现有数据带声调（shuǐ mǐn），没做归一化的话这条会空手而归 */
+  it('带空格的全拼也认（shui min）', () => {
+    const { type, names } = mount()
+    type('shui min')
+    expect(names()).toContain('水黾')
+  })
+
+  it('英文版不接拼音 —— 英文读者面对的是英文名', () => {
+    const onPick = vi.fn()
+    renderEn(
+      <TopBar
+        insects={INSECTS}
+        activeId={INSECTS[0].id}
+        onPick={onPick}
+        onLessons={vi.fn()}
+        onLibrary={vi.fn()}
+        onNotes={vi.fn()}
+        onExplore={vi.fn()}
+        orderFilter={null}
+        onOrderFilter={vi.fn()}
+        noteCount={0}
+        onCopyNotes={vi.fn()}
+        onClearNotes={vi.fn()}
+        theme="light"
+        onToggleTheme={vi.fn()}
+      />,
+    )
+    const input = screen.getByPlaceholderText(/Search species/)
+    fireEvent.change(input, { target: { value: 'shuimin' } })
+    const hits = screen
+      .queryAllByRole('button')
+      .filter((b) => b.querySelector('[class*=resultName]'))
+    expect(hits).toHaveLength(0)
   })
 })
 
