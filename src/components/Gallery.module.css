@@ -72,13 +72,17 @@
   background: var(--line);
 }
 
+/* 格子从 178px 放宽到 190px：1020px 的图鉴库里由一行五格变四格，
+   名字栏跟着从 98px 涨到 151px —— 这样连最长的「黑翅土白蚁（兵蚁）」也能
+   按 17px 排成一行，不必把字号压到比下面的拉丁名还小。 */
 .grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(178px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
   gap: 12px;
 }
 
 .tile {
+  container-type: inline-size;
   display: flex;
   align-items: center;
   gap: 11px;
@@ -115,6 +119,17 @@
   font-family: var(--serif);
   font-size: 17px;
   line-height: 1.15;
+}
+
+/* 名字一行放下（算法见 fitName.ts）。
+   这里的格子宽度随 auto-fill 变（窗口窄时列数会掉），所以可用宽度不能写死：
+   100cqi 是格子的内容宽，再减去缩略图 44 + 间距 11 + 2px 余量就是名字栏。
+   老浏览器不认 cqi 时这条 font-size 作废、退回 17px，此时由省略号兜底不撑破格子。 */
+.tileName[data-fit] {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-size: min(17px, calc((100cqi - 57px) / var(--name-chars, 4)));
 }
 
 .tileLatin {

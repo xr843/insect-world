@@ -2,6 +2,7 @@ import { useEffect, useRef } from 'react'
 import type { Insect } from '../data/types'
 import { InsectGlyph } from './InsectGlyph'
 import { IconArrowRight, IconBookmark, IconLeafSolid } from './icons'
+import { fitName } from './fitName'
 import s from './LibraryPanel.module.css'
 import { useLabels, useLocale, useT } from '../i18n/useT'
 import { pinyinOf } from '../data/pinyin'
@@ -107,7 +108,9 @@ export function LibraryPanel({
                 <InsectGlyph id={i.id} size={26} color={i.accent} />
               </span>
               <span style={{ minWidth: 0 }}>
-                <div className={s.name}>{i.name}</div>
+                <div className={s.name} {...fitName(i.name)}>
+                  {i.name}
+                </div>
                 {/* 拼音夹在名字与目名之间：小孩要先念得出名字，才知道该点哪一只 */}
                 {zh && pinyinOf(i.id) && <div className={s.pinyin}>{pinyinOf(i.id)}</div>}
                 <div className={s.order}>{labels.order[i.order]}</div>

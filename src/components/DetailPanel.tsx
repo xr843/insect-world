@@ -11,6 +11,7 @@ import {
   IconShare,
   IconSparkle,
 } from './icons'
+import { fitName } from './fitName'
 import s from './DetailPanel.module.css'
 import { useT, useLocale } from '../i18n/useT'
 import { photoUrl } from '../data/external'
@@ -30,13 +31,15 @@ export function DetailPanel({
   const pinyin = useLocale() === 'zh' ? pinyinOf(insect.id) : null
   return (
     <aside className={`card stage-height ${s.panel} detail-panel`} key={insect.id}>
-      <div className={s.eyebrow}>
-        <IconLeaf size={12} />
-        {t('detail.eyebrow')}
-      </div>
-
-      <div className={s.titleRow}>
-        <h1 className={s.title}>{insect.name}</h1>
+      {/*
+        标本印章挪到展签这一行 —— 名字要独占整行宽度才排得下。
+        原先印章跟标题并排，留给标题的只有 160px，「双叉犀金龟」在 40px 下断成两行。
+      */}
+      <div className={s.head}>
+        <div className={s.eyebrow}>
+          <IconLeaf size={12} />
+          {t('detail.eyebrow')}
+        </div>
         <span
           className={s.portrait}
           style={{
@@ -46,6 +49,10 @@ export function DetailPanel({
           <InsectGlyph id={insect.id} size={42} color={insect.accent} />
         </span>
       </div>
+
+      <h1 className={s.title} {...fitName(insect.name)}>
+        {insect.name}
+      </h1>
 
       {/*
         名称拼音 —— 起因是「有拼音的话小孩子就可以自己看了」。

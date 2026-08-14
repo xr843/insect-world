@@ -36,6 +36,7 @@
 }
 
 .item {
+  container-type: inline-size;
   position: relative;
   display: flex;
   align-items: center;
@@ -74,6 +75,21 @@
   font-weight: 500;
   line-height: 1.15;
   color: var(--ink);
+}
+
+/* 名字一行放下（算法见 fitName.ts）。
+   名录这一栏在 1240px 以下会从 232px 缩到 200px，可用宽度不能写死：
+   100cqi 是每行的内容宽，减去缩略图 38 + 间距 11 + 2px 余量就是名字栏。
+   桌面下只有 9 字的「黑翅土白蚁（兵蚁）」会被收窄，落到 12.5px。
+
+   11px 是下限（旁边的目名就是 11px，再小主次就倒过来了）：名录窄到 200px 那一档，
+   这条 9 字的名字按公式会掉到 8.9px，于是改为停在 11px、尾巴收成省略号 ——
+   与手机横滑条的处理一致，全名在右侧详情栏里照样看得到。 */
+.name[data-fit] {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-size: max(11px, min(16.5px, calc((100cqi - 51px) / var(--name-chars, 4))));
 }
 
 /* 名称拼音：比目名再小半档并压低不透明度，让「名字 → 拼音 → 目名」三行有清晰的
@@ -198,7 +214,9 @@
     text-align: center;
   }
 
-  .name {
+  /* 横滑小卡只有 86px 宽，长名字一律截断成省略号，不再按字数缩字号 */
+  .name,
+  .name[data-fit] {
     font-size: 12px;
     max-width: 78px;
     overflow: hidden;

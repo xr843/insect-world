@@ -1,4 +1,5 @@
 .panel {
+  container-type: inline-size;
   padding: 18px 20px 20px;
   display: flex;
   flex-direction: column;
@@ -17,18 +18,32 @@
   letter-spacing: 0.16em;
 }
 
-.titleRow {
+.head {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   justify-content: space-between;
   gap: 12px;
-  margin-top: 9px;
 }
 
 .title {
   font-size: 40px;
   line-height: 1.02;
   letter-spacing: 0.005em;
+  margin-top: 9px;
+}
+
+/**
+ * 中文名单行排版（算法见 fitName.ts）。
+ * 100cqi 是详情栏的内容宽（桌面 252px），减 18px 留出滚动条与字距（1.005em）的余量。
+ * 于是 5 字以内（60 种里的 57 种）仍是设计稿的 40px，6 字收到 39px，
+ * 最长的「黑翅土白蚁（兵蚁）」收到 26px —— 都只占一行。
+ * 详情栏在 1240px 以下会铺满整行，那时长名字自己就涨回 40px，上限由 min() 管住。
+ */
+/* 注意：这里不能加 overflow: hidden。详情栏是定高的纵向 flex，
+   一旦 overflow 不是 visible，标题的 min-height:auto 就失效、会被压成 0 高 —— 名字整个消失。 */
+.title[data-fit] {
+  white-space: nowrap;
+  font-size: min(40px, calc((100cqi - 18px) / var(--name-chars, 4)));
 }
 
 .portrait {

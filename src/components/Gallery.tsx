@@ -2,6 +2,7 @@ import { useEffect, useMemo } from 'react'
 import type { Insect, Order } from '../data/types'
 import { useLabels, useT } from '../i18n/useT'
 import { InsectGlyph } from './InsectGlyph'
+import { fitName } from './fitName'
 import s from './Gallery.module.css'
 
 /** 关掉弹层的通用行为：Esc 键 + 打开时锁住背景滚动 */
@@ -86,7 +87,9 @@ export function Gallery({
                     <InsectGlyph id={i.id} size={30} color={i.accent} />
                   </span>
                   <span style={{ minWidth: 0 }}>
-                    <div className={s.tileName}>{i.name}</div>
+                    <div className={s.tileName} {...fitName(i.name)}>
+                      {i.name}
+                    </div>
                     <div className={s.tileLatin}>{i.latin}</div>
                   </span>
                 </button>
