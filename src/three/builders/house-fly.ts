@@ -245,8 +245,11 @@ export function buildHouseFly(): InsectModel {
   abdomen.name = 'abdomen'
   g.add(abdomen)
   {
-    // 尾端圆帽：把 loft 的平切端面盖成圆钝的尾（略吞进尾节，藏住接缝）
-    const cap = new THREE.Mesh(new THREE.SphereGeometry(abdomenR1 * 1.02, 16, 12), abdomenMat)
+    // 尾端圆帽：把 loft 的平切端面盖成圆钝的尾（略吞进尾节，藏住接缝）。
+    // 用深一档的专用材质而不是腹色（终审打回）：帽子露在收拢翅膜的银灰之外，
+    // 纯腹色在那儿读成贴上去的浅塞；真家蝇的腹端本来就朝尾变深。
+    const capMat = chitin({ color: '#71512d', gloss: 0.5, clearcoat: 0.2 })
+    const cap = new THREE.Mesh(new THREE.SphereGeometry(abdomenR1 * 1.02, 16, 12), capMat)
     cap.position.set(abdomenTo[0] + 0.014, abdomenTo[1], abdomenTo[2])
     cap.scale.set(0.8, 1.0, 1.1)
     cap.name = 'abdomen'
