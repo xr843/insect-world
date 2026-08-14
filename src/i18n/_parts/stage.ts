@@ -19,6 +19,9 @@ export const PART = definePart(
     'stage.captionHint': '拖动旋转 · 滚轮细看 · 圆点＝观察点',
     'stage.error': '这只虫的模型没能建起来：{error}',
     'stage.loading': '正在生成 {name} 的立体标本…',
+    'stage.noWebgl': '这台设备开不了 3D 视图（WebGL 不可用），先用剪影代替。图鉴的文字内容不受影响。',
+    'stage.glLost': '3D 视图中断了（图形上下文丢失）。通常会自己恢复；一直没动静就重新加载。',
+    'stage.reload': '重新加载',
     'detail.eyebrow': '本期标本',
     'detail.facts': '关键数据',
     'detail.ecology': '生态角色',
@@ -49,6 +52,11 @@ export const PART = definePart(
     'stage.captionHint': 'Drag to rotate · Scroll to zoom in · Dots mark points of interest',
     'stage.error': 'The 3D model for this insect could not be built: {error}',
     'stage.loading': 'Building the 3D specimen of {name}…',
+    'stage.noWebgl':
+      'This device cannot show the 3D view (WebGL is unavailable), so here is the silhouette instead. The field-guide text is unaffected.',
+    'stage.glLost':
+      'The 3D view was interrupted (graphics context lost). It usually recovers by itself; reload if nothing happens.',
+    'stage.reload': 'Reload',
     'detail.eyebrow': 'Featured specimen',
     'detail.facts': 'Key facts',
     'detail.ecology': 'Ecological role',

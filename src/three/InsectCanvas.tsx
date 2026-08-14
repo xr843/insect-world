@@ -14,6 +14,7 @@ import type { OrbitControls as OrbitControlsImpl } from 'three-stdlib'
 import type { Insect } from '../data/types'
 import type { InsectModel } from './builders/kit'
 import { loadInsectModel } from './registry'
+import { bindContextLoss } from './webgl'
 
 /** 后期管线懒加载：+103KB gzip 的 postprocessing 只让真正会用它的桌面端下载（详见 PostFX.tsx 头注释） */
 const PostFX = lazy(() => import('./PostFX'))
@@ -729,6 +730,7 @@ export function InsectCanvas({
   active = true,
   theme = 'dark',
   onStatus,
+  onContextLoss,
 }: {
   insect: Insect
   mode: ViewMode
@@ -744,8 +746,13 @@ export function InsectCanvas({
   /** 明暗主题：决定轮廓光档位与落影颜色（材质与环境贴图不随主题动） */
   theme?: 'dark' | 'light'
   onStatus: (s: { loading: boolean; error: string | null }) => void
+  /** WebGL 上下文丢失(true)/恢复(false)的上报，Stage 据此盖/撤提示层 */
+  onContextLoss?: (lost: boolean) => void
 }) {
   const controls = useRef<OrbitControlsImpl>(null)
+  /** onCreated 只跑一次，回调进 ref 才能一直拿到最新的那个（同 Scene 的 notify） */
+  const lossNotify = useRef(onContextLoss)
+  lossNotify.current = onContextLoss
 
   useEffect(() => {
     onStatus({ loading: true, error: null })
@@ -770,9 +777,19 @@ export function InsectCanvas({
       // toDataURL 取帧，默认关着省一份缓冲拷贝（未来照片模式同走此门）。
       gl={{ antialias: COARSE, alpha: true, preserveDrawingBuffer: PDB, powerPreference: 'high-performance' }}
       camera={{ fov: 34, position: [2, 1, 3] }}
-      onCreated={({ gl }) => {
+      onCreated={({ gl, invalidate }) => {
         gl.toneMapping = THREE.ACESFilmicToneMapping
         gl.toneMappingExposure = 1.02
+        /**
+         * 上下文丢失/恢复上报出去（GPU 重置、驱动崩溃、移动端后台挤占都会触发）。
+         * 恢复后补一帧：three 会自己重建资源，但 demand 模式下没人 invalidate
+         * 的话，重建好的画面要等到下一次交互才出现。
+         * 不必解绑 —— 监听挂在 canvas 元素自己身上，随 Canvas 卸载一起回收。
+         */
+        bindContextLoss(gl.domElement, (lost) => {
+          lossNotify.current?.(lost)
+          if (!lost) invalidate()
+        })
       }}
       onPointerMissed={() => onToggleHotspot(null)}
     >

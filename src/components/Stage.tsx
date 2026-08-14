@@ -1,7 +1,9 @@
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { Component, useCallback, useEffect, useRef, useState, type ReactNode } from 'react'
 import type { Insect } from '../data/types'
 import { InsectCanvas, type ViewMode } from '../three/InsectCanvas'
+import { webglAvailable } from '../three/webgl'
 import { CompareBar } from './CompareBar'
+import { InsectGlyph } from './InsectGlyph'
 import {
   IconBox,
   IconIsolate,
@@ -13,6 +15,27 @@ import {
 } from './icons'
 import s from './Stage.module.css'
 import { useLabels, useT } from '../i18n/useT'
+
+/**
+ * 3D 画布的错误边界。
+ *
+ * webglAvailable() 只挡得住「探测得到」的不可用；还有一类是探测通过、
+ * 真建的时候才炸（显存耗尽、上下文数量到顶），three 的构造器直接 throw，
+ * 函数组件接不住，只有 class 边界能接。接住后通知 Stage 换剪影兜底 ——
+ * 没有这层，整个 React 树连着右栏的图鉴文字一起白屏。
+ */
+class CanvasBoundary extends Component<{ onFail: () => void; children: ReactNode }> {
+  state = { failed: false }
+  static getDerivedStateFromError() {
+    return { failed: true }
+  }
+  componentDidCatch() {
+    this.props.onFail()
+  }
+  render() {
+    return this.state.failed ? null : this.props.children
+  }
+}
 
 export function Stage({
   insect,
@@ -51,6 +74,15 @@ export function Stage({
     loading: true,
     error: null,
   })
+  /**
+   * WebGL 兜底两件套：
+   * webglDead —— 建不起上下文（远程桌面、驱动黑名单、关了硬件加速），
+   *   一次性判定 + 错误边界补漏，展台改摆该物种的 SVG 剪影；
+   * glLost —— 建起来之后半路丢了（GPU 重置、移动端后台挤占），canvas
+   *   保持挂载等浏览器发恢复事件，其间盖一层提示，恢复即撤。
+   */
+  const [webglDead, setWebglDead] = useState(() => !webglAvailable())
+  const [glLost, setGlLost] = useState(false)
 
   /**
    * 展台滚出视口就停掉渲染循环。
@@ -97,26 +129,39 @@ export function Stage({
   return (
     <section className={`card stage-height ${s.stage}`}>
       {/* 无障碍名挂在包装层：r3f v8 的 Canvas 会把未知 props 当 root 配置吞掉，
-          挂上去整个 3D 子树都不渲染（实测踩过） */}
+          挂上去整个 3D 子树都不渲染（实测踩过）。
+          剪影兜底时不挂 role="img"：那个 aria-label 承诺「可拖动可缩放」，
+          兜底页做不到，让可见文字自己说话。 */}
       <div
         className={s.canvasWrap}
         ref={wrapRef}
-        role="img"
-        aria-label={t('stage.canvasLabel', { name: insect.name })}
+        {...(webglDead
+          ? {}
+          : { role: 'img', 'aria-label': t('stage.canvasLabel', { name: insect.name }) })}
       >
-        <InsectCanvas
-          active={inView}
-          insect={insect}
-          mode={mode}
-          spin={spin}
-          openHotspot={openHotspot}
-          onToggleHotspot={setOpenHotspot}
-          zoomNonce={zoomNonce}
-          resetNonce={resetNonce}
-          focusAnchor={focusAnchor}
-          theme={theme}
-          onStatus={onStatus}
-        />
+        {webglDead ? (
+          <div className={s.glyphFallback}>
+            <InsectGlyph id={insect.id} size={120} color={insect.accent} />
+            <p className={s.fallbackNote}>{t('stage.noWebgl')}</p>
+          </div>
+        ) : (
+          <CanvasBoundary onFail={() => setWebglDead(true)}>
+            <InsectCanvas
+              active={inView}
+              insect={insect}
+              mode={mode}
+              spin={spin}
+              openHotspot={openHotspot}
+              onToggleHotspot={setOpenHotspot}
+              zoomNonce={zoomNonce}
+              resetNonce={resetNonce}
+              focusAnchor={focusAnchor}
+              theme={theme}
+              onStatus={onStatus}
+              onContextLoss={setGlLost}
+            />
+          </CanvasBoundary>
+        )}
       </div>
 
       <div className={s.orderTag}>
@@ -126,7 +171,9 @@ export function Stage({
         <span style={{ color: 'var(--muted)' }}>{labels.metamorphosis[insect.metamorphosis]}</span>
       </div>
 
-      <div className={s.rail}>
+      {/* 工具条整条随 WebGL 一起撤：旋转/剖切/聚焦全是对着 canvas 说话的，
+          兜底页上留一排按不动的按钮比没有更糟（本站原则：不留只有样子的按钮） */}
+      {!webglDead && <div className={s.rail}>
         <button className={s.tool} data-active={spin} onClick={() => setSpin((v) => !v)}>
           <IconRotate size={17} />
           <span className={s.toolLabel}>{t('stage.tool.rotate')}</span>
@@ -175,11 +222,12 @@ export function Stage({
           <IconReset size={17} />
           <span className={s.toolLabel}>{t('stage.tool.reset')}</span>
         </button>
-      </div>
+      </div>}
 
       <div className={s.caption}>
         <div className={s.captionLatin}>{insect.latin}</div>
-        <div className={s.captionHint}>{t('stage.captionHint')}</div>
+        {/* 「拖动旋转 · 滚轮细看」在剪影兜底页上是一句谎话，撤掉；学名照留 */}
+        {!webglDead && <div className={s.captionHint}>{t('stage.captionHint')}</div>}
       </div>
 
       {compareWith && (
@@ -191,7 +239,8 @@ export function Stage({
         />
       )}
 
-      {(showLoading || status.error) && (
+      {/* 兜底页上不转加载圈：canvas 压根没挂载，status 永远停在 loading */}
+      {!webglDead && (showLoading || status.error) && (
         <div className={s.status}>
           {status.error ? (
             <div className={s.error}>{t('stage.error', { error: status.error })}</div>
@@ -201,6 +250,19 @@ export function Stage({
               {t('stage.loading', { name: insect.name })}
             </div>
           )}
+        </div>
+      )}
+
+      {/* 上下文丢失：canvas 还挂着（等浏览器发恢复事件），先盖一层说明。
+          恢复不是必然会来的 —— 有的驱动崩掉就不吭声了，所以给一个重载按钮 */}
+      {!webglDead && glLost && (
+        <div className={s.status}>
+          <div className={s.lostCard}>
+            {t('stage.glLost')}
+            <button className={s.reload} onClick={() => location.reload()}>
+              {t('stage.reload')}
+            </button>
+          </div>
         </div>
       )}
     </section>

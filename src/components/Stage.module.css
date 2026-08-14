@@ -191,6 +191,61 @@
   pointer-events: auto;
 }
 
+/* ------------------------------------------------------------ WebGL 兜底 */
+
+/* WebGL 不可用：展台位置摆该物种的剪影 + 一句说明。剪影用物种主题色，
+   「这一页在讲哪只虫」这层信息不能跟着 3D 一起没了 */
+.glyphFallback {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  padding: 24px;
+  text-align: center;
+}
+
+.fallbackNote {
+  max-width: 300px;
+  font-size: 12.5px;
+  line-height: 1.7;
+  color: var(--muted);
+}
+
+/* 上下文丢失的提示卡：结构同 .error，但这不是谁的过错，不用危险色 */
+.lostCard {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  max-width: 300px;
+  padding: 16px 18px;
+  border-radius: var(--radius);
+  background: var(--chip);
+  border: 1px solid var(--line-strong);
+  color: var(--ink);
+  font-size: 12.5px;
+  line-height: 1.6;
+  text-align: center;
+  pointer-events: auto;
+}
+
+.reload {
+  padding: 7px 16px;
+  border-radius: 999px;
+  border: 1px solid var(--line-strong);
+  background: var(--field);
+  font-size: 12px;
+  color: var(--ink);
+  transition: background 0.16s ease;
+}
+
+.reload:hover {
+  background: var(--paper-solid);
+}
+
 /* ---------------------------------------------------------------- 门牌 */
 
 /* 左上角的展厅门牌：目 · 变态类型 */
