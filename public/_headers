@@ -1,12 +1,14 @@
 # Cloudflare Pages 的响应头配置。Vite 会把 public/ 原样复制到 dist 根目录。
 #
 # CSP 各指令的依据（改动前先核对，否则很容易把站点自己拦死）：
-# - script-src 'self'：全部脚本都是同源打包产物，页面上没有内联 <script>
+# - script-src：同源打包产物 + analytics.fojin.app 的 Umami 统计脚本，
+#   页面上没有内联 <script>
 # - style-src 带 'unsafe-inline'：React 的 style={{...}} 内联样式属性需要它，
 #   Google Fonts 的样式表来自 fonts.googleapis.com
 # - font-src：字体文件从 fonts.gstatic.com 下发；大陆访客拿不到时走系统兜底
 # - img-src 加 data:：three.js 内部生成的贴图会用 data: URI
-# - connect-src 'self'：物种模型是同源代码分块，站点不请求任何外部接口
+# - connect-src：物种模型是同源代码分块；analytics.fojin.app 是 Umami 上报
+#   （script.js 会 POST 回自己的 /api/send）
 # - frame-ancestors 'self'：与 X-Frame-Options SAMEORIGIN 等价的现代写法，两个都留
 
 /*
@@ -14,7 +16,7 @@
   Referrer-Policy: strict-origin-when-cross-origin
   X-Frame-Options: SAMEORIGIN
   Permissions-Policy: geolocation=(), microphone=(), camera=()
-  Content-Security-Policy: default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'self'
+  Content-Security-Policy: default-src 'self'; script-src 'self' https://analytics.fojin.app; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self' https://analytics.fojin.app; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'self'
 
 # 产物文件名带内容哈希，改了内容就换名字，可以永久缓存
 /assets/*
