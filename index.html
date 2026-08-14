@@ -50,5 +50,18 @@
   <body>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
+    <!--
+      Umami 统计（自托管于 analytics.fojin.app，无 cookie）。
+      放在 body 末尾而不是 head：defer 脚本按文档顺序排队执行，排在应用
+      模块前面的话，统计域名一旦失联（大陆访客完全可能），应用要等它超时
+      才启动 —— 和上面字体注释里是同一类教训。放在应用入口之后，最坏也
+      只是统计丢失，页面照常。
+      data-website-id 需在 Umami 后台为本站新建站点后填入真实 id。
+    -->
+    <script
+      defer
+      src="https://analytics.fojin.app/script.js"
+      data-website-id="TODO_UMAMI_SITE_ID"
+    ></script>
   </body>
 </html>
