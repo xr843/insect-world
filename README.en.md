@@ -14,7 +14,7 @@ An interactive 3D insect field guide — rotate, zoom, and click the coloured ho
 
 63 species across 14 orders: Coleoptera 28, Diptera 5, Lepidoptera 5, Hymenoptera 5, Hemiptera 4, Orthoptera 4; Odonata, Mantodea, Neuroptera, and Blattodea 2 each; Phasmatodea, Dermaptera, Megaloptera, and Trichoptera 1 each. The latest three — house fly, northern house mosquito, and German cockroach — were added after readers pointed out that a guide with 28 beetles had not a single everyday household insect.
 
-![Gallery (screenshot taken at 60 species)](docs/screenshots/05-gallery.jpg)
+![Gallery — 63 species across 14 orders](docs/screenshots/05-gallery.jpg)
 
 Two themes, the same museum by day and by night: **"Specimen Table"** (default — cool grey-green archival board, bronze nameplates, specimen-label inks) and **"Museum at Night"** (gallery black with brass accents, specimens lifted out of the dark by spotlight cones — metallic elytra, membrane iridescence, and the firefly's lantern all read better on a deep ground).
 

@@ -16,7 +16,7 @@
 
 **长期目标 60 种 / 14 目已达成**，此后第 7 轮补上了三种日常昆虫（家蝇、淡色库蚊、德国小蠊）——读者指出图鉴里甲虫占了近半、身边最常见的虫却一种没有，这是兑现「后续会陆续添加」的公开承诺。物种史与打磨史见 [docs/roadmap.md](docs/roadmap.md) 与 [docs/polish-plan.md](docs/polish-plan.md)，模型审计方法见 [docs/model-audit-notes.md](docs/model-audit-notes.md)。
 
-![图鉴总览（截图摄于 60 种时）](docs/screenshots/05-gallery.jpg)
+![图鉴总览 —— 63 种 / 14 个目](docs/screenshots/05-gallery.jpg)
 
 双主题视觉，同一个馆的日与夜：默认**「标本台」**（冷灰绿档案衬板 + 青铜铭牌 +
 标本标签的印刷墨色），一键切换**「博物馆之夜」**（展厅黑做底、黄铜做骨，标本靠

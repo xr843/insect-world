@@ -22,7 +22,7 @@ LANG_ARG="${1:-zh}"
 if [ "$LANG_ARG" = "en" ]; then
   OUT=public/og-en.png
   TITLE='Insect World'
-  SUBTITLE='An interactive 3D field guide to 60 insects'
+  SUBTITLE='An interactive 3D field guide to 63 insects'
   TAGLINE='Rotate · Dissect · Annotate'
   # 站点 h1 用的 Playfair Display 是 Google Fonts 下发的，本机通常没装。
   # 退到 Georgia —— 它本来就排在 global.css 的 --serif 栈里 Playfair 之后，
@@ -53,7 +53,7 @@ else
     [ -r "$f" ] || { echo "缺字体：$f（见脚本头注释）" >&2; exit 1; }
   done
   TITLE='昆虫世界'
-  SUBTITLE='60 种昆虫的可交互 3D 图鉴'
+  SUBTITLE='63 种昆虫的可交互 3D 图鉴'
   TAGLINE='旋转 · 剖切 · 标注点 —— 像博物学家一样观察'
   PT_SUB=38
   PT_TAG=27
