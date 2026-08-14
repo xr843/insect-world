@@ -22,7 +22,8 @@ describe('模型缓存有上限', () => {
     expect(kept).toContain(ids[ids.length - 1])
     // 最早加载的应当已被逐出
     expect(kept).not.toContain(ids[0])
-  })
+    // 真建 20 个模型本来就重（空载 ~1.6s），并行/CI 负载下 5s 默认超时会偶发吃穿
+  }, 20_000)
 
   it('重复访问会续命 —— 反复用的物种不被逐出', async () => {
     const ids = INSECTS.slice(0, 20).map((i) => i.id)
