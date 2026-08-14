@@ -4,3 +4,6 @@ User-agent: *
 Allow: /
 Disallow: /preview
 Disallow: /preview.html
+
+# sitemap 是构建期生成的（scripts/make-species-pages.mjs），只存在于 dist
+Sitemap: https://insect-world.pages.dev/sitemap.xml

@@ -23,3 +23,11 @@
 # HTML 每次都回源校验，保证发新版后用户立刻拿到
 /*.html
   Cache-Control: public, max-age=0, must-revalidate
+
+# 物种壳页走美化地址（/s/<id>/ 不带 .html 后缀），上面那条按后缀的规则
+# 兜不住它们，按路径再声明一遍同样的回源校验。两棵子树下只有壳页 HTML。
+/s/*
+  Cache-Control: public, max-age=0, must-revalidate
+
+/en/s/*
+  Cache-Control: public, max-age=0, must-revalidate
