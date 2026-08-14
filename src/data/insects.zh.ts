@@ -2101,6 +2101,111 @@ export const INSECTS: Insect[] = [
     relatives: ['长角石蛾', '沼石蛾', '纹石蛾'],
     accent: '#75634a',
   },
+  {
+    id: 'house-fly',
+    name: '家蝇',
+    latin: 'Musca domestica',
+    epithet: '倒走天花板的不速之客',
+    order: 'diptera',
+    summary:
+      '家蝇是与人类同居最久的昆虫之一，胸背四条深色纵纹是它的认种标志。它的口器不叮不咬，只会像海绵一样把食物泡软再吸走；足端的爪垫让它能在玻璃与天花板上如履平地。',
+    facts: [
+      { key: '体长', value: '体长6–7毫米，灰黑色，胸背具4条深色纵纹', icon: 'size' },
+      { key: '寿命', value: '成虫约15–30天，温暖季节两周即可完成一代', icon: 'time' },
+      { key: '栖息环境', value: '人居环境为主，垃圾、粪肥与厨余附近', icon: 'place' },
+      { key: '食性', value: '舐吸式取食，先吐消化液把食物泡软再吸回', icon: 'food' },
+      { key: '飞行', value: '振翅约200次每秒，受惊后瞬间弹射起飞', icon: 'ability' },
+      { key: '卫生', value: '体表与消化道可携带多种病原体，是重要卫生害虫', icon: 'ability' },
+    ],
+    hotspots: [
+      { id: 'house-fly-stripe', label: '胸背纵纹', note: '灰底上4条前后贯通的深色纵纹，是家蝇的认种标志', anchor: 'stripe', tone: 'coral' },
+      { id: 'house-fly-eye', label: '复眼', note: '红褐色大复眼几乎包住头两侧，雌虫两眼间距明显', anchor: 'eye', tone: 'sage' },
+      { id: 'house-fly-proboscis', label: '舐吸式口器', note: '短粗下垂的喙，端部一对海绵状唇瓣，只能舔吸不能叮咬', anchor: 'proboscis', tone: 'amber' },
+      { id: 'house-fly-antenna', label: '芒状触角', note: '触角短小，第三节上生一根细长芒毛，是蝇类的共同标志', anchor: 'antenna', tone: 'lavender' },
+      { id: 'house-fly-wing', label: '翅', note: '仅一对膜翅，停歇时向后收拢平覆在腹背上', anchor: 'wing', tone: 'sage' },
+      { id: 'house-fly-pulvillus', label: '爪垫', note: '足端的黏性肉垫，靠分泌的黏液倒挂在光滑天花板上', anchor: 'pulvillus', tone: 'coral' },
+    ],
+    ecology:
+      '家蝇幼虫（蛆）能高速把粪肥与腐烂有机物转化为自身蛋白质，是腐屑食物链里高效的分解者；但成虫在垃圾与餐桌之间往返，也把病原体一路捎带，对人类而言防治意义远大于生态贡献。',
+    trivia:
+      '家蝇落脚后总用前足互相搓洗——那不是讲卫生，而是在擦拭足上的味觉感受器：它尝味道用的是脚而不是嘴，落点尝一口，合适才伸喙。',
+    metamorphosis: 'complete',
+    lifecycle: ['卵', '幼虫（蛆）', '蛹', '成虫'],
+    range: '随人类分布于全世界，两极之外几乎无处不在',
+    status: '极常见，全球性卫生害虫',
+    relatives: ['市蝇', '厩腐蝇', '丝光绿蝇'],
+    accent: '#7a7168',
+  },
+  {
+    id: 'mosquito',
+    name: '淡色库蚊',
+    latin: 'Culex pipiens pallens',
+    epithet: '耳边嗡鸣的夜行刺客',
+    order: 'diptera',
+    summary:
+      '淡色库蚊是中国北方最常见的「家蚊」，夜里在耳边嗡嗡作响的多半是它。只有雌蚊才吸血——为了让卵成熟；细长的刺吸喙、腹节基部的淡色横带和停下时与墙面平行的体态，是认出它的三把钥匙。',
+    facts: [
+      { key: '体长', value: '体长4–5毫米，通体淡褐、细长纤弱', icon: 'size' },
+      { key: '活动', value: '黄昏与夜间活动，白天躲在阴暗角落', icon: 'time' },
+      { key: '栖息环境', value: '滞水中产卵：下水道、积水容器、雨水井', icon: 'place' },
+      { key: '食性', value: '雌蚊吸血促卵成熟，雄蚊只取食花蜜与植物汁液', icon: 'food' },
+      { key: '飞行', value: '振翅约500次每秒，恼人的嗡鸣正是振翅声', icon: 'ability' },
+      { key: '医学', value: '可传播流行性乙型脑炎与丝虫病，是重要医学昆虫', icon: 'ability' },
+    ],
+    hotspots: [
+      { id: 'mosquito-proboscis', label: '刺吸喙', note: '细长针管与头胸之和等长，雌蚊用它刺入皮肤吸血', anchor: 'proboscis', tone: 'coral' },
+      { id: 'mosquito-antenna', label: '轮毛触角', note: '雌蚊触角只有稀疏轮毛，雄蚊蓬松如羽，一眼分性别', anchor: 'antenna', tone: 'sage' },
+      { id: 'mosquito-band', label: '腹部淡色横带', note: '每个腹节基部一圈浅色横带，「淡色」库蚊因此得名', anchor: 'band', tone: 'amber' },
+      { id: 'mosquito-wing', label: '狭长翅', note: '一对窄翅停歇时平覆在腹背上，翅脉上覆有细鳞', anchor: 'wing', tone: 'lavender' },
+      { id: 'mosquito-leg', label: '细长足', note: '六足细长如丝，落在皮肤上几乎没有触感', anchor: 'leg', tone: 'sage' },
+      { id: 'mosquito-haltere', label: '平衡棒', note: '后翅退化成的小棒，飞行时高速振动感知姿态', anchor: 'haltere', tone: 'coral' },
+    ],
+    ecology:
+      '库蚊幼虫（孑孓）滤食滞水中的微生物与有机碎屑，同时是鱼类和蜻蜓稚虫的重要饵料；成蚊则供养着蝙蝠、燕子与蜘蛛——吸血其实只占它生活史里很小的一环。',
+    trivia:
+      '锁定你的不是眼睛而是化学仪器：库蚊靠触角上的受体追踪人呼出的二氧化碳与皮肤气味，隔着十几米就能定位，汗味重的人确实更招蚊子。',
+    metamorphosis: 'complete',
+    lifecycle: ['卵（结成卵筏）', '幼虫（孑孓）', '蛹', '成虫'],
+    range: '中国北方广布，东亚温带地区常见',
+    status: '极常见，夏秋居室内外的主要蚊种',
+    relatives: ['致倦库蚊', '白纹伊蚊', '中华按蚊'],
+    accent: '#a08a5f',
+  },
+  {
+    id: 'cockroach',
+    name: '德国小蠊',
+    latin: 'Blattella germanica',
+    epithet: '厨房缝隙里的夜行房客',
+    order: 'blattodea',
+    summary:
+      '德国小蠊是室内最常见的蟑螂，茶褐色的扁平身体只有指甲盖大小，前胸背板上两条深色纵纹是它的认种标志。它昼伏夜出，钻缝本领极强，一对超过体长的丝状触角替它在黑暗中探路。',
+    facts: [
+      { key: '体长', value: '体长12–15毫米，是室内常见蟑螂中最小的', icon: 'size' },
+      { key: '寿命', value: '成虫可活100–200天，室内温暖处全年繁殖', icon: 'time' },
+      { key: '栖息环境', value: '厨房与管道缝隙，喜温暖潮湿的黑暗处', icon: 'place' },
+      { key: '食性', value: '杂食，从食物残渣到纸张浆糊都能下咽', icon: 'food' },
+      { key: '奔跑', value: '每秒可跑出体长20倍以上的距离，贴墙急转不减速', icon: 'ability' },
+      { key: '繁殖', value: '雌虫把卵鞘拖带在腹端直到临孵化，一鞘30–40粒卵', icon: 'ability' },
+    ],
+    hotspots: [
+      { id: 'cockroach-stripe', label: '前胸双纹', note: '前胸背板上两条平行的深色纵条纹，是德国小蠊的认种特征', anchor: 'stripe', tone: 'coral' },
+      { id: 'cockroach-head', label: '头', note: '大部分藏在前胸背板下方，从背面只能看到头顶一线', anchor: 'head', tone: 'sage' },
+      { id: 'cockroach-antenna', label: '丝状触角', note: '比身体还长的触角不停摆动，靠触觉与气味在黑暗里导航', anchor: 'antenna', tone: 'amber' },
+      { id: 'cockroach-wing', label: '前翅', note: '革质前翅盖住整个腹部，虽有完整翅膀却几乎不飞', anchor: 'wing', tone: 'lavender' },
+      { id: 'cockroach-cercus', label: '尾须', note: '腹末一对分节尾须，感知背后的气流，预警天敌偷袭', anchor: 'cercus', tone: 'coral' },
+      { id: 'cockroach-leg', label: '多刺的足', note: '足上密生硬刺，既防滑又护身，是疾走的本钱', anchor: 'leg', tone: 'sage' },
+    ],
+    ecology:
+      '蜚蠊家族在野外本是落叶层的分解者，德国小蠊却已完全转入人居，以残渣与垃圾为生。它边吃边排泄的习性会污染食物、传播肠道致病菌，蜕皮与分泌物还是室内重要的过敏原之一。',
+    trivia:
+      '德国小蠊其实不来自德国——老家多半在东南亚，随航运搬进了全世界的厨房；如今它几乎丧失野外生存能力，离开有人供暖的建筑，冬天就活不下去。',
+    metamorphosis: 'incomplete',
+    lifecycle: ['卵（卵鞘）', '若虫', '成虫'],
+    range: '随人类遍布全球，室内环境全年可见',
+    status: '极常见，头号室内蟑螂',
+    relatives: ['美洲大蠊', '黑胸大蠊', '日本大蠊'],
+    accent: '#a9752f',
+  },
 ]
 
 export const getInsect = (id: string) => INSECTS.find(i => i.id === id)

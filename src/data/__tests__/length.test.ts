@@ -28,9 +28,9 @@ describe('体长解析', () => {
     expect(parseLengthMm('随个体差异很大')).toBeNull()
   })
 
-  /** 现有 60 条数据过一遍，保证重构没把任何一条的解析结果弄丢 */
-  it('60 个物种里至少 55 个能解析出体长', () => {
+  /** 现有 63 条数据过一遍，保证重构没把任何一条的解析结果弄丢 */
+  it('63 个物种里至少 58 个能解析出体长', () => {
     const ok = INSECTS.filter((i) => lengthOf(i) != null)
-    expect(ok.length).toBeGreaterThanOrEqual(55)
+    expect(ok.length).toBeGreaterThanOrEqual(58)
   })
 })

@@ -77,6 +77,9 @@ export const NAME_PINYIN: Record<string, string> = {
   'crane-fly': 'dà wén', // 大蚊
   'mantidfly': 'táng líng', // 螳蛉
   'caddisfly': 'shí é', // 石蛾
+  'house-fly': 'jiā yíng', // 家蝇
+  'mosquito': 'dàn sè kù wén', // 淡色库蚊
+  'cockroach': 'dé guó xiǎo lián', // 德国小蠊——蠊读 lián，已人工念过
 }
 
 /** 取某个物种名的拼音；没有记录时返回 null */

@@ -80,6 +80,9 @@ const ALLOWED_ANCHORS: Record<string, string[]> = {
   'crane-fly': ['haltere', 'leg', 'wing', 'thorax', 'abdomen', 'antenna'],
   mantidfly: ['raptorialLeg', 'wing', 'pronotum', 'eye', 'antenna', 'abdomen'],
   caddisfly: ['hairyWing', 'antenna', 'palp', 'eye', 'thorax', 'abdomen'],
+  'house-fly': ['stripe', 'eye', 'proboscis', 'antenna', 'wing', 'pulvillus'],
+  mosquito: ['proboscis', 'antenna', 'band', 'wing', 'leg', 'haltere'],
+  cockroach: ['stripe', 'head', 'antenna', 'wing', 'cercus', 'leg'],
 }
 
 const EXPECTED_IDS = [
@@ -143,13 +146,16 @@ const EXPECTED_IDS = [
   'crane-fly',
   'mantidfly',
   'caddisfly',
+  'house-fly',
+  'mosquito',
+  'cockroach',
 ]
 
 const HEX_COLOR = /^#[0-9a-fA-F]{6}$/
 
 describe('INSECTS 数据完整性', () => {
-  it('恰好包含 60 条记录', () => {
-    expect(INSECTS).toHaveLength(60)
+  it('恰好包含 63 条记录', () => {
+    expect(INSECTS).toHaveLength(63)
   })
 
   it('id 全部唯一且与规定列表一致（含顺序）', () => {
