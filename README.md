@@ -6,17 +6,17 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-8a6318.svg)](LICENSE)
 [![LINUX DO](https://img.shields.io/badge/LINUX-DO-FFB003.svg?logo=data:image/svg%2bxml;base64,DQo8c3ZnIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyIgd2lkdGg9IjEwMCIgaGVpZ2h0PSIxMDAiPjxwYXRoIGQ9Ik00Ni44Mi0uMDU1aDYuMjVxMjMuOTY5IDIuMDYyIDM4IDIxLjQyNmM1LjI1OCA3LjY3NiA4LjIxNSAxNi4xNTYgOC44NzUgMjUuNDV2Ni4yNXEtMi4wNjQgMjMuOTY4LTIxLjQzIDM4LTExLjUxMiA3Ljg4NS0yNS40NDUgOC44NzRoLTYuMjVxLTIzLjk3LTIuMDY0LTM4LjAwNC0yMS40M1EuOTcxIDY3LjA1Ni0uMDU0IDUzLjE4di02LjQ3M0MxLjM2MiAzMC43ODEgOC41MDMgMTguMTQ4IDIxLjM3IDguODE3IDI5LjA0NyAzLjU2MiAzNy41MjcuNjA0IDQ2LjgyMS0uMDU2IiBzdHlsZT0ic3Ryb2tlOm5vbmU7ZmlsbC1ydWxlOmV2ZW5vZGQ7ZmlsbDojZWNlY2VjO2ZpbGwtb3BhY2l0eToxIi8+PHBhdGggZD0iTTQ3LjI2NiAyLjk1N3EyMi41My0uNjUgMzcuNzc3IDE1LjczOGE0OS43IDQ5LjcgMCAwIDEgNi44NjcgMTAuMTU3cS00MS45NjQuMjIyLTgzLjkzIDAgOS43NS0xOC42MTYgMzAuMDI0LTI0LjM4N2E2MSA2MSAwIDAgMSA5LjI2Mi0xLjUwOCIgc3R5bGU9InN0cm9rZTpub25lO2ZpbGwtcnVsZTpldmVub2RkO2ZpbGw6IzE5MTkxOTtmaWxsLW9wYWNpdHk6MSIvPjxwYXRoIGQ9Ik03Ljk4IDcwLjkyNmMyNy45NzctLjAzNSA1NS45NTQgMCA4My45My4xMTNRODMuNDI2IDg3LjQ3MyA2Ni4xMyA5NC4wODZxLTE4LjgxIDYuNTQ0LTM2LjgzMi0xLjg5OC0xNC4yMDMtNy4wOS0yMS4zMTctMjEuMjYyIiBzdHlsZT0ic3Ryb2tlOm5vbmU7ZmlsbC1ydWxlOmV2ZW5vZGQ7ZmlsbDojZjlhZjAwO2ZpbGwtb3BhY2l0eToxIi8+PC9zdmc+)](https://linux.do)
 
-可交互的 3D 昆虫图鉴 —— 旋转、缩放、点击标注点，认识 60 种昆虫的身体构造、生活史与生态角色。
+可交互的 3D 昆虫图鉴 —— 旋转、缩放、点击标注点，认识 63 种昆虫的身体构造、生活史与生态角色。
 
 **线上：https://insect-world.pages.dev** · **English: https://insect-world.pages.dev/en/**
 
 **每一只虫都是代码实时生成的，仓库里没有一个模型文件。**
 
-60 个物种覆盖 14 个目：鞘翅目 28、鳞翅目 5、膜翅目 5、半翅目 4、直翅目 4、双翅目 3，蜻蜓目、螳螂目、脉翅目各 2，䗛目、革翅目、广翅目、蜚蠊目、毛翅目各 1。
+63 个物种覆盖 14 个目：鞘翅目 28、双翅目 5、鳞翅目 5、膜翅目 5、半翅目 4、直翅目 4，蜻蜓目、螳螂目、脉翅目、蜚蠊目各 2，䗛目、革翅目、广翅目、毛翅目各 1。
 
-**长期目标 60 种 / 14 目已达成**；物种史与打磨史见 [docs/roadmap.md](docs/roadmap.md) 与 [docs/polish-plan.md](docs/polish-plan.md)，模型审计方法见 [docs/model-audit-notes.md](docs/model-audit-notes.md)。
+**长期目标 60 种 / 14 目已达成**，此后第 7 轮补上了三种日常昆虫（家蝇、淡色库蚊、德国小蠊）——读者指出图鉴里甲虫占了近半、身边最常见的虫却一种没有，这是兑现「后续会陆续添加」的公开承诺。物种史与打磨史见 [docs/roadmap.md](docs/roadmap.md) 与 [docs/polish-plan.md](docs/polish-plan.md)，模型审计方法见 [docs/model-audit-notes.md](docs/model-audit-notes.md)。
 
-![图鉴总览 —— 60 种 / 14 个目](docs/screenshots/05-gallery.jpg)
+![图鉴总览（截图摄于 60 种时）](docs/screenshots/05-gallery.jpg)
 
 双主题视觉，同一个馆的日与夜：默认**「标本台」**（冷灰绿档案衬板 + 青铜铭牌 +
 标本标签的印刷墨色），一键切换**「博物馆之夜」**（展厅黑做底、黄铜做骨，标本靠
@@ -26,7 +26,7 @@
 | --- | --- |
 | ![标本台](docs/screenshots/02-beetle-closeup.jpg) | ![博物馆之夜](docs/screenshots/03-dark-stage.jpg) |
 
-> ⚠️ **关于讲解文本**：60 种昆虫的总述、关键数据、生活史与冷知识**由 AI 撰写，
+> ⚠️ **关于讲解文本**：63 种昆虫的总述、关键数据、生活史与冷知识**由 AI 撰写，
 > 尚未经昆虫学文献或专业人士逐条核校**。当作「看着好玩、顺便认个形态」的读物，
 > 别当作可引用的资料；发现错处欢迎开 issue。
 
@@ -69,7 +69,7 @@ node scripts/shots.mjs     # 重拍 README 截图（无头 Chromium，用法见�
 
 这不只是妥协。昆虫的形态比内脏规律得多 —— 体分头/胸/腹三段，胸部生三对足、两对翅，附肢是分节的锥管，翅面由放射状翅脉支撑。这些结构参数化以后，加一个物种只需要写一份尺寸与配色的描述，而不是再买一个模型。代价是写实度不如三维扫描，换来的是零资产依赖、任意可扩展，以及每处形态都能在代码里追溯到形态学依据。
 
-单个物种 1.4 万~3.6 万三角面（最小是蠼螋 14,420，最大是柞蚕蛾 35,732），在浏览器里构建耗时 30~90 毫秒。生产构建首屏 JS gzip 约 424 KB（three 主导的 vendor 340 KB + 主包 84 KB），桌面后期管线 103 KB 为懒加载独立 chunk，手机不下载，物种代码按需分包，点到谁才下载谁。
+单个物种 1.3 万~3.6 万三角面（最小是淡色库蚊 13,308，最大是柞蚕蛾 35,732），在浏览器里构建耗时 30~90 毫秒。生产构建首屏 JS gzip 约 424 KB（three 主导的 vendor 340 KB + 主包 84 KB），桌面后期管线 103 KB 为懒加载独立 chunk，手机不下载，物种代码按需分包，点到谁才下载谁。
 
 ## 借来的与自写的
 
@@ -113,11 +113,11 @@ src/
     Discovery.tsx         讲解弹窗（讲解 / 动态演示 / 小测 / 栖境 四个变体）
     CompareBar.tsx        展台底部的内联对比条
     Gallery.tsx           按目分组的全部物种总览
-    InsectGlyph.tsx       60 个手写 SVG 剪影
+    InsectGlyph.tsx       63 个手写 SVG 剪影
   data/
     types.ts              数据契约
-    insects.zh.ts / insects.en.ts   60 种昆虫的图鉴数据（中英各一份）
-    guides.zh.ts / guides.en.ts     60 种的分步讲解与测验（中英各一份）
+    insects.zh.ts / insects.en.ts   63 种昆虫的图鉴数据（中英各一份）
+    guides.zh.ts / guides.en.ts     63 种的分步讲解与测验（中英各一份）
   preview.tsx             模型调试台（/preview.html）
 ```
 
@@ -134,7 +134,7 @@ src/
 
 `loft` 是全部几何的地基：给一串椭圆截面，沿路径放样成封闭实体。它对退化输入（重合点、零半径、竖直路径）有专门的测试，因为这些情况一旦产生 NaN，整个模型会静默变成空白。
 
-物种文件只依赖 kit（与 surface/eyes/venation 三个工具模块），彼此不依赖 —— 60 个物种是六轮多 agent 并行写出来的。
+物种文件只依赖 kit（与 surface/eyes/venation 三个工具模块），彼此不依赖 —— 63 个物种是七轮多 agent 并行写出来的。
 
 ### 坐标与数据的约定
 
@@ -198,18 +198,18 @@ npm test
 
 | 文件 | 数量 | 管什么 |
 | --- | --- | --- |
-| `data/__tests__/guides.test.ts` | 1026 | 讲解与测验的结构、字数、anchor 逐物种校验 |
-| `data/__tests__/insects.test.ts` | 907 | 图鉴数据契约、anchor 白名单、trivia 不得复述 summary |
-| `data/__tests__/parity.test.ts` | 602 | 中英两版逐字段对齐（学名一致、条目不缺不多） |
-| `data/__tests__/lengths.en.test.ts` | 240 | 英文文案长度闸门 —— 并行翻译的验收线 |
-| `components/__tests__/glyph.test.tsx` | 183 | 60 个剪影的结构与坐标越界 |
-| `three/__tests__/integration.test.ts` | 183 | 建模层 × 数据层的接缝 |
-| `__tests__/layers.test.ts` | 65 | 三层齐备性 + 展示文案字符白名单 |
-| `three/__tests__/anchors-have-geometry.test.ts` | 61 | 每个 anchor 落点上真有几何体 |
+| `data/__tests__/guides.test.ts` | 1074 | 讲解与测验的结构、字数、anchor 逐物种校验 |
+| `data/__tests__/insects.test.ts` | 952 | 图鉴数据契约、anchor 白名单、trivia 不得复述 summary |
+| `data/__tests__/parity.test.ts` | 632 | 中英两版逐字段对齐（学名一致、条目不缺不多） |
+| `data/__tests__/lengths.en.test.ts` | 252 | 英文文案长度闸门 —— 并行翻译的验收线 |
+| `components/__tests__/glyph.test.tsx` | 192 | 63 个剪影的结构与坐标越界 |
+| `three/__tests__/integration.test.ts` | 192 | 建模层 × 数据层的接缝 |
+| `__tests__/layers.test.ts` | 68 | 三层齐备性 + 展示文案字符白名单 |
+| `three/__tests__/anchors-have-geometry.test.ts` | 64 | 每个 anchor 落点上真有几何体 |
 | `builders/__tests__/kit.test.ts` | 30 | 放样地基与退化输入 |
-| `builders/__tests__/*.test.ts`（其余 30 个） | 585 | 各物种形态断言、表面材质落位、翅脉/节间膜/触角钩子普查 |
+| `builders/__tests__/*.test.ts`（其余 31 个） | 602 | 各物种形态断言、表面材质落位、翅脉/节间膜/触角钩子普查 |
 | `builders/__tests__/mirror.test.ts` | 12 | 成对附肢对称性、`wing` 的 `spread` 语义与方向 |
-| 其余零散文件 | 136 | 搜索、滚动、页脚、对比度、免责声明等 |
+| 其余零散文件 | 219 | 搜索、滚动、页脚、对比度、免责声明等 |
 
 形态类断言写的时候有个自检标准：**把代码改回出问题的版本，这条断言会失败吗？** 不会就等于没写。
 

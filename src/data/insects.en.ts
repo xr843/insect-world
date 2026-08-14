@@ -2112,6 +2112,111 @@ export const INSECTS: Insect[] = [
     relatives: ['Long-Horned Caddisfly', 'Marsh Caddisfly', 'Patterned Caddisfly'],
     accent: '#75634a',
   },
+  {
+    id: 'house-fly',
+    name: 'House Fly',
+    latin: 'Musca domestica',
+    epithet: 'The uninvited guest that walks the ceiling upside down',
+    order: 'diptera',
+    summary:
+      'The house fly has shared our homes longer than almost any other insect; four dark stripes down its gray thorax are its ID mark. Its mouthparts neither bite nor sting — they sponge food soft and mop it up — while sticky foot pads let it stroll across glass and ceilings.',
+    facts: [
+      { key: 'Length', value: 'Body 6–7 mm; gray-black, with 4 dark stripes along the thorax', icon: 'size' },
+      { key: 'Lifespan', value: 'Adults live about 15–30 days; one generation can pass in two warm-season weeks', icon: 'time' },
+      { key: 'Habitat', value: 'Mostly human settings — around garbage, manure, and kitchen scraps', icon: 'place' },
+      { key: 'Diet', value: 'Sponging mouthparts: digestive juices soften food before it is lapped back up', icon: 'food' },
+      { key: 'Flight', value: 'Beats its wings about 200 times per second and catapults off at the slightest alarm', icon: 'ability' },
+      { key: 'Health', value: 'Body surface and gut can carry many pathogens; a major sanitary pest', icon: 'ability' },
+    ],
+    hotspots: [
+      { id: 'house-fly-stripe', label: 'Thoracic Stripes', note: 'Four dark stripes running the length of the gray thorax — the identification mark of the house fly', anchor: 'stripe', tone: 'coral' },
+      { id: 'house-fly-eye', label: 'Compound Eye', note: 'Large red-brown eyes wrap around the sides of the head; a clear gap between them marks the female', anchor: 'eye', tone: 'sage' },
+      { id: 'house-fly-proboscis', label: 'Sponging Mouthparts', note: 'A short, stout, drooping proboscis ending in two spongy lobes — it can lap, never pierce', anchor: 'proboscis', tone: 'amber' },
+      { id: 'house-fly-antenna', label: 'Aristate Antenna', note: 'Tiny antennae, each third segment bearing one long bristle (arista) — the shared badge of true flies', anchor: 'antenna', tone: 'lavender' },
+      { id: 'house-fly-wing', label: 'Wing', note: 'Just one pair of membranous wings, folded flat back over the abdomen at rest', anchor: 'wing', tone: 'sage' },
+      { id: 'house-fly-pulvillus', label: 'Foot Pad', note: 'Adhesive pads at each foot tip secrete a sticky film, letting it hang from smooth ceilings', anchor: 'pulvillus', tone: 'coral' },
+    ],
+    ecology:
+      'House fly larvae (maggots) convert manure and rotting matter into body protein at remarkable speed, making them efficient decomposers in the scrap food chain; but adults shuttle between garbage and dinner tables, ferrying pathogens along the way — for humans, control matters more than their ecological service.',
+    trivia:
+      "A landed fly rubbing its front legs isn't being tidy — it is wiping the taste receptors on its feet. It tastes with its feet, not its mouth: sample the spot, then extend the proboscis if it checks out.",
+    metamorphosis: 'complete',
+    lifecycle: ['Egg', 'Larva (maggot)', 'Pupa', 'Adult'],
+    range: 'Follows humans worldwide; found almost everywhere outside the polar regions',
+    status: 'Extremely common; a sanitary pest of global concern',
+    relatives: ['False Stable Fly', 'Muscina Fly', 'Green Bottle Fly'],
+    accent: '#7a7168',
+  },
+  {
+    id: 'mosquito',
+    name: 'Northern House Mosquito',
+    latin: 'Culex pipiens pallens',
+    epithet: 'The night raider whining at your ear',
+    order: 'diptera',
+    summary:
+      "The pale house mosquito is northern China's most familiar house mosquito — the night whine at your ear is usually hers. Only females drink blood, to ripen their eggs; a needle-thin proboscis, pale bands on each abdominal segment, and a body held parallel to the wall at rest are the three keys to naming it.",
+    facts: [
+      { key: 'Length', value: 'Body 4–5 mm; pale brown, slender and delicate throughout', icon: 'size' },
+      { key: 'Activity', value: 'Active at dusk and night; hides in dark corners by day', icon: 'time' },
+      { key: 'Habitat', value: 'Lays eggs in standing water: drains, rain barrels, and catch basins', icon: 'place' },
+      { key: 'Diet', value: 'Females take blood to mature their eggs; males sip only nectar and plant juices', icon: 'food' },
+      { key: 'Flight', value: 'Wings beat about 500 times per second — the maddening whine is the wingbeat itself', icon: 'ability' },
+      { key: 'Medical', value: 'Can transmit Japanese encephalitis and filariasis; a key medical insect', icon: 'ability' },
+    ],
+    hotspots: [
+      { id: 'mosquito-proboscis', label: 'Piercing Proboscis', note: 'A slender needle as long as head and thorax combined; females drive it into skin to draw blood', anchor: 'proboscis', tone: 'coral' },
+      { id: 'mosquito-antenna', label: 'Whorled Antenna', note: 'Female antennae carry only sparse whorls of hair; males are feathery plumes — sexes told at a glance', anchor: 'antenna', tone: 'sage' },
+      { id: 'mosquito-band', label: 'Pale Abdominal Bands', note: "A light band across the base of each segment gives the 'pale' house mosquito its name", anchor: 'band', tone: 'amber' },
+      { id: 'mosquito-wing', label: 'Narrow Wing', note: 'One pair of slim wings folded flat over the back at rest, their veins fringed with tiny scales', anchor: 'wing', tone: 'lavender' },
+      { id: 'mosquito-leg', label: 'Threadlike Legs', note: 'Six legs thin as silk threads — a landing on skin is almost impossible to feel', anchor: 'leg', tone: 'sage' },
+      { id: 'mosquito-haltere', label: 'Haltere', note: 'The hindwings, reduced to tiny clubs that vibrate rapidly in flight to sense body attitude', anchor: 'haltere', tone: 'coral' },
+    ],
+    ecology:
+      'Mosquito larvae (wrigglers) filter microbes and organic debris from standing water and are staple prey for fish and dragonfly nymphs; the adults in turn feed bats, swallows, and spiders — blood-feeding is only a small chapter of the life story.',
+    trivia:
+      'What locks onto you is chemistry, not eyesight: receptors on the antennae track exhaled carbon dioxide and skin odors from a dozen meters away — people who sweat more genuinely do attract more mosquitoes.',
+    metamorphosis: 'complete',
+    lifecycle: ['Egg (in floating rafts)', 'Larva (wriggler)', 'Pupa', 'Adult'],
+    range: 'Widespread across northern China and temperate East Asia',
+    status: 'Extremely common; the main house mosquito of summer and autumn',
+    relatives: ['Southern House Mosquito', 'Asian Tiger Mosquito', 'Chinese Malaria Mosquito'],
+    accent: '#a08a5f',
+  },
+  {
+    id: 'cockroach',
+    name: 'German Cockroach',
+    latin: 'Blattella germanica',
+    epithet: 'The nocturnal lodger in the kitchen crack',
+    order: 'blattodea',
+    summary:
+      'The German cockroach is the most common roach indoors: a flat, tea-brown body no bigger than a fingernail, with two dark stripes on the pronotum as its ID mark. It hides by day, roams by night, squeezes through astonishing gaps, and probes the dark with antennae longer than its body.',
+    facts: [
+      { key: 'Length', value: 'Body 12–15 mm — the smallest of the common indoor cockroaches', icon: 'size' },
+      { key: 'Lifespan', value: 'Adults live 100–200 days, breeding year-round in heated buildings', icon: 'time' },
+      { key: 'Habitat', value: 'Kitchens and pipe crevices; favors warm, damp darkness', icon: 'place' },
+      { key: 'Diet', value: 'Omnivorous — anything from food scraps to paper and wallpaper paste', icon: 'food' },
+      { key: 'Running', value: 'Covers over 20 body lengths per second, cornering along walls at full speed', icon: 'ability' },
+      { key: 'Breeding', value: 'The female carries her egg case at her tail until just before hatching — 30–40 eggs per case', icon: 'ability' },
+    ],
+    hotspots: [
+      { id: 'cockroach-stripe', label: 'Pronotal Stripes', note: 'Two parallel dark stripes on the pronotum — the field mark of the German cockroach', anchor: 'stripe', tone: 'coral' },
+      { id: 'cockroach-head', label: 'Head', note: 'Mostly hidden beneath the pronotum shield; from above only the crown peeks out', anchor: 'head', tone: 'sage' },
+      { id: 'cockroach-antenna', label: 'Filiform Antennae', note: 'Ever-waving antennae longer than the body navigate the dark by touch and smell', anchor: 'antenna', tone: 'amber' },
+      { id: 'cockroach-wing', label: 'Forewing', note: 'Leathery forewings cover the whole abdomen, yet this fully winged insect almost never flies', anchor: 'wing', tone: 'lavender' },
+      { id: 'cockroach-cercus', label: 'Cercus', note: 'A pair of jointed tail bristles senses air currents from behind — an early-warning radar for ambushes', anchor: 'cercus', tone: 'coral' },
+      { id: 'cockroach-leg', label: 'Spiny Legs', note: 'Legs bristling with stiff spines for grip and defense — the engine of its sprint', anchor: 'leg', tone: 'sage' },
+    ],
+    ecology:
+      'In the wild, the cockroach family decomposes leaf litter, but the German cockroach has moved indoors for good, living on crumbs and garbage. Feeding and defecating as it goes, it contaminates food and spreads enteric bacteria, and its molts and secretions rank among the major indoor allergens.',
+    trivia:
+      "The German cockroach isn't German — its homeland was likely Southeast Asia, and it sailed into the world's kitchens with trade. It has nearly lost the wild: without heated buildings, it cannot survive winter.",
+    metamorphosis: 'incomplete',
+    lifecycle: ['Egg (in egg case)', 'Nymph', 'Adult'],
+    range: 'Worldwide alongside humans; indoors in every season',
+    status: 'Extremely common; the number-one indoor cockroach',
+    relatives: ['American Cockroach', 'Smoky-Brown Cockroach', 'Japanese Cockroach'],
+    accent: '#a9752f',
+  },
 ]
 
 export const getInsect = (id: string) => INSECTS.find(i => i.id === id)

@@ -67,6 +67,9 @@ const IDS = [
   'crane-fly',
   'mantidfly',
   'caddisfly',
+  'house-fly',
+  'mosquito',
+  'cockroach',
 ] as const
 
 type AnyElement = ReactElement<Record<string, unknown>>

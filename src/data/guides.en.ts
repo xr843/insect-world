@@ -3218,6 +3218,144 @@ export const GUIDES: Record<string, Guide> = {
       body: "Clear streams and lake shores are home: at dusk, adults swarm above the water, and after dark they cluster at streetlights on the bank; by day, turning streambed stones often reveals a caddisworm inside its sand-and-pebble case.",
     },
   },
+  'house-fly': {
+    lesson: [
+      {
+        title: 'Read the Stripes',
+        body: "Look at the thorax: four dark stripes running front to back on a gray ground — the house fly's ID card. Among a hundred thousand fly species, the one on your dinner table is named by those four lines.",
+        anchor: 'stripe',
+      },
+      {
+        title: 'It Laps, Never Bites',
+        body: "The mouthparts are a sponge mop: a short drooping proboscis tipped with two grooved pads. The fly spits saliva to dissolve sugar, then draws the syrup back up — it cannot bite, and carries no needle.",
+        anchor: 'proboscis',
+      },
+      {
+        title: 'Walking the Ceiling',
+        body: 'Each foot ends in a pair of adhesive pads covered in fine hairs that ooze a sticky film, gripping glass by wet adhesion. Six feet lift and land in turn, so some always hold on — and the ceiling becomes a floor.',
+        anchor: 'pulvillus',
+      },
+      {
+        title: 'Why Swatting Fails',
+        body: 'One pair of wings does all the flying; the hindwings are tiny hidden balancers. No run-up needed — a backward hop, a wingbeat, airborne — and its eyes react to a looming shadow far faster than your hand.',
+        anchor: 'wing',
+      },
+    ],
+    motion: {
+      title: 'The Secret of Hand-Rubbing',
+      body: 'A resting fly forever rubs its legs, wipes its head, strokes its wings. Its taste receptors sit on its feet, so every landing is a tasting; scrubbing off dust and stale odors keeps the next footstep in sugar water readable.',
+    },
+    quiz: [
+      {
+        question: 'When a house fly lands on food, how does it actually eat?',
+        options: ['It stabs in a needle-like mouthpart and sucks', 'It spits digestive juices to soften the food, then mops it up with spongy pads', 'It chews off small bites with its jaws'],
+        answer: 1,
+        explain: 'Sponging mouthparts can only lap liquids: solids must first be dissolved in saliva. The fly has nothing that can pierce or chew.',
+      },
+      {
+        question: 'What lets a house fly hang upside down from the ceiling?',
+        options: ['Constantly beating wings', 'Foot pads that secrete a sticky film', 'A suction cup on its abdomen'],
+        answer: 1,
+        explain: 'Hairs on the foot pads ooze a sticky film that grips smooth surfaces by wet adhesion; the six feet take turns lifting, so the hold is never lost.',
+      },
+    ],
+    habitat: {
+      title: 'Wherever People Are',
+      body: 'The house fly barely exists apart from us; its life follows human habits. Garbage bins, manure heaps, and kitchen counters serve as nursery and dining room, and with a generation every two warm weeks, it spans the globe.',
+    },
+  },
+  mosquito: {
+    lesson: [
+      {
+        title: 'Naming a House Mosquito',
+        body: 'A resting Culex holds its body roughly parallel to the wall, tail not raised (an Anopheles tilts head-down, tail-up). Then check the abdomen: a pale band at each segment base. Both match — pale house mosquito.',
+        anchor: 'band',
+      },
+      {
+        title: 'A Precision Needle Kit',
+        body: 'The proboscis is not one needle but six stylets in a sheath: two saw-edged blades open the skin, two hold steady, one pumps in anticoagulant saliva, one draws blood. The itch is an allergy to that saliva.',
+        anchor: 'proboscis',
+      },
+      {
+        title: 'Antennae Tell the Sexes',
+        body: "A female's antennae are slim threads with sparse whorls of short hair; a male's are feathery plumes — his 'ears', tuned to a female's wingbeat hum. Only females bite; a male's mouthparts cannot even break skin.",
+        anchor: 'antenna',
+      },
+      {
+        title: 'Scales on the Wing',
+        body: "Mosquito wings are narrow, their veins and edges fringed with tiny scales — the family crest; other flies carry bare film. Beating hundreds of times a second, the telltale whine also helps them find each other.",
+        anchor: 'wing',
+      },
+    ],
+    motion: {
+      title: 'Anatomy of a Bite',
+      body: 'After landing, the female probes for a capillary-rich patch, then the six stylets cut in by turns, trading anticoagulant saliva for blood. Within minutes she takes on nearly twice her weight, abdomen glowing red, and pulls out.',
+    },
+    quiz: [
+      {
+        question: 'Which mosquitoes drink blood?',
+        options: ['All mosquitoes do', 'Only females, to develop their eggs', 'Only males, to show off when courting'],
+        answer: 1,
+        explain: 'Blood is a nutritional need for egg development, so only females bite; males have feeble mouthparts and live entirely on nectar and plant juices.',
+      },
+      {
+        question: 'How does a pale house mosquito hold itself when resting on a wall?',
+        options: ['Body roughly parallel to the wall', 'Head down with the tail tilted high', 'Always hanging upside down'],
+        answer: 0,
+        explain: 'Culex rests parallel to the surface; the head-down, tail-up slant belongs to Anopheles — the fastest field mark separating the two.',
+      },
+    ],
+    habitat: {
+      title: 'A Life Beside Still Water',
+      body: 'The water in one discarded tire or a flowerpot saucer is childhood enough: eggs float in rafts, wrigglers hang head-down filtering below, even the pupa somersaults in it. Emptying standing water beats any mosquito coil.',
+    },
+  },
+  cockroach: {
+    lesson: [
+      {
+        title: 'Two Stripes Say It All',
+        body: 'Plenty of roaches are small and tea-brown; this one carries its ID on the pronotum — two dark stripes, front edge to rear. Nymphs lack wings, but wear the stripes from hatching, so any age can be named.',
+        anchor: 'stripe',
+      },
+      {
+        title: 'The Hidden Head',
+        body: "A cockroach's head is not out in front: it tucks under the pronotum shield, mouthparts down, so only the crown shows from above. The frailest part stays plated — and the body packs flatter for the cracks.",
+        anchor: 'head',
+      },
+      {
+        title: 'Eyes in the Back',
+        body: "The cerci at the tail are rear-view mirrors: their hairs catch the faintest puff of air from behind. A slipper's gust arrives before the slipper — the cerci fire, the signal goes straight to the legs, gone.",
+        anchor: 'cercus',
+      },
+      {
+        title: 'Wings It Never Uses',
+        body: 'Leathery forewings cover the abdomen and look flight-ready, yet it almost never flies. Its escape plan is the crack: a flattened body and spiny legs turn any gap a few millimeters wide into a safety door.',
+        anchor: 'wing',
+      },
+    ],
+    motion: {
+      title: 'The Split-Second Getaway',
+      body: 'A startled cockroach launches in tens of milliseconds: the cerci feel the air move, and an abdominal nerve center — not the brain — fires the legs. It swings its back to the threat and sprints, cornering along walls mid-run.',
+    },
+    quiz: [
+      {
+        question: 'How do you pick the German cockroach out of a crowd of small roaches?',
+        options: ['By the two dark stripes on its pronotum', 'By whether it can fly', 'By the shade of its abdomen'],
+        answer: 0,
+        explain: 'The paired pronotal stripes are its most stable field mark, kept from nymph to adult — far more reliable than size or overall color.',
+      },
+      {
+        question: 'The slipper has not even landed and the roach is gone — what warned it?',
+        options: ['Its compound eyes saw the slipper', 'Its cerci felt the gust the strike pushed ahead', 'It heard the footsteps'],
+        answer: 1,
+        explain: 'Hairs on the cerci sense the faintest air current; the signal bypasses the brain, driving the legs via an abdominal nerve center in milliseconds.',
+      },
+    ],
+    habitat: {
+      title: 'Between Radiator and Crack',
+      body: 'Its housing checklist has three lines: warm, damp, and a crack. The pipe gap under the sink, the space by a fridge compressor, a microwave base — all five-star nests. It hides by day and files out along the baseboard at night.',
+    },
+  },
 }
 
 export const getGuide = (id: string): Guide | undefined => GUIDES[id]

@@ -28,6 +28,7 @@ export const INAT_TAXA: Record<string, number> = {
   'checkered-beetle': 560752,
   'cicada': 319989,
   'click-beetle': 560574,
+  'cockroach': 121237,  // Blattella germanica，species，2026-08-14 API 核实精确匹配
   'crane-fly': 60393,
   'cricket': 146737,
   'damselfly': 52054,
@@ -47,6 +48,7 @@ export const INAT_TAXA: Record<string, number> = {
   'hister-beetle': 131121,
   'honeybee': 47219,
   'hornet': 322284,
+  'house-fly': 120156,  // Musca domestica，species，2026-08-14 API 核实精确匹配
   'hoverfly': 52482,
   'ichneumon-wasp': 47935,
   'jewel-beetle': 360062,
@@ -60,6 +62,10 @@ export const INAT_TAXA: Record<string, number> = {
   'mantis': 71034,
   'mole-cricket': 118894,
   'monarch-butterfly': 48662,
+  // 淡色库蚊 Culex pipiens pallens 是亚种：iNat 有亚种页（493787）但按本表收录
+  // 规则（种级只收 species/complex）不采信亚种级，链到其所属种 Culex pipiens
+  // （species，2026-08-14 API 核实）——种页包含 pallens，属于「链粗不链错」。
+  'mosquito': 130032,
   'net-winged-beetle': 355413,
   'orchid-mantis': 460388,
   'rhinoceros-beetle': 324733,
