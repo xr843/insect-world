@@ -7,6 +7,9 @@ dist/
 # wrangler pages dev 的本地缓存
 .wrangler/
 
+# 目视验收渲染图（scripts/new-species-shots.mjs 的输出），只看不提交
+audit-out/
+
 # 并行 agent 的一次性校验脚本，不该进仓库
 _tmp*.mjs
 .tmp-*.mjs
