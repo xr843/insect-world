@@ -14,3 +14,6 @@ audit-out/
 _tmp*.mjs
 .tmp-*.mjs
 scripts/_*.mjs
+
+# 并行 agent 的 git worktree 挂载点
+.claude/worktrees/
