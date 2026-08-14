@@ -63,12 +63,12 @@ describe('GUIDES 数据完整性', () => {
     }
   })
 
-  it('INSECTS 恰好 60 个物种', () => {
-    expect(INSECTS).toHaveLength(60)
+  it('INSECTS 恰好 63 个物种', () => {
+    expect(INSECTS).toHaveLength(63)
   })
 
-  it('GUIDES 恰好 60 条', () => {
-    expect(Object.keys(GUIDES)).toHaveLength(60)
+  it('GUIDES 恰好 63 条', () => {
+    expect(Object.keys(GUIDES)).toHaveLength(63)
   })
 
   it('第 6 轮新增的 10 个物种 id 均已收录进 GUIDES', () => {
