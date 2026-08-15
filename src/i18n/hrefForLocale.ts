@@ -23,6 +23,16 @@ export function hrefForLocale(target: Locale, speciesId: string): string {
   return canonicalPath(target, speciesId)
 }
 
+/**
+ * 这个地址是不是旧格式 `?s=<id>`（改用路径 `/s/<id>/` 之前转发出去的链接）。
+ *
+ * 用途只有一个：首帧要不要动地址栏。规范路径与不带物种的首页都**不该**在首帧改写
+ * —— 那会让统计把入口页记成默认物种（见 App.tsx 里的说明）；只有旧格式值得归一。
+ */
+export function isLegacySpeciesUrl(search: string): boolean {
+  return new URLSearchParams(search).has('s')
+}
+
 /** 解码失败（畸形 %xx）不抛错 —— 宽容策略同下：烂链接回落，不搞坏页面 */
 function tryDecode(raw: string): string | null {
   try {

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import type { Order } from './data/types'
 import { useLabels, useLocale, useSpecies, useT } from './i18n/useT'
 import { notesToMarkdown, useFieldNotes } from './hooks/useFieldNotes'
@@ -14,7 +14,7 @@ import { TopBar } from './components/TopBar'
 import { IconGrid, IconSparkle } from './components/icons'
 import { isKnownSpecies, prefetchInsectModel } from './three/registry'
 import { THEME_COLOR, THEME_KEY, resolveTheme, type Theme } from './theme'
-import { canonicalPath, speciesFromUrl } from './i18n/hrefForLocale'
+import { canonicalPath, isLegacySpeciesUrl, speciesFromUrl } from './i18n/hrefForLocale'
 import { LanguageHint } from './i18n/LanguageHint'
 
 
@@ -76,15 +76,25 @@ export default function App() {
    * 选中的物种写回地址栏与标题 —— 地址栏随时可复制转发，标签页多开时
    * 靠标题分得清谁是谁。用 replaceState 不用 pushState：逐只翻 60 种
    * 会堆出 60 层历史，「后退」变成原路倒带、永远退不出本站。
-   * 首次加载也会跑一遍，顺带把旧格式 ?s= 归一成规范路径。
    * 只动 pathname 与 s 参数，别的查询参数（如调试用的 ?pdb=1）不碰。
+   *
+   * ⚠️ 首帧**不改**地址（除非要归一旧格式 ?s=）：落在 "/" 的访客本来就该记成 "/"，
+   * 那也是 index.html 里 canonical 指的地址。首帧就改写成 /s/<默认物种>/ 有两处害处
+   * （2026-08-15 从统计里看出来的）：入口页被记成默认物种 —— 307 次会话里 205 次如此，
+   * 首页的真实落地量完全看不见；而且每次落地都白多一条 pageview，因为统计脚本
+   * 把 replaceState 当作一次站内跳转。分享按钮取的是 canonicalPath 而不是当前地址，
+   * 所以默认物种照样能分享出带物种的链接，不受影响。
    */
+  const urlSynced = useRef(false)
   useEffect(() => {
+    document.title = t('doc.title', { name: insect.name })
+    const firstRun = !urlSynced.current
+    urlSynced.current = true
+    if (firstRun && !isLegacySpeciesUrl(location.search)) return
     const url = new URL(location.href)
     url.pathname = canonicalPath(locale, insect.id)
     url.searchParams.delete('s')
     history.replaceState(null, '', url)
-    document.title = t('doc.title', { name: insect.name })
     // t 是每次渲染新建的闭包，不进依赖 —— 它实际只随 locale 变
   }, [insect.id, insect.name, locale])
 

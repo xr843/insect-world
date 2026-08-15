@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { canonicalPath, hrefForLocale, speciesFromUrl } from '../hrefForLocale'
+import { canonicalPath, hrefForLocale, isLegacySpeciesUrl, speciesFromUrl } from '../hrefForLocale'
 
 describe('物种深链的规范路径', () => {
   it('中文是 /s/<id>/', () => {
@@ -77,5 +77,27 @@ describe('从地址里读初始物种', () => {
 
   it('多余的路径层级不算物种链接（如 /s/x/y/）', () => {
     expect(speciesFromUrl('/s/caddisfly/extra/', '', known)).toBeNull()
+  })
+})
+
+/**
+ * 首帧要不要动地址栏。
+ *
+ * 这道判断存在的唯一理由是统计口径：首帧把 "/" 改写成 /s/<默认物种>/，
+ * 会让统计把入口页记成那只虫（2026-08-15 实测 307 次会话中 205 次如此），
+ * 首页的真实落地量就此消失，每次落地还多算一条 pageview。
+ * 所以只有旧格式 ?s= 值得在首帧归一，其余一律保持原样。
+ */
+describe('旧格式识别', () => {
+  it('只有带 ?s= 的旧链接才需要首帧归一', () => {
+    expect(isLegacySpeciesUrl('?s=firefly')).toBe(true)
+    expect(isLegacySpeciesUrl('?pdb=1&s=firefly')).toBe(true)
+  })
+
+  it('首页与规范路径都不该在首帧被改写', () => {
+    expect(isLegacySpeciesUrl('')).toBe(false)
+    expect(isLegacySpeciesUrl('?pdb=1')).toBe(false)
+    // 名字里带 s 的别的参数不算数
+    expect(isLegacySpeciesUrl('?species=firefly')).toBe(false)
   })
 })
