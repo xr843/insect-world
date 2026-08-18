@@ -17,6 +17,7 @@
  * 若换了旧 Node 跑不动，报错信息会指向这里：升级 Node 或改用
  * `node --experimental-strip-types`。
  */
+import { execFileSync } from 'node:child_process'
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
@@ -288,11 +289,59 @@ assert(new Set(canonicals).size === canonicals.length, 'canonical 有重复（�
 
 // ---------- sitemap.xml ----------
 
+// ---------- lastmod ----------
+
+/**
+ * sitemap 的 `lastmod`：搜索引擎靠它决定要不要重爬。
+ *
+ * **绝对不能用构建时间。** 那等于每次构建都声称「这页改过了」，而多数构建
+ * 根本没动内容 —— Google 明说 lastmod 一旦被判定不可信就整个忽略，
+ * 于是这个字段不但没用，还会连累真正改过的那次也不被当回事。
+ *
+ * 用真实信号：**决定这页可爬内容的那几个文件的最后提交时间**。
+ * 物种数据（`insects.*.ts`）决定正文，生成器本身决定排版与结构，
+ * 两者取较晚的一个。改了别的（比如某只虫的建模代码）不会让 lastmod 动，
+ * 那是对的 —— 壳页的可爬内容确实没变。
+ *
+ * 拿不到 git（比如从 tarball 构建）就**整个省掉 lastmod**，
+ * 而不是退回构建时间去凑一个。宁可没有，不要假的。
+ *
+ * ⚠️ CI 的 `actions/checkout@v4` 默认浅克隆（depth 1），`git log -- <file>`
+ * 多半查不到东西，于是 CI 构建出来的 sitemap 没有 lastmod。目前无害 ——
+ * CI 只跑构建当检查，真正部署的产物是本地 `npm run deploy` build 的，
+ * 本地有完整历史。**若哪天把部署搬进 CI，记得给 checkout 加 `fetch-depth: 0`**，
+ * 否则 lastmod 会静默消失。
+ */
+function lastmodFor(files) {
+  try {
+    const times = files.map((f) =>
+      execFileSync('git', ['log', '-1', '--format=%cI', '--', f], {
+        cwd: ROOT,
+        encoding: 'utf8',
+        stdio: ['ignore', 'pipe', 'ignore'],
+      }).trim(),
+    )
+    const valid = times.filter(Boolean).sort()
+    return valid.length ? valid[valid.length - 1] : null
+  } catch {
+    return null
+  }
+}
+
+const GENERATOR = 'scripts/make-species-pages.mjs'
+const LASTMOD = {
+  zh: lastmodFor(['src/data/insects.zh.ts', GENERATOR]),
+  en: lastmodFor(['src/data/insects.en.ts', GENERATOR]),
+}
+/** 根页两版内容都涉及，取较晚的 */
+const LASTMOD_ROOT = [LASTMOD.zh, LASTMOD.en].filter(Boolean).sort().pop() ?? null
+
 /** 一个 <url> 条目；物种页带 hreflang 交替引用，根页对同样适用 */
-function urlEntry(loc, zhHref, enHref) {
+function urlEntry(loc, zhHref, enHref, lastmod) {
   return [
     '  <url>',
     `    <loc>${loc}</loc>`,
+    ...(lastmod ? [`    <lastmod>${lastmod}</lastmod>`] : []),
     `    <xhtml:link rel="alternate" hreflang="zh-Hans" href="${zhHref}"/>`,
     `    <xhtml:link rel="alternate" hreflang="en" href="${enHref}"/>`,
     `    <xhtml:link rel="alternate" hreflang="x-default" href="${zhHref}"/>`,
@@ -301,12 +350,12 @@ function urlEntry(loc, zhHref, enHref) {
 }
 
 const entries = [
-  urlEntry(`${SITE}/`, `${SITE}/`, `${SITE}/en/`),
-  urlEntry(`${SITE}/en/`, `${SITE}/`, `${SITE}/en/`),
+  urlEntry(`${SITE}/`, `${SITE}/`, `${SITE}/en/`, LASTMOD_ROOT),
+  urlEntry(`${SITE}/en/`, `${SITE}/`, `${SITE}/en/`, LASTMOD_ROOT),
 ]
 for (const { id } of ZH) {
-  entries.push(urlEntry(`${SITE}/s/${id}/`, `${SITE}/s/${id}/`, `${SITE}/en/s/${id}/`))
-  entries.push(urlEntry(`${SITE}/en/s/${id}/`, `${SITE}/s/${id}/`, `${SITE}/en/s/${id}/`))
+  entries.push(urlEntry(`${SITE}/s/${id}/`, `${SITE}/s/${id}/`, `${SITE}/en/s/${id}/`, LASTMOD.zh))
+  entries.push(urlEntry(`${SITE}/en/s/${id}/`, `${SITE}/s/${id}/`, `${SITE}/en/s/${id}/`, LASTMOD.en))
 }
 const sitemap = [
   '<?xml version="1.0" encoding="UTF-8"?>',
