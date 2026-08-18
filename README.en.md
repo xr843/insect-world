@@ -89,12 +89,20 @@ hovering really is stationary.
 ## A whole life
 
 The **life cycle** card at the bottom steps the stand through egg, larva and pupa
-as you page through the panel. Four species so far: **Japanese rhinoceros beetle**
-(a creamy white grub → a pupa that already carries the beginnings of the horn →
-the glossy black adult), **monarch**, **Chinese oak silkmoth** (the caterpillar
-plus a half-sectioned cocoon), and **the black cicada** — the only incomplete-
-metamorphosis species in the set, whose nymph carries a pair of wing pads on its
-back as the visible evidence that the wings are still "buds".
+as you page through the panel. Eight species so far, **22 stage models**. Complete metamorphosis: **Japanese
+rhinoceros beetle** (a creamy white grub → a pupa that already carries the
+beginnings of the horn → the glossy black adult — the sharpest contrast of the
+set), **monarch**, **Chinese oak silkmoth** (the caterpillar plus a
+longitudinally half-sectioned cocoon), **western honeybee** (everything happens
+inside hexagonal wax cells; the pupa's compound eyes darken before its body),
+**Chinese firefly** (egg, larva and pupa all glow) and **the sacred dung beetle**
+(egg and larva both inside a brood pear). Incomplete metamorphosis, as the
+contrast: **the black cicada** (fossorial forelegs plus wing pads) and **the
+emperor dragonfly** nymph (the hinged, mask-like labium plus four wing pads).
+
+**Those wing pads are the visible evidence that the wings are still "buds"** —
+the difference between complete and incomplete metamorphosis is the first thing
+anyone is taught about insects, and it is the whole reason this feature exists.
 
 ![The life of a rhinoceros beetle](docs/screenshots/08-lifecycle.jpg)
 

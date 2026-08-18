@@ -140,6 +140,11 @@ type Motion = (rig: InsectRig, t: number) => void
 依据」的立场冲突。改成**离散阶段 + 设计过的转场**：蜕皮与羽化是真实事件，做成
 蛹壳裂开 → 成虫挤出 → **翅从皱缩展开**。最后那一段是真连续的，也是最值钱的镜头。
 
+> **已落地**（[#19](https://github.com/xr843/insect-world/pull/19)）：做了「翅从皱缩展开」这一段，
+> 3.2 秒、`1-(1-u)³` 的先快后慢曲线、展开同时从下垂抬回静止姿态。
+> 「蛹壳裂开 → 成虫挤出」没做 —— 那需要蛹壳的破裂几何与一段位移动画，
+> 收益远不如翅那一段，留着。
+
 入口是底部现成的那张「生活史 · 完全变态」卡片（`BottomCards`），它现在点了没有
 3D 反应。
 
@@ -212,12 +217,12 @@ type Motion = (rig: InsectRig, t: number) => void
 
 | 阶段 | 内容 | 并行度 |
 | --- | --- | --- |
-| P0 | 地基三件（埋点 / 语言分流 / 性能先量） | 3 路并行 |
+| P0 | 地基三件 ✅ [#7](https://github.com/xr843/insect-world/pull/7) [#4](https://github.com/xr843/insect-world/pull/4) [#10](https://github.com/xr843/insect-world/pull/10) | 3 路并行 |
 | P1 | rig 契约 + 翅句柄 ✅ [#5](https://github.com/xr843/insect-world/pull/5) | 契约单点 + 17 只接线并行 |
-| P2 | 悬停振翅 + motion 模块地基 | 单点起，物种可并行 |
+| P2 | 悬停振翅 ✅ [#8](https://github.com/xr843/insect-world/pull/8) [#11](https://github.com/xr843/insect-world/pull/11) | 单点起，物种可并行 |
 | P3 | 腿骨架化 ✅ [#6](https://github.com/xr843/insect-world/pull/6) | 单点，kit 手术 |
-| P4 | 三角步态（62 只一起会走） | 单点起，验收可并行 |
-| P5 | 生活史 8 只 × 3 阶段 | 8 路并行（照过去物种轮次的作业法） |
+| P4 | 三角步态 → 改做静息微动 ✅ [#12](https://github.com/xr843/insect-world/pull/12)（理由：转台上走路读成踏步机） | 全体通用 |
+| P5 | 生活史 8 只 ✅ 22 个阶段模型 | 两批各 4 路并行 |
 
 P1 之前先出 P2 的振翅，是因为 `wing()` 的 pivot 已经存在，那是最快能发出去的
 一件；腿骨架化是主体工程，放在它后面。
