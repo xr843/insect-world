@@ -22,6 +22,19 @@ export const PART = definePart(
     'discovery.back': '上一步',
     'discovery.next': '下一步',
     'discovery.done': '看完了',
+    'discovery.lifecycle.title': '{name}的一生',
+    'discovery.lifecycle.stepOf': '第 {cur} / {total} 个阶段 · {type}',
+    'discovery.lifecycle.onStage': '◎ 展台已换成这一阶段的立体标本',
+    'discovery.lifecycle.noModel': '这一阶段还没有立体标本，展台先留着成虫',
+    'discovery.stage.egg': '卵',
+    'discovery.stage.larva': '幼虫',
+    'discovery.stage.pupa': '蛹',
+    'discovery.stage.nymph': '若虫',
+    'discovery.stage.adult': '成虫',
+    'discovery.lifecycle.holoNote':
+      '完全变态：幼虫与成虫长得完全不同，中间要经过一个不吃不动的蛹期。',
+    'discovery.lifecycle.hemiNote':
+      '不完全变态：若虫就是缩小版的成虫，翅还停在「芽」的阶段，逐次蜕皮长大，没有蛹期。',
 
     'quiz.title': '{name}小测',
     'quiz.noContent': '这一种的题目还在出。',
@@ -44,6 +57,19 @@ export const PART = definePart(
     'discovery.back': 'Back',
     'discovery.next': 'Next',
     'discovery.done': 'Done',
+    'discovery.lifecycle.title': 'The life of the {name}',
+    'discovery.lifecycle.stepOf': 'Stage {cur} of {total} · {type}',
+    'discovery.lifecycle.onStage': '◎ The specimen on the stand is now this stage',
+    'discovery.lifecycle.noModel': 'No 3D specimen for this stage yet — the adult stays on the stand',
+    'discovery.stage.egg': 'Egg',
+    'discovery.stage.larva': 'Larva',
+    'discovery.stage.pupa': 'Pupa',
+    'discovery.stage.nymph': 'Nymph',
+    'discovery.stage.adult': 'Adult',
+    'discovery.lifecycle.holoNote':
+      'Complete metamorphosis: the larva looks nothing like the adult, and a motionless pupal stage sits between them.',
+    'discovery.lifecycle.hemiNote':
+      'Incomplete metamorphosis: the nymph is a small version of the adult with wings still at the "pad" stage. It moults its way up — there is no pupa.',
 
     'quiz.title': '{name} quiz',
     'quiz.noContent': 'Questions for this species are still being written.',

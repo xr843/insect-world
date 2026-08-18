@@ -14,6 +14,7 @@ import type { OrbitControls as OrbitControlsImpl } from 'three-stdlib'
 import type { Insect } from '../data/types'
 import type { InsectModel } from './builders/kit'
 import { loadInsectModel } from './registry'
+import { loadStageModel, type LifeStage } from './stages'
 import { applyBlended, motionFor, stepBlend } from './motion'
 import { bindContextLoss } from './webgl'
 import { installGLProbes, installThreeProbes, markFirstFrame, pexpose, pinfo, pmark } from '../perf'
@@ -578,6 +579,7 @@ function Scene({
   zoomNonce,
   resetNonce,
   focusAnchor,
+  lifeStage,
   onLoaded,
   onError,
   dark,
@@ -591,6 +593,8 @@ function Scene({
   zoomNonce: number
   resetNonce: number
   focusAnchor: string | null
+  /** 生活史阶段；null = 成虫（照旧走物种注册表） */
+  lifeStage: LifeStage | null
   dark: boolean
   onLoaded: () => void
   onError: (msg: string) => void
@@ -653,7 +657,16 @@ function Scene({
       return null
     })
     pmark('model-load-start')
-    loadInsectModel(insect.id)
+    /**
+     * 生活史模式下展台展示的是**阶段模型**（卵/幼虫/蛹/若虫），走
+     * `three/stages.ts` 那套独立注册表；`lifeStage` 为 null 时照旧是成虫。
+     *
+     * 分成两个注册表而不是一个，是因为阶段模型的懒加载边界就该落在这里 ——
+     * 不打开生活史的人不该下载那 11 个额外的 builder。这也是 `stages.ts` 在
+     * 本次接线之前完全没有生产代码引用、阶段 chunk 压根不进产物的原因。
+     */
+    const load = lifeStage ? loadStageModel(insect.id, lifeStage) : loadInsectModel(insect.id)
+    load
       .then((m) => {
         if (!alive) return
         pmark('model-ready')
@@ -669,7 +682,7 @@ function Scene({
     return () => {
       alive = false
     }
-  }, [insect.id])
+  }, [insect.id, lifeStage])
 
   // 取景/落影/光场一律用 frameRadius（缺省=包围半径）：大蚊这类「一团腿」
   // 物种按腿尖包围球取景会把虫体缩成一个点，按 frameRadius 则腿尖出画。
@@ -783,6 +796,7 @@ export const InsectCanvas = memo(function InsectCanvas({
   zoomNonce,
   resetNonce,
   focusAnchor = null,
+  lifeStage = null,
   active = true,
   theme = 'dark',
   onStatus,
@@ -797,6 +811,12 @@ export const InsectCanvas = memo(function InsectCanvas({
   resetNonce: number
   /** 由讲解弹窗下发的镜头指令，优先于工具条的聚焦模式 */
   focusAnchor?: string | null
+  /**
+   * 生活史阶段：非 null 时展台展示的是该阶段的模型（卵/幼虫/蛹/若虫）而不是成虫。
+   * 同样由讲解弹窗下发 —— 与 focusAnchor 是同一条通路、同一个形状：
+   * 弹窗翻页驱动展台，展台不反过来知道弹窗的存在。
+   */
+  lifeStage?: LifeStage | null
   /** 展台滚出视口时置 false，整个渲染循环停摆 —— 手机上省下的是真电量 */
   active?: boolean
   /** 明暗主题：决定轮廓光档位与落影颜色（材质与环境贴图不随主题动） */
@@ -873,6 +893,7 @@ export const InsectCanvas = memo(function InsectCanvas({
           zoomNonce={zoomNonce}
           resetNonce={resetNonce}
           focusAnchor={focusAnchor}
+          lifeStage={lifeStage}
           dark={theme !== 'light'}
           onLoaded={() => onStatus({ loading: false, error: null })}
           onError={(msg) => onStatus({ loading: false, error: msg })}
