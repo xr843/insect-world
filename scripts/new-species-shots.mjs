@@ -69,6 +69,12 @@ for (const id of SPECIES) {
       const key = new THREE.DirectionalLight('#fff6ea', 2.35)
       key.position.set(6, 9, 7)
       key.castShadow = true
+      // 阴影贴图规格也要对齐 preview.tsx：缺省的 512 无偏移贴图会在贴着体表的
+      // 浅浮雕上刷出一层摩尔纹自阴影 —— 那是出图台的病，不是模型的病，
+      // 而验收人只看得到图，会照着这个假象去改模型（2026-08-18 帝王蝶蛹上实撞）
+      key.shadow.mapSize.set(2048, 2048)
+      key.shadow.bias = -0.0006
+      key.shadow.normalBias = 0.02
       scene.add(key)
       const fillA = new THREE.DirectionalLight('#d6e2ff', 0.85)
       fillA.position.set(-8, 3, -4)
