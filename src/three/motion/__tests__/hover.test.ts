@@ -71,8 +71,7 @@ function wingTip(root: THREE.Object3D, pivot: THREE.Object3D): THREE.Vector3 {
 describe('扑翅是上下扇动，不是剪刀', () => {
   it.each(['dragonfly', 'honeybee', 'hoverfly'])('%s：左右翅尖始终等高', async (id) => {
     const model = await loadRig(id)
-    const motion = motionFor(id)!
-    expect(motion).toBeTruthy()
+    const motion = motionFor(id)
     const wings = model.rig!.wings!
     // 按 role 分组后再配左右，四翅物种不能把前翅和后翅配成一对
     const groups = new Map<string, typeof wings>()
@@ -103,7 +102,7 @@ describe('扑翅是上下扇动，不是剪刀', () => {
 
   it('蜻蜓的前后翅反相 —— 这是它能悬停的原因，也是一眼认出蜻蜓的动态特征', async () => {
     const model = await loadRig('dragonfly')
-    const motion = motionFor('dragonfly')!
+    const motion = motionFor('dragonfly')
     const wings = model.rig!.wings!
     const fore = wings.find((w) => w.side === 1 && w.role === 'fore')!
     const hind = wings.find((w) => w.side === 1 && w.role === 'hind')!
@@ -123,7 +122,7 @@ describe('扑翅是上下扇动，不是剪刀', () => {
 describe('动作是纯的', () => {
   it('无状态：同一个 t 调两次结果一样', async () => {
     const model = await loadRig('honeybee')
-    const motion = motionFor('honeybee')!
+    const motion = motionFor('honeybee')
     motion(model.rig!, 1.234)
     const a = model.rig!.wings!.map((w) => w.pivot.rotation.x)
     motion(model.rig!, 9.9) // 中间插一帧别的时刻
@@ -143,7 +142,7 @@ describe('动作是纯的', () => {
     }
     const before = count()
     const r = model.radius
-    for (let i = 0; i < 5; i++) motionFor('honeybee')!(model.rig!, i * 0.1)
+    for (let i = 0; i < 5; i++) motionFor('honeybee')(model.rig!, i * 0.1)
     expect(count()).toBe(before)
     expect(model.radius).toBe(r)
   })
@@ -164,10 +163,22 @@ describe('动作是纯的', () => {
 })
 
 describe('注册表', () => {
-  it('没配动作的物种返回 null —— 没有默认动作，凭空让步甲悬停会毁掉可信度', () => {
-    expect(motionFor('rhinoceros-beetle')).toBeNull()
-    expect(motionFor('ladybird')).toBeNull()
-    expect(motionFor('不存在的虫')).toBeNull()
+  it('没配悬停的物种只跑静息微动，翅一动不动 —— 让步甲原地悬停会毁掉可信度', async () => {
+    const { loadInsectModel } = await import('../../registry')
+    for (const id of ['rhinoceros-beetle', 'ladybird', 'longhorn-beetle']) {
+      const m = await loadInsectModel(id)
+      const before = (m.rig?.wings ?? []).map((w) => w.pivot.rotation.x)
+      motionFor(id)(m.rig!, 0.4)
+      expect((m.rig?.wings ?? []).map((w) => w.pivot.rotation.x), `${id} 的翅动了`).toEqual(before)
+      // 但腿必须动 —— 那是「活着」
+      expect(m.rig?.legs?.length).toBeGreaterThan(0)
+      const moved = m.rig!.legs!.some((l) => l.coxa.rotation.y !== l.rest.coxa.y)
+      expect(moved, `${id} 的腿一点没动，静息微动没生效`).toBe(true)
+    }
+  }, 30000)
+
+  it('未知 id 也能拿到动作（静息微动是普遍的），不返回 null', () => {
+    expect(typeof motionFor('不存在的虫')).toBe('function')
   })
 
   it('配了动作的物种必须真有翅骨架 —— 否则动作静默空转', async () => {
