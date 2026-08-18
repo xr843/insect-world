@@ -201,7 +201,7 @@ function InsectMesh({
     }
 
     /**
-     * 悬停振翅（动作层，见 `three/motion/`）。
+     * 动作层（见 `three/motion/`）：静息微动对所有虫都跑，悬停振翅只给那八只。
      *
      * 跟触角摆同一个 `live` 开关，但**不能像触角那样直接停**：触角停在某个
      * 微小偏角上没人看得出来，翅膀停在冲程中间就是一只僵在半空的虫。
@@ -211,7 +211,7 @@ function InsectMesh({
      * 收拢的写法对任何「以 rest 为基准做偏移」的动作都成立，
      * 所以这段不必随每个新动作改一遍 —— 那也正是 rest 契约存在的意义。
      */
-    if (motion && model.rig?.wings?.length && !REDUCED_MOTION) {
+    if (model.rig && !REDUCED_MOTION) {
       flapBlend.current = stepBlend(flapBlend.current, live ? 1 : 0, dt)
       if (flapBlend.current > 0) motionT.current += dt
       applyBlended(model.rig, motion, motionT.current, flapBlend.current)

@@ -9,6 +9,7 @@
  * 它只往关节的 `rotation` 上写数。不需要 WebGL、不需要 r3f，
  * node 里就能逐帧断言 —— 这也是它能被测住的原因。
  */
+import type * as THREE from 'three'
 import type { InsectRig } from '../builders/kit'
 
 /**
@@ -90,7 +91,22 @@ export function stepBlend(current: number, target: number, dt: number, rate = BL
  */
 export function applyBlended(rig: InsectRig, motion: Motion, t: number, blend: number): void {
   if (blend > 0) motion(rig, t)
-  for (const w of rig.wings ?? []) {
-    w.pivot.rotation.x = w.rest.x + (w.pivot.rotation.x - w.rest.x) * blend
+  for (const w of rig.wings ?? []) blendToward(w.pivot.rotation, w.rest, blend)
+  for (const l of rig.legs ?? []) {
+    blendToward(l.coxa.rotation, l.rest.coxa, blend)
+    blendToward(l.femur.rotation, l.rest.femur, blend)
+    blendToward(l.tibia.rotation, l.rest.tibia, blend)
+    blendToward(l.tarsus.rotation, l.rest.tarsus, blend)
   }
+}
+
+/**
+ * 把一个 Euler 按权重朝 rest 收。三轴都收，不只收动作实际写过的那一轴 ——
+ * 「哪些轴被写过」是各个动作的私事，收拢这一层不该知道，也不该每加一个新动作
+ * 就回来补一轴。blend=1 时是恒等，blend=0 时精确落回 rest。
+ */
+function blendToward(cur: THREE.Euler, rest: THREE.Euler, blend: number): void {
+  cur.x = rest.x + (cur.x - rest.x) * blend
+  cur.y = rest.y + (cur.y - rest.y) * blend
+  cur.z = rest.z + (cur.z - rest.z) * blend
 }
