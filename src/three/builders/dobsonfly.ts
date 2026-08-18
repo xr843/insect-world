@@ -40,6 +40,7 @@ import {
   legPair,
   loft,
   membrane,
+  registerWing,
   segmentedAbdomen,
   spindle,
   wingGeometry,
@@ -296,6 +297,10 @@ export function buildDobsonfly(): InsectModel {
   for (const side of [1, -1] as const) {
     const fw = buildWing(foreSpec, wingFaceMat, veinMat, spotMat, side)
     const hw = buildWing(hindSpec, wingFaceMat, veinMat, spotMat, side)
+    // 骨架标记：buildWing() 复刻的是 kit.wing() 的枢轴装配方式，
+    // registerWing 补上 kit 内建 wing() 打不到的这一份。
+    registerWing(fw.pivot, { side, role: 'fore' })
+    registerWing(hw.pivot, { side, role: 'hind' })
     g.add(fw.pivot, hw.pivot)
     if (side === 1) foreRight = fw
   }

@@ -34,6 +34,7 @@ import {
   finalize,
   legPair,
   loft,
+  registerWing,
   segmentedAbdomen,
   spindle,
   wingGeometry,
@@ -353,6 +354,10 @@ export function buildSwallowtail(): InsectModel {
   for (const side of [1, -1] as const) {
     const fw = buildWing(foreSpec, wingMats, { veinCount: 8, marginSpotRange: [0.18, 0.88, 6] }, side)
     const hw = buildWing(hindSpec, wingMats, { veinCount: 7, tail: true, band: [0.42, 0.6], crescents: 5 }, side)
+    // 骨架标记：buildWing() 复刻的是 kit.wing() 的枢轴装配方式，
+    // registerWing 补上 kit 内建 wing() 打不到的这一份。
+    registerWing(fw.pivot, { side, role: 'fore' })
+    registerWing(hw.pivot, { side, role: 'hind' })
     g.add(fw.pivot, hw.pivot)
     if (side === 1) {
       foreRight = fw

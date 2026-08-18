@@ -64,6 +64,7 @@ import {
   legPair,
   loft,
   membrane,
+  registerWing,
   spindle,
   wingGeometry,
   type InsectModel,
@@ -286,9 +287,13 @@ export function buildDamselfly(): InsectModel {
   for (const side of [1, -1] as const) {
     const fw = buildWing(foreSpec, wingFaceMat, veinMat, stigmaMat, side, 6)
     fw.name = 'wing'
+    // 骨架标记：buildWing() 复刻的是 kit.wing() 的枢轴装配方式，
+    // registerWing 补上 kit 内建 wing() 打不到的这一份。
+    registerWing(fw, { side, role: 'fore' })
     g.add(fw)
     const hw = buildWing(hindSpec, wingFaceMat, veinMat, stigmaMat, side, 6)
     hw.name = 'wing'
+    registerWing(hw, { side, role: 'hind' })
     g.add(hw)
     if (side === 1) wingAnchorPivot = fw
   }

@@ -21,6 +21,7 @@ import {
   finalize,
   legPair,
   loft,
+  registerWing,
   segmentedAbdomen,
   segmentedAbdomenMembranes,
   type SegmentedAbdomenOptions,
@@ -89,6 +90,8 @@ function flatTegmen(
   pivot.rotation.y = side * (Math.PI / 2 - THREE.MathUtils.degToRad(spec.spread)) + THREE.MathUtils.degToRad(spec.sweep ?? 0)
   pivot.rotation.x = side * THREE.MathUtils.degToRad(spec.tilt ?? 0)
   pivot.scale.z = side
+  // 骨架标记：本种只建了前翅（覆翅），后翅未单独建模，role 固定给 'fore'。
+  registerWing(pivot, { side, role: 'fore' })
   return { pivot, blade }
 }
 

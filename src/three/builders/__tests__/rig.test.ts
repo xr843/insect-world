@@ -191,3 +191,52 @@ describe('全物种普查：翅的骨架覆盖', () => {
     expect(stale, `豁免名单里这些 id 已不在图鉴中：${stale.join('、')}`).toEqual([])
   })
 })
+
+describe('翅骨架的 role：四翅物种前后有别，双翅目只有前翅', () => {
+  /**
+   * 只覆盖本轮接线的 17 只自写翅物种（见上面普查测试列出的名单）——
+   * 其余物种（包括用 kit.wing() 自动打标记的那些）role 是否齐备不是
+   * 本轮任务范围，不在这里断言，避免测试范围和任务范围脱节。
+   */
+  const FOUR_WING = [
+    // 蜻蜓目 + 脉翅目近亲 + 广翅目 + 毛翅目：两对翅形态独立，扑翅要错相位
+    'dragonfly',
+    'damselfly',
+    'lacewing',
+    'dobsonfly',
+    'caddisfly',
+    'mantidfly',
+    // 鳞翅目（蝶+蛾）：前后翅同样独立
+    'monarch-butterfly',
+    'swallowtail',
+    'silk-moth',
+    'hawk-moth',
+    'dead-leaf-butterfly',
+  ]
+  const DIPTERA_FORE_ONLY = ['robber-fly', 'crane-fly', 'house-fly', 'mosquito']
+
+  it('四翅物种（蜻蜓/豆娘/草蛉/齿蛉/石蛾/螳蛉/蝶蛾类）fore 与 hind 都要出现', async () => {
+    const { loadInsectModel } = await import('../../registry')
+    const missing: string[] = []
+    for (const id of FOUR_WING) {
+      const model = await loadInsectModel(id)
+      const roles = new Set((model.rig?.wings ?? []).map((w) => w.role))
+      if (!roles.has('fore') || !roles.has('hind')) missing.push(`${id}(${[...roles].join(',') || '空'})`)
+    }
+    expect(
+      missing,
+      `这些四翅物种的 fore/hind 没有同时出现，扑翅时后翅会跟前翅同相，不是真实的四翅昆虫飞行：${missing.join('、')}`,
+    ).toEqual([])
+  }, 30000)
+
+  it('双翅目（家蝇/库蚊/大蚊/食虫虻）只登记了前翅，没有 hind（平衡棒不是翅，不登记）', async () => {
+    const { loadInsectModel } = await import('../../registry')
+    const bad: string[] = []
+    for (const id of DIPTERA_FORE_ONLY) {
+      const model = await loadInsectModel(id)
+      const roles = (model.rig?.wings ?? []).map((w) => w.role)
+      if (roles.length === 0 || roles.some((r) => r !== 'fore')) bad.push(`${id}(${roles.join(',') || '空'})`)
+    }
+    expect(bad, `这些双翅目物种的翅 role 不是纯 fore：${bad.join('、')}`).toEqual([])
+  }, 30000)
+})

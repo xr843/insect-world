@@ -28,6 +28,7 @@ import {
   loft,
   membrane,
   mirrorZ,
+  registerWing,
   segmentedAbdomen,
   segmentedAbdomenMembranes,
   type SegmentedAbdomenOptions,
@@ -106,6 +107,8 @@ function tegmenWing(spec: WingSpec, faceMat: THREE.Material, veinMat: THREE.Mate
   pivot.rotation.y = side * (Math.PI / 2 - THREE.MathUtils.degToRad(spec.spread)) + THREE.MathUtils.degToRad(spec.sweep ?? 0)
   pivot.rotation.x = side * THREE.MathUtils.degToRad(spec.tilt ?? 0)
   pivot.scale.z = side
+  // 骨架标记：本种只建了覆翅（前翅），后翅折叠贴背未单独建模，role 固定给 'fore'。
+  registerWing(pivot, { side, role: 'fore' })
   return pivot
 }
 

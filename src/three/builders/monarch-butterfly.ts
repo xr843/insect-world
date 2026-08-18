@@ -22,6 +22,7 @@ import {
   finalize,
   legPair,
   loft,
+  registerWing,
   segmentedAbdomen,
   spindle,
   wingGeometry,
@@ -384,6 +385,10 @@ export function buildMonarchButterfly(): InsectModel {
   for (const side of [1, -1] as const) {
     const fw = monarchWing(foreSpec, wingMats, 9, 0.72, 6, side)
     const hw = monarchWing(hindSpec, wingMats, 7, 0.7, 5, side)
+    // 骨架标记：monarchWing() 复刻的是 kit.wing() 的枢轴装配方式（pivot 已按
+    // spread/tilt 摆好姿态），registerWing 补上 kit 内建 wing() 打不到的这一份。
+    registerWing(fw.pivot, { side, role: 'fore' })
+    registerWing(hw.pivot, { side, role: 'hind' })
     g.add(fw.pivot, hw.pivot)
     if (side === 1) {
       foreTip = fw
