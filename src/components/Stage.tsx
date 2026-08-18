@@ -1,8 +1,10 @@
 import { Component, useCallback, useEffect, useRef, useState, type ReactNode } from 'react'
 import type { Insect } from '../data/types'
 import { InsectCanvas, type ViewMode } from '../three/InsectCanvas'
+import { prefetchInsectModel } from '../three/registry'
 import { webglAvailable } from '../three/webgl'
 import { EVENTS, track, type StageTool } from '../analytics'
+import { pmark } from '../perf'
 import { CompareBar } from './CompareBar'
 import { InsectGlyph } from './InsectGlyph'
 import {
@@ -86,6 +88,27 @@ export function Stage({
   const [glLost, setGlLost] = useState(false)
 
   /**
+   * 首屏物种的 chunk 下载与几何构建，在 Stage **第一次渲染时**就发起，不等 WebGL 上下文。
+   *
+   * 原先这件事挂在 Scene 的 effect 上，也就是排在「React 挂载完 → r3f 量到容器尺寸
+   * → 建 WebGL 上下文 → onCreated」**之后**（实测这一段 300~380ms）。而 chunk 下载
+   * 是纯网络等待，本来可以和那一段重叠。实测「GL 就绪→模型就绪」这一段
+   * 桌面热缓存 186→5ms、移动 slow-4G 冷缓存 1066→42ms，端到端首帧桌面热缓存
+   * 约 1.6s→1.2s（方法与全部分段见 docs/perf-notes.md）。
+   *
+   * ⚠️ 几何构建本身是同步的主线程活儿，提前只是换了个位置、省不掉 —— 这里省的是
+   * **网络那一段**加上等上下文时的一点主线程空转，别指望它能把 builder 变快。
+   *
+   * 放在 webglDead 判定之后：建不起上下文的机器只会看到 SVG 剪影兜底页，
+   * 没必要为它下载并构建两万多面的几何。useState 的惰性初始化 = 只在首次渲染跑一次，
+   * registry 自带按 id 去重与在途合并，稍后 Scene 再要同一只虫拿到的是同一个 promise。
+   */
+  useState(() => {
+    if (!webglDead) prefetchInsectModel(insect.id)
+    return null
+  })
+
+  /**
    * 展台滚出视口就停掉渲染循环。
    *
    * 手机上整页竖排，用户在下面读图鉴数据时展台还在每帧画 —— 白烧 GPU，
@@ -114,11 +137,22 @@ export function Stage({
   /**
    * 加载提示延迟 180ms 再露面：模型按 id 缓存，切回看过的物种是瞬时的，
    * 立刻显示会让「正在生成…」闪一下就消失，比不显示更让人分神。
+   *
+   * ⚠️ **首屏这一次不延迟**（`first.current`）。首屏必然要等一秒以上
+   * （线上实测热缓存约 2.2s、冷缓存约 3.7s，分段见 docs/perf-notes.md），
+   * 延迟只是让空展台多空 180ms。第二只虫起才有「可能瞬时」这回事。
    */
+  const first = useRef(true)
   const [showLoading, setShowLoading] = useState(false)
   useEffect(() => {
     if (!status.loading) {
+      first.current = false
       setShowLoading(false)
+      return
+    }
+    if (first.current) {
+      setShowLoading(true)
+      pmark('stage-placeholder')
       return
     }
     const timer = window.setTimeout(() => setShowLoading(true), 180)
@@ -281,8 +315,20 @@ export function Stage({
           {status.error ? (
             <div className={s.error}>{t('stage.error', { error: status.error })}</div>
           ) : (
+            /**
+             * 加载态先摆一张该物种的剪影 —— 不是装饰，是本轮性能测量的结论。
+             *
+             * 首帧真实耗时压不到一秒以内：线上热缓存约 2.2s、冷缓存约 3.7s，
+             * 其中网络 ~0.9s 与 builder ~0.5s 都动不了（分段见 docs/perf-notes.md）。
+             * 既然等待去不掉，就别让展台在这一两秒里**完全空着** —— 剪影跟着首屏
+             * 内容一起就位：「展台上第一次出现这只虫的形状」实测从 1592ms 提到
+             * 220ms（无头桌面热缓存），真机上落在 542ms。立体标本长出来就换掉它。
+             * 用的是 InsectGlyph 里现成的 24×24 剪影，零新增资产。
+             */
             <div className={s.spinner}>
-              <span className={s.spinnerRing} />
+              <span className={s.developing}>
+                <InsectGlyph id={insect.id} size={96} color={insect.accent} />
+              </span>
               {t('stage.loading', { name: insect.name })}
             </div>
           )}

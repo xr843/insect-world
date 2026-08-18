@@ -7,6 +7,7 @@
  */
 import type * as THREE from 'three'
 import type { InsectModel } from './builders/kit'
+import { pspan, ptrack } from '../perf'
 
 type Loader = () => Promise<Record<string, unknown>>
 
@@ -123,9 +124,10 @@ export async function loadInsectModel(id: string): Promise<InsectModel> {
   const loader = LOADERS[id]
   if (!loader) throw new Error(`未注册的物种：${id}`)
 
-  const task = loader()
+  // 两段分开计时：chunk 下载+求值 vs builder 真正构建几何（默认关闭，见 src/perf.ts）
+  const task = ptrack(`chunk:${id}`, loader())
     .then((mod) => {
-      const model = pickBuilder(mod)()
+      const model = pspan(`build:${id}`, () => pickBuilder(mod)())
       cache.set(id, model)
       evictStale()
       inflight.delete(id)

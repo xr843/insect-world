@@ -41,11 +41,12 @@ npm run build        # tsc --noEmit + vite build
 npm run deploy       # 构建并发布到 Cloudflare Pages（需先 npx wrangler login）
 ```
 
-两个出图脚本（都不进依赖，用到时临时装）：
+三个辅助脚本（都不进依赖，用到时临时装）：
 
 ```bash
-bash scripts/make-og.sh    # 重生成分享卡 public/og.png 与图标三件套（需 ImageMagick）
-node scripts/shots.mjs     # 重拍 README 截图（无头 Chromium，用法见文件头注释）
+bash scripts/make-og.sh          # 重生成分享卡 public/og.png 与图标三件套（需 ImageMagick）
+node scripts/shots.mjs           # 重拍 README 截图（无头 Chromium，用法见文件头注释）
+node scripts/perf-firstframe.mjs # 首帧分段计时（配合 ?perf=1 的打点通道，见 docs/perf-notes.md）
 ```
 
 部署在 Cloudflare Pages，静态托管，无后端。`public/_headers` 配了缓存策略：
@@ -80,7 +81,7 @@ cookie 的访客不动，响应带 `Vary: Accept-Language`）。`functions/` 目
 
 这不只是妥协。昆虫的形态比内脏规律得多 —— 体分头/胸/腹三段，胸部生三对足、两对翅，附肢是分节的锥管，翅面由放射状翅脉支撑。这些结构参数化以后，加一个物种只需要写一份尺寸与配色的描述，而不是再买一个模型。代价是写实度不如三维扫描，换来的是零资产依赖、任意可扩展，以及每处形态都能在代码里追溯到形态学依据。
 
-单个物种 1.3 万~3.6 万三角面（最小是淡色库蚊 13,308，最大是柞蚕蛾 35,732），在浏览器里构建耗时 30~90 毫秒。生产构建首屏 JS gzip 约 424 KB（three 主导的 vendor 340 KB + 主包 84 KB），桌面后期管线 103 KB 为懒加载独立 chunk，手机不下载，物种代码按需分包，点到谁才下载谁。
+单个物种 1.3 万~3.6 万三角面（最小是淡色库蚊 13,308，最大是柞蚕蛾 35,732），在浏览器里构建耗时 30~90 毫秒 —— 但**第一只要 230~730 毫秒**，因为程序化表面贴图是全库共享的、由它一次性生成（实测与首帧分段账见 [docs/perf-notes.md](docs/perf-notes.md)）。生产构建首屏 JS gzip 约 424 KB（three 主导的 vendor 340 KB + 主包 84 KB），桌面后期管线 103 KB 为懒加载独立 chunk，手机不下载，物种代码按需分包，点到谁才下载谁。
 
 ## 借来的与自写的
 
