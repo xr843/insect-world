@@ -14,6 +14,7 @@ import { Stage } from './components/Stage'
 import { TopBar } from './components/TopBar'
 import { IconGrid, IconSparkle } from './components/icons'
 import { isKnownSpecies, prefetchInsectModel } from './three/registry'
+import type { LifeStage } from './three/stages'
 import { THEME_COLOR, THEME_KEY, resolveTheme, type Theme } from './theme'
 import { canonicalPath, isLegacySpeciesUrl, speciesFromUrl } from './i18n/hrefForLocale'
 import { LanguageHint } from './i18n/LanguageHint'
@@ -67,6 +68,11 @@ export default function App() {
   const [compareId, setCompareId] = useState<string | null>(null)
   const [discovery, setDiscovery] = useState<DiscoveryKind | null>(null)
   const [focusAnchor, setFocusAnchor] = useState<string | null>(null)
+  /**
+   * 展台正在展示的生活史阶段；null = 成虫。由生活史讲解弹窗逐步下发，
+   * 与 focusAnchor 同一条通路（弹窗驱动展台，展台不知道弹窗的存在）。
+   */
+  const [lifeStage, setLifeStage] = useState<LifeStage | null>(null)
   const [orderFilter, setOrderFilter] = useState<Order | null>(null)
   const [notedOnly, setNotedOnly] = useState(false)
   /** 双主题：浅=纸感图鉴（默认），暗=博物馆之夜；选择持久化本机。
@@ -90,6 +96,16 @@ export default function App() {
     () => SPECIES.find((i) => i.id === activeId) ?? SPECIES[0],
     [activeId],
   )
+
+  /**
+   * 换虫必须复位生活史阶段。不复位的后果不是「显示得不对」而是**报错**：
+   * 阶段模型是逐物种做的，只有少数几种有；停在「蛹」上切到七星瓢虫，
+   * `loadStageModel('ladybird', 'pupa')` 会抛「未注册的生活史阶段」，
+   * 展台盖上错误提示层。
+   */
+  useEffect(() => {
+    setLifeStage(null)
+  }, [activeId])
 
   /**
    * 选中的物种写回地址栏与标题 —— 地址栏随时可复制转发，标签页多开时
@@ -292,6 +308,7 @@ export default function App() {
           onCompareToggle={toggleCompare}
           onCompareCycle={cycleCompare}
           focusAnchor={focusAnchor}
+          lifeStage={lifeStage}
           theme={theme}
         />
         <DetailPanel insect={insect} onCompare={toggleCompare} onDiscover={setDiscovery} />
@@ -343,6 +360,7 @@ export default function App() {
           guide={getGuide(insect.id)}
           onClose={() => setDiscovery(null)}
           onFocusAnchor={setFocusAnchor}
+          onLifeStage={setLifeStage}
         />
       )}
     </div>

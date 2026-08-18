@@ -8,6 +8,7 @@
 import { useMemo } from 'react'
 import type { Insect } from '../data/types'
 import type { DiscoveryKind } from './Discovery'
+import { builtStagesOf } from '../three/stages'
 import {
   IconArrowRight,
   IconDocument,
@@ -126,6 +127,8 @@ export function BottomCards({
   onExplore: () => void
 }) {
   const t = useT()
+  /** 这一种有没有做阶段模型 —— 决定「生活史」那张卡片点开是立体标本还是文本 */
+  const hasStages = builtStagesOf(insect.id).length > 0
   const labels = useLabels()
 
   // 体长对比：当前物种 + 三个体型差异明显的同伴，按长度排序
@@ -249,7 +252,16 @@ export function BottomCards({
             ))}
           </div>
         </div>
-        <button className={s.foot} onClick={() => onDiscover('motion')}>
+        {/*
+          有阶段模型的物种走「生活史」那支 —— 弹窗逐步翻，展台跟着换成
+          卵/幼虫/蛹的立体标本。没有阶段模型的仍退回原来的动态演示文本，
+          不给用户一个点开只有字的「生活史」。判定直接问注册表
+          （`builtStagesOf`），不另设名单：名单与文件两处都能改，迟早对不上。
+        */}
+        <button
+          className={s.foot}
+          onClick={() => onDiscover(hasStages ? 'lifecycle' : 'motion')}
+        >
           {t('cards.lifecycle.foot')}
           <IconArrowRight size={13} />
         </button>

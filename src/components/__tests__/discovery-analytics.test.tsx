@@ -31,7 +31,8 @@ afterEach(() => {
 
 function mount(kind: DiscoveryKind) {
   renderZh(
-    <Discovery kind={kind} insect={ladybird} guide={guide} onClose={vi.fn()} onFocusAnchor={vi.fn()} />,
+    <Discovery kind={kind} insect={ladybird} guide={guide} onClose={vi.fn()} onFocusAnchor={vi.fn()}
+      onLifeStage={vi.fn()} />,
   )
 }
 

@@ -1,5 +1,6 @@
 import { Component, useCallback, useEffect, useRef, useState, type ReactNode } from 'react'
 import type { Insect } from '../data/types'
+import type { LifeStage } from '../three/stages'
 import { InsectCanvas, type ViewMode } from '../three/InsectCanvas'
 import { prefetchInsectModel } from '../three/registry'
 import { webglAvailable } from '../three/webgl'
@@ -46,6 +47,7 @@ export function Stage({
   onCompareToggle,
   onCompareCycle,
   focusAnchor = null,
+  lifeStage = null,
   theme = 'dark',
 }: {
   insect: Insect
@@ -55,6 +57,8 @@ export function Stage({
   onCompareCycle: () => void
   /** 讲解弹窗下发的镜头指令 */
   focusAnchor?: string | null
+  /** 生活史阶段；非 null 时展台展示阶段模型而不是成虫。由讲解弹窗下发，与 focusAnchor 同一条通路 */
+  lifeStage?: LifeStage | null
   /** 明暗主题：透传给 3D 场景定轮廓光档位与落影颜色 */
   theme?: 'dark' | 'light'
 }) {
@@ -203,6 +207,7 @@ export function Stage({
               zoomNonce={zoomNonce}
               resetNonce={resetNonce}
               focusAnchor={focusAnchor}
+              lifeStage={lifeStage}
               theme={theme}
               onStatus={onStatus}
               onContextLoss={setGlLost}

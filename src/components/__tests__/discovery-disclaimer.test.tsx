@@ -33,6 +33,7 @@ function mount(kind: DiscoveryKind, g = guide) {
       guide={g}
       onClose={vi.fn()}
       onFocusAnchor={vi.fn()}
+      onLifeStage={vi.fn()}
     />,
   )
 }
