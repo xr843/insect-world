@@ -53,6 +53,8 @@ npm run deploy       # build and publish to Cloudflare Pages (run npx wrangler l
 
 Hosted as a static site on Cloudflare Pages, with no backend. `public/_headers` sets the caching policy: build outputs carry content hashes and are cached immutably for a year, while HTML is revalidated on every request so a new release takes effect immediately.
 
+The root path `/` also carries a Cloudflare Pages Function (`functions/index.ts`): it 302-redirects visitors whose `Accept-Language` has no Chinese tag to `/en/` (crawlers, and visitors with an existing language-choice cookie, are left alone; the response carries `Vary: Accept-Language`). `functions/` lives at the repo root, not inside `dist/`, but **the `deploy` command above needs no change** — `wrangler pages deploy` resolves its functions directory as "the current working directory at invocation time, plus `functions`", independent of the deployed directory argument (`dist`), confirmed by reading wrangler 4.x's own source (`deploy2()`'s `functionsDirectory = customFunctionsDirectory || path.join(process.cwd(), "functions")`), not assumed from docs. `npm run deploy` runs from the repo root, so it is auto-discovered and bundled in. Locally, `npx wrangler pages dev dist` plus `curl`ing `/` with different `Accept-Language`/`Cookie` headers reproduces the whole chain.
+
 ## How to use it
 
 Pick a species in the left column, or step through with `↑` / `↓`. Drag to rotate, scroll to zoom, click a coloured dot for a note on that body part.

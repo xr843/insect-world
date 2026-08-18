@@ -51,6 +51,17 @@ node scripts/shots.mjs     # 重拍 README 截图（无头 Chromium，用法见�
 部署在 Cloudflare Pages，静态托管，无后端。`public/_headers` 配了缓存策略：
 产物文件名带内容哈希，按一年不可变缓存；HTML 每次回源校验，保证发新版立刻生效。
 
+根路径 `/` 另外挂了一个 Cloudflare Pages Function（`functions/index.ts`）：按
+`Accept-Language` 把没有中文语言标签的访客 302 到 `/en/`（爬虫与已有语言选择
+cookie 的访客不动，响应带 `Vary: Accept-Language`）。`functions/` 目录在仓库根、
+不在 `dist/` 里，但**不需要改上面这条 `deploy` 命令**——`wrangler pages deploy`
+的 functions 目录默认是「执行命令那一刻的当前工作目录 + `functions`」，跟被部署
+的目录参数（这里是 `dist`）无关（读的是 wrangler 4.x 源码里 `deploy2()` 的
+`functionsDirectory = customFunctionsDirectory || path.join(process.cwd(), "functions")`，
+不是猜的）。`npm run deploy` 就是在仓库根跑的，会自动发现并打包进部署。本地可以用
+`npx wrangler pages dev dist` 起一份服务，用不同 `Accept-Language`/`Cookie` 头
+`curl` 根路径来复验这条链路。
+
 ## 怎么用
 
 左栏点选，或用 `↑` `↓` 逐只翻。拖动转动虫体，滚轮拉近，点彩色圆点看部位说明。
