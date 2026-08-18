@@ -151,7 +151,7 @@ describe('动作是纯的', () => {
     const rest = new THREE.Euler(0.21, 1.37, -0.4)
     const pivot = new THREE.Object3D()
     pivot.rotation.copy(rest)
-    const rig = { wings: [{ pivot, rest: rest.clone(), side: 1 as const, base: new THREE.Vector3() }] }
+    const rig = { wings: [{ pivot, rest: rest.clone(), restScale: pivot.scale.clone(), side: 1 as const, base: new THREE.Vector3() }] }
     const motion = makeHover({ freq: 8, amplitude: 0.5, hindPhase: 0 })
     motion(rig, 0) // sin(0)=0，此刻应正好回到 rest
     expect(pivot.rotation.x).toBeCloseTo(rest.x, 10)
@@ -206,7 +206,7 @@ describe('进出场的幅度权重（回归：翅不许僵在冲程中间）', (
     pivot.rotation.set(restX, 1.1, -0.2)
     const rest = pivot.rotation.clone()
     return {
-      rig: { wings: [{ pivot, rest, side: 1 as const, base: new THREE.Vector3() }] },
+      rig: { wings: [{ pivot, rest, restScale: pivot.scale.clone(), side: 1 as const, base: new THREE.Vector3() }] },
       pivot,
       restX,
     }
