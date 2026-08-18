@@ -15,7 +15,7 @@ import type { Insect } from '../data/types'
 import type { InsectModel } from './builders/kit'
 import { loadInsectModel } from './registry'
 import { loadStageModel, type LifeStage } from './stages'
-import { applyBlended, motionFor, stepBlend } from './motion'
+import { applyBlended, makeEmerge, motionFor, resetEmerge, stepBlend } from './motion'
 import { bindContextLoss } from './webgl'
 import { installGLProbes, installThreeProbes, markFirstFrame, pexpose, pinfo, pmark } from '../perf'
 
@@ -39,6 +39,14 @@ const PDB = typeof window !== 'undefined' && new URLSearchParams(window.location
 /** 系统「减少动态效果」：CSS 那侧有全局规则兜底，JS 驱动的触角微动在这里问一次 */
 const REDUCED_MOTION =
   typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches
+
+/**
+ * 羽化展翅的时长（秒）。真实的翅展开要二十分钟到一小时 —— 这个压缩与把
+ * 扑翅频率压到 4~12Hz 是同一类明摆着的取舍：真实时长没法看，
+ * 但**过程的形状是真的**（先快后慢、边展开边从下垂抬起）。
+ * 3.2 秒是「看得清在发生什么、又不至于等得不耐烦」的折中。
+ */
+const EMERGE_SECONDS = 3.2
 
 /** 主光阴影贴图边长（见 StudioLights 的注释） */
 const SHADOW_MAP_SIZE = COARSE ? 1024 : 2048
@@ -71,6 +79,7 @@ export type ViewMode = 'normal' | 'isolate' | 'section' | 'layers'
 function InsectMesh({
   model,
   speciesId,
+  emergeNonce,
   mode,
   spin,
   pauseUntil,
@@ -84,6 +93,12 @@ function InsectMesh({
   model: InsectModel
   /** 当前物种 id —— 动作层按它查表（查不到就是不动，没有默认动作） */
   speciesId: string
+  /**
+   * 每次「蛹/若虫 → 成虫」自增一次，触发一遍羽化展翅。
+   * 判定放在 Scene 那一层：切阶段会重载模型，加载期间这个组件整个卸载，
+   * 记在这里的 ref 活不过那一次。
+   */
+  emergeNonce: number
   mode: ViewMode
   spin: boolean
   /** 交互后的「让转」截止时刻（performance.now() 基准） */
@@ -99,6 +114,22 @@ function InsectMesh({
   const motionT = useRef(0)
   const flapBlend = useRef(0)
   const motion = useMemo(() => motionFor(speciesId), [speciesId])
+  /**
+   * 羽化展翅：正在进行时是已过秒数，不在进行时是 null。
+   *
+   * 3.2 秒是压过的 —— 真实的翅展开要二十分钟到一小时。这跟扑翅频率压到
+   * 4~12Hz 是同一类明摆着的取舍：真实时长没法看，但**过程的形状是真的**
+   * （先快后慢、边展开边从下垂抬起）。
+   */
+  const emergeT = useRef<number | null>(null)
+  const emerge = useMemo(() => makeEmerge(), [])
+
+  useEffect(() => {
+    // nonce 为 0 是初始值，不是一次真实的羽化
+    if (emergeNonce === 0) return
+    if (REDUCED_MOTION) return
+    emergeT.current = 0
+  }, [emergeNonce])
 
   // 切换物种时从略小的尺度弹入，避免生硬替换
   useLayoutEffect(() => {
@@ -212,7 +243,37 @@ function InsectMesh({
      * 收拢的写法对任何「以 rest 为基准做偏移」的动作都成立，
      * 所以这段不必随每个新动作改一遍 —— 那也正是 rest 契约存在的意义。
      */
-    if (model.rig && !REDUCED_MOTION) {
+    /**
+     * 羽化展翅优先于常规动作 —— 一只正在把翅撑开的虫不该同时在扑翅。
+     * 走完把翅归位，之后常规动作接管。
+     */
+    let emerging = false
+    if (emergeT.current !== null && model.rig?.wings?.length) {
+      /**
+       * 每帧最多推进 1/30 秒。
+       *
+       * 不夹住的话**整段羽化会被一两帧吃掉**：羽化紧接在成虫模型加载之后，
+       * 而构建几何是同步的主线程活儿，醒来的第一帧 dt 常常是几百毫秒起步
+       * （无头软件渲染下实测能到几秒）—— 一帧就把 3.2 秒的进度走完了，
+       * 用户什么也没看见。这与收拢权重那个 bug 同源：**按需渲染下 dt 不是
+       * 一个「大约 16 毫秒」的量**，凡是按 dt 推进的动画都得想清楚这一点。
+       *
+       * 夹住的代价是卡顿时羽化会比 3.2 秒长一些 —— 对一段一次性的演示动画
+       * 来说，「慢一点但看得见」远好过「准时但看不见」。
+       */
+      emergeT.current += Math.min(dt, 1 / 30)
+      const u = emergeT.current / EMERGE_SECONDS
+      if (u >= 1) {
+        emergeT.current = null
+        resetEmerge(model.rig)
+      } else {
+        emerge(model.rig, u)
+        emerging = true
+        invalidate()
+      }
+    }
+
+    if (model.rig && !REDUCED_MOTION && !emerging) {
       flapBlend.current = stepBlend(flapBlend.current, live ? 1 : 0, dt)
       if (flapBlend.current > 0) motionT.current += dt
       applyBlended(model.rig, motion, motionT.current, flapBlend.current)
@@ -684,6 +745,21 @@ function Scene({
     }
   }, [insect.id, lifeStage])
 
+  /**
+   * 羽化触发。用 nonce 而不是让 InsectMesh 自己记上一个阶段：切换阶段会
+   * 重新加载模型，加载期间 `model` 短暂为 null、InsectMesh 整个卸载，
+   * 它内部的 ref 会跟着清掉 —— 记在这一层才活得过那次卸载。
+   * 形状照抄同文件里的 zoomNonce / resetNonce。
+   */
+  const prevStage = useRef<LifeStage | null>(null)
+  const [emergeNonce, setEmergeNonce] = useState(0)
+  useEffect(() => {
+    const prev = prevStage.current
+    prevStage.current = lifeStage
+    // 蛹/若虫 → 成虫，正是羽化那一刻
+    if (lifeStage === null && (prev === 'pupa' || prev === 'nymph')) setEmergeNonce((n) => n + 1)
+  }, [lifeStage])
+
   // 取景/落影/光场一律用 frameRadius（缺省=包围半径）：大蚊这类「一团腿」
   // 物种按腿尖包围球取景会把虫体缩成一个点，按 frameRadius 则腿尖出画。
   const radius = model ? model.frameRadius ?? model.radius : 1
@@ -733,6 +809,7 @@ function Scene({
           <InsectMesh
             model={model}
             speciesId={insect.id}
+            emergeNonce={emergeNonce}
             mode={mode}
             spin={spin && !focus}
             pauseUntil={pauseUntil}

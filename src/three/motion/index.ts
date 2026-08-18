@@ -60,4 +60,5 @@ export function animatedSpecies(): string[] {
 
 export { HOVERERS, makeHover } from './hover'
 export { IDLE_DEFAULTS, makeIdle } from './idle'
+export { EMERGE_DEFAULTS, makeEmerge, resetEmerge } from './emerge'
 export { BLEND_RATE, applyBlended, stepBlend, visualWingbeat, type Motion } from './types'

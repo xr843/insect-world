@@ -32,6 +32,13 @@ export interface WingRig {
   pivot: THREE.Object3D
   /** 静止姿态，动作层的基准 */
   rest: THREE.Euler
+  /**
+   * 静止缩放。羽化展翅要把翅从「皱缩的一小团」放大到全尺寸，
+   * 而 `wing()` 会把 `scale.z` 设成 ±1 来做左右镜像 —— 动作层直接
+   * `setScalar()` 会把那个负号抹掉，左翅当场翻到对侧去。
+   * 记下原值，缩放一律以它为基准做**乘法**。
+   */
+  restScale: THREE.Vector3
   /** +1 右翅，−1 左翅。⚠️ 左翅的 pivot 带 scale.z = −1，绕 Y/X 的旋转在观感上会反号，动作层要按它取符号 */
   side: 1 | -1
   /** 前翅 / 后翅。物种在 WingSpec 里显式给出才有值，kit 不做猜测 */
@@ -1352,6 +1359,7 @@ function collectRig(group: THREE.Group, tagged: { node: THREE.Object3D; tag: Rig
       wings.push({
         pivot: node,
         rest: node.rotation.clone(),
+        restScale: node.scale.clone(),
         side: tag.side,
         role: tag.role,
         base: node.getWorldPosition(new THREE.Vector3()),
