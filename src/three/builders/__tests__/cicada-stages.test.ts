@@ -16,6 +16,22 @@
  * 而是把顶点投影到垂直于部件自身长轴的平面上，绕一圈量支撑函数，
  * 取其中的最大值与最小值 —— 一块板的这两个值差一个数量级，
  * 一根饱满的纺锤体则相差无几。这个量和人在剪影里看到的是同一件事。
+ *
+ * ## 2026-08-18 补的两条，以及它们补的是哪一个窟窿
+ *
+ * 上一版的翅芽断言全绿，四个机位却一致把翅芽读成「胸背上的一块深色斑纹」。
+ * 复盘下来，**这些断言在结构上就管不住那个毛病**：
+ *
+ * - 它们只量了翅芽**自己**的尺寸（长、厚/宽、末端落在腹部前百分之几），
+ *   没有一条量**翅芽与体表之间的关系**。所以一片完全贴死在背上、
+ *   末端还埋进腹部表面 0.01 的膏药，与一片真正掀起一角的盖片，
+ *   在这些数字上一模一样。→ 补「后缘离体表的有符号高度」。
+ * - 明度那条写的是 `|胸背 − 翅芽| > 0.08`，**只管差多少、不管谁亮**。
+ *   当时翅芽 27% 比胸背 38% 还暗 0.119，这条一路全绿 ——
+ *   而「比自己趴着的那个面更暗」正是把凸起读成斑纹的直接原因。
+ *   → 换成有向的：翅芽**不许**比胸背暗。
+ *
+ * 两条都按老规矩自检过：把模型改回上一版，两条都当场红。
  */
 import * as THREE from 'three'
 import { describe, expect, it } from 'vitest'
@@ -122,6 +138,63 @@ function localSize(m: THREE.Mesh): THREE.Vector3 {
   const s = new THREE.Vector3()
   m.geometry.boundingBox!.getSize(s)
   return s
+}
+
+/**
+ * 一片沿自身 +X 长出的薄板：长、宽，以及**逐片量出来的厚**。
+ *
+ * 厚为什么不能直接取局部包围盒的 y 跨度：翅芽的后半段是翘起来的，
+ * 中心线本身有一段高度差，包围盒的 y 跨度里混着这段抬升 ——
+ * 越翘就越「厚」，而那跟人看到的「扁不扁」毫无关系。
+ * 所以沿长轴切 24 片，每片内部的 y 跨度才是那一处**自己的**厚度，取各片最大值。
+ */
+function bladeSize(m: THREE.Mesh): { length: number; thick: number; width: number } {
+  const pos = m.geometry.getAttribute('position')
+  let x0 = Infinity
+  let x1 = -Infinity
+  let z0 = Infinity
+  let z1 = -Infinity
+  for (let i = 0; i < pos.count; i++) {
+    x0 = Math.min(x0, pos.getX(i))
+    x1 = Math.max(x1, pos.getX(i))
+    z0 = Math.min(z0, pos.getZ(i))
+    z1 = Math.max(z1, pos.getZ(i))
+  }
+  const SLICES = 24
+  const lo = new Array<number>(SLICES).fill(Infinity)
+  const hi = new Array<number>(SLICES).fill(-Infinity)
+  for (let i = 0; i < pos.count; i++) {
+    const k = Math.min(SLICES - 1, Math.max(0, Math.floor(((pos.getX(i) - x0) / (x1 - x0)) * SLICES)))
+    lo[k] = Math.min(lo[k], pos.getY(i))
+    hi[k] = Math.max(hi[k], pos.getY(i))
+  }
+  let thick = 0
+  for (let k = 0; k < SLICES; k++) if (hi[k] > lo[k]) thick = Math.max(thick, hi[k] - lo[k])
+  return { length: x1 - x0, thick, width: z1 - z0 }
+}
+
+/**
+ * 一个点相对体表的**有符号**高度，沿 `up` 方向量：正 = 浮在体表之上，负 = 埋在体表里。
+ *
+ * 做法是从这个点**正上方很远处**沿 −up 打一条射线，取第一次撞到体表的距离减去
+ * 那个高度。这样写有两个好处：一次射线就同时覆盖「浮着」与「埋着」两种情况
+ * （埋着时命中点在射线原点与该点之间，差值自然为负），
+ * 而且不用先判断点在体内还是体外 —— 判断内外本身就是个容易写错的活。
+ *
+ * `finalize()` 给不透明材质统一开了双面，所以射线从哪一侧打都能命中体表。
+ */
+function heightAboveBody(
+  p: THREE.Vector3,
+  up: THREE.Vector3,
+  body: readonly THREE.Mesh[],
+  rc: THREE.Raycaster,
+): number | null {
+  const H = 4
+  rc.set(p.clone().addScaledVector(up, H), up.clone().negate())
+  rc.near = 0
+  rc.far = 3 * H
+  const hits = rc.intersectObjects(body as THREE.Mesh[], false)
+  return hits.length ? hits[0].distance - H : null
 }
 
 /*
@@ -321,17 +394,19 @@ describe('黑蚱蝉若虫（知了猴） buildCicadaNymph', () => {
     const pads = meshesByName(model.group, 'wing-pad')
     expect(pads.length, '翅芽应是一对').toBe(2)
 
-    // 翅芽的几何是沿自身 +X 建的，局部包围盒就是 (长, 厚, 宽)，不需要再投影
-    const s = localSize(pads[0])
-    const flat = s.y / s.z
+    // 翅芽的几何是沿自身 +X 建的，长/宽直接取局部跨度；厚要逐片量（见 bladeSize 的注释）
+    const s = bladeSize(pads[0])
+    const flat = s.thick / s.width
     // eslint-disable-next-line no-console
-    console.log(`[cicada-nymph] 翅芽 长=${s.x.toFixed(3)} 厚=${s.y.toFixed(3)} 宽=${s.z.toFixed(3)} 厚/宽=${flat.toFixed(3)}`)
+    console.log(
+      `[cicada-nymph] 翅芽 长=${s.length.toFixed(3)} 厚=${s.thick.toFixed(3)} 宽=${s.width.toFixed(3)} 厚/宽=${flat.toFixed(3)}`,
+    )
     expect(flat, `翅芽厚/宽 ${flat.toFixed(2)}，太厚了，读不出「扁芽」`).toBeLessThanOrEqual(0.45)
     expect(flat, `翅芽厚/宽 ${flat.toFixed(2)}，薄成一张纸片了`).toBeGreaterThanOrEqual(0.12)
 
     // 长度：完整的成虫前翅是体长的 ~87%（cicada.ts 里前翅 2.75 / 体长 ~3.2）。
     // 翅芽必须明显短于它，否则「翅还是芽」这句话在画面上不成立。
-    const rel = s.x / trunkSize.x
+    const rel = s.length / trunkSize.x
     expect(rel, `翅芽长 = 体长的 ${(rel * 100).toFixed(0)}%，太长了，已经是一副翅而不是芽`).toBeLessThanOrEqual(0.45)
     expect(rel, `翅芽长 = 体长的 ${(rel * 100).toFixed(0)}%，短到看不出是翅`).toBeGreaterThanOrEqual(0.22)
 
@@ -351,6 +426,81 @@ describe('黑蚱蝉若虫（知了猴） buildCicadaNymph', () => {
     )
     expect(into, '翅芽根本没搭到腹部，停在胸部上了').toBeGreaterThan(0.1)
     expect(into, `翅芽盖到腹部 ${(into * 100).toFixed(0)}% 处，那已经是成虫的翅了`).toBeLessThan(0.5)
+  })
+
+  it('翅芽是掀起一角的盖片，不是贴上去的一片膏药 —— 后缘离开体表、前端仍贴合', () => {
+    /*
+     * 这一条补的是上一版最大的窟窿：所有翅芽断言都只量翅芽**自己**，
+     * 没有一条量它与体表的关系，于是一片贴死在背上、末端还埋进腹部表面 0.01
+     * 的膏药一路全绿，四个机位却一致读成「胸背上的一块深色斑纹」。
+     *
+     * 量的是**沿翅芽自身「上」方向**的有符号高度，不是沿世界 +Y：
+     * 翅芽要离开的是它自己趴着的那个面，而那个面是斜的（外倾 40°），
+     * 用世界 +Y 量会把「向外张开」误当成「抬起来」。
+     */
+    const pad = meshesByName(model.group, 'wing-pad').filter((m) => centroid(worldPoints(m)).z > 0)[0]
+    expect(pad, '找不到右侧翅芽').toBeTruthy()
+    const up = new THREE.Vector3(0, 1, 0).transformDirection(pad.matrixWorld).normalize()
+    const body = ['head', 'clypeus', 'pronotum', 'mesonotum', 'abdomen', 'abdomen-membrane'].flatMap((n) =>
+      meshesByName(model.group, n),
+    )
+    expect(body.length, '找不到躯干网格').toBeGreaterThan(3)
+
+    const rc = new THREE.Raycaster()
+    const pos = pad.geometry.getAttribute('position')
+    let lx0 = Infinity
+    let lx1 = -Infinity
+    for (let i = 0; i < pos.count; i++) {
+      lx0 = Math.min(lx0, pos.getX(i))
+      lx1 = Math.max(lx1, pos.getX(i))
+    }
+    /** 按沿翅芽长轴的参数 t 取一段顶点，返回它们相对体表的有符号高度 */
+    const heights = (from: number, to: number): number[] => {
+      const out: number[] = []
+      for (let i = 0; i < pos.count; i++) {
+        const t = (pos.getX(i) - lx0) / (lx1 - lx0)
+        if (t < from || t > to) continue
+        const p = new THREE.Vector3(pos.getX(i), pos.getY(i), pos.getZ(i)).applyMatrix4(pad.matrixWorld)
+        const h = heightAboveBody(p, up, body, rc)
+        if (h !== null) out.push(h)
+      }
+      return out
+    }
+
+    const rear = heights(0.95, 1)
+    const front = heights(0, 0.2)
+    expect(rear.length, '后缘一个采样点都没打到体表').toBeGreaterThan(8)
+    expect(front.length, '前段一个采样点都没打到体表').toBeGreaterThan(8)
+    const rearMin = Math.min(...rear)
+    const rearMax = Math.max(...rear)
+    /*
+     * 前段量的是 **max** 不是 min，这一点是变异测试逼出来的：
+     * 翅芽的内缘天生就深埋在背中线里（实测 −0.16），min 一直是个很负的数，
+     * 于是「把整片翅芽平移着抬起来」这种退化（前端也浮空了）照样能过。
+     * max 才是「这一段里最露头的那个点」，它贴着体表，整片才是贴着体表的。
+     */
+    const frontMax = Math.max(...front)
+    // eslint-disable-next-line no-console
+    console.log(
+      `[cicada-nymph] 翅芽后缘离体表 ${rearMin.toFixed(3)}~${rearMax.toFixed(3)}（沿翅芽自身法向），` +
+        `前段最露头处 ${frontMax.toFixed(3)}`,
+    )
+
+    /*
+     * 下限 0.035：低于这个数，成图里投不出一条看得见的缝（体长 3.2 的虫，
+     * 0.035 只有 5~6 个像素），翅芽就退回「一块贴上去的斑」。
+     * 上限 0.14：再高翅芽就脱离躯干飘起来了 —— 那是兔耳朵不是贴伏的翅芽。
+     * 上下限一起给是这个项目的老规矩：天蛾的喙只给了下限，长成了一根标枪。
+     */
+    expect(rearMin, `翅芽后缘离体表只有 ${rearMin.toFixed(3)}，投不出缝，会读成贴在背上的一块斑`).toBeGreaterThan(0.035)
+    expect(rearMax, `翅芽后缘翘到 ${rearMax.toFixed(3)}，脱离躯干了，那是兔耳朵不是翅芽`).toBeLessThan(0.14)
+
+    /*
+     * 前端必须仍然贴着胸背 —— 否则「后缘翘起」就退化成「整片浮在背上的板」，
+     * 那同样不是翅芽。真实若虫的翅芽基部是**埋在**中胸里、从前胸背板后缘
+     * 底下长出来的，所以这里连「刚好齐平」都算宽松，取 0.03 当上限。
+     */
+    expect(frontMax, `翅芽前段离体表 ${frontMax.toFixed(3)}，整片浮起来了，不是长在胸背上的芽`).toBeLessThan(0.03)
   })
 
   it('刺吸式喙存在，向后贴伏在腹面，不是向下扎的一根标枪', () => {
@@ -378,11 +528,11 @@ describe('黑蚱蝉若虫（知了猴） buildCicadaNymph', () => {
     expect(box.max.y, '喙整根都应在躯干中线以下（腹面）').toBeLessThan(trunkMidY)
   })
 
-  it('通体土褐，但翅芽与开掘足必须靠明度差与胸背分得开', () => {
+  it('通体土褐，但翅芽绝不许比胸背暗，开掘足必须靠明度差跳出来', () => {
     /*
      * 第 5 轮 10 只里 7 只返工，一半原因是「颜色压过了头」：招牌图案压成
      * 深灰叠深灰，在画面上直接消失，而断言只看基色 HSL 一路全绿。
-     * 这只通体土褐，正是最容易糊成一团的那种配色，所以把明度差本身钉住。
+     * 这只通体土褐，正是最容易糊成一团的那种配色，所以把明度关系本身钉住。
      */
     const l = (n: string) => lightnessOf(meshesByName(model.group, n)[0])
     const thorax = l('mesonotum')
@@ -391,11 +541,30 @@ describe('黑蚱蝉若虫（知了猴） buildCicadaNymph', () => {
     const vein = l('pad-vein')
     // eslint-disable-next-line no-console
     console.log(
-      `[cicada-nymph] 明度 胸背=${thorax.toFixed(3)} 翅芽=${pad.toFixed(3)} 开掘足=${femur.toFixed(3)} 翅脉=${vein.toFixed(3)}`,
+      `[cicada-nymph] 明度 胸背=${thorax.toFixed(3)} 翅芽=${pad.toFixed(3)}（差 ${(pad - thorax >= 0 ? '+' : '') + (pad - thorax).toFixed(3)}）` +
+        ` 开掘足=${femur.toFixed(3)} 翅脉=${vein.toFixed(3)}`,
     )
-    expect(Math.abs(thorax - pad), '翅芽与胸背的明度差太小，会在土褐里糊成一片').toBeGreaterThan(0.08)
+
+    /*
+     * 这一条是**有向的**，上一版写成 `|胸背 − 翅芽| > 0.08` 是个结构性错误：
+     * 它只管差多少、不管谁亮，于是翅芽 27% 比胸背 38% 暗 0.119 时照样全绿 ——
+     * 而「一块比背景更暗的色块贴在浅色面上」正是人眼把凸起读成斑纹/污渍的
+     * 直接原因，四个机位一致读成「胸背上的一块深色斑」就是这么来的。
+     * 真实蝉若虫的翅芽与胸背是同一个褐色系、明度相当，靠**形**被认出来。
+     * 所以这里只钉一件事：**翅芽不许比胸背暗**。
+     * 上限 0.12 拦另一头 —— 亮成一块白斑同样是「靠色不靠形」。
+     */
+    const padOverThorax = pad - thorax
+    expect(
+      padOverThorax,
+      `翅芽(${pad.toFixed(3)})比胸背(${thorax.toFixed(3)})暗了 ${(-padOverThorax).toFixed(3)}：` +
+        '深色块贴在浅色面上只会读成斑纹，不会读成盖在上面的一片翅芽',
+    ).toBeGreaterThanOrEqual(0)
+    expect(padOverThorax, `翅芽比胸背亮 ${padOverThorax.toFixed(3)}，成了一块白斑，还是在靠色不靠形`).toBeLessThan(0.12)
+
     expect(Math.abs(thorax - femur), '开掘足与胸背的明度差太小，招牌结构会消失').toBeGreaterThan(0.08)
-    expect(Math.abs(vein - pad), '翅脉与翅芽的明度差太小，翅芽会读成一块黑斑').toBeGreaterThan(0.15)
+    // 翅缘/翅脉是勾轮廓的那一档浅色，翅芽提亮之后它必须跟着还站得住
+    expect(vein - pad, '翅脉没比翅芽亮出一档，翅芽的轮廓与翅脉会一起糊掉').toBeGreaterThan(0.15)
   })
 
   it('anchors 齐备且无 NaN', () => {

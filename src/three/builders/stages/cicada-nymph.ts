@@ -29,7 +29,27 @@
  * 2. **翅芽（wing pad）**：中后胸背侧一对短而扁的芽状突起，向后贴伏，
  *    末端只搭到腹部前 39%（约第 2~3 节），**不是完整的翅**；
  *    作为对照，成虫的前翅有体长的 ~87% 长（`cicada.ts` 里 2.75）。
- *    翅缘与三条翅脉用浅色，与深色芽面拉开明度差，让「这是没长开的翅」看得出来。
+ *
+ *    **第一版栽在这里，而且栽得很彻底**：四个机位一致把它读成「胸背上的一块
+ *    深色斑纹」，不是「一片翘起来的芽」。当时归因给「侧视角度与 40° 外倾的折中」，
+ *    是错的。真正的两个根因都不是角度：
+ *
+ *    a. **明度排反了。** 翅芽 27% 比它趴着的那个面（胸背 38%）还暗。
+ *       深色块贴在浅色面上，人眼的第一解释永远是「斑纹/污渍」，不是
+ *       「盖在上面的一片东西」—— 顶视机位角度最有利，照样读成两道深色条纹，
+ *       这条就足以排除角度的嫌疑。真实蝉若虫的翅芽与胸背是**同一个褐色系、
+ *       明度相当**，靠形被认出来，不靠色。所以现在翅芽 41% ≥ 胸背 38%，
+ *       **区分一律交给形**。
+ *    b. **整片贴着体表走，末端与体表之间没有缝。** 实测末端到腹部表面的
+ *       间隙是 −0.01（即末端正埋在腹部表面里），一条阴影缝都投不出来，
+ *       那当然只能读成一块贴上去的膏药。真实若虫的翅芽后缘是**自由的**、
+ *       微微外张。所以现在后半段沿自身「上」方向翘起（见 `padLift`），
+ *       末端离体表约 0.06。
+ *
+ *    翅缘与三条翅脉的浅色（61%）保留 —— 顶视之所以还勉强读得出形状全靠它，
+ *    这说明「靠形」这条路本来就是通的，只是芽面主体没跟上。翅缘另外挪到了
+ *    芽面的上棱上，从「画在面上的一条亮线」变成一道**有明暗转折的棱**；
+ *    基部再加一道横跨的肩棱，翅芽才有自己闭合的轮廓，不是从胸背上渐变出来的。
  * 3. **刺吸式喙**：半翅目的口器，从头部腹面向后贴着腹面伸到中足之间。
  * 4. **膨大的后唇基**：额前那个带横向沟纹的大鼓包，里面是抽树汁的唧筒肌肉，
  *    是蝉（成虫与若虫都有）最好认的头部特征之一。
@@ -49,9 +69,13 @@
  *
  * 通体土褐（地下待数年、体表挂泥），最大的风险是压成一团分不出结构的深棕。
  * 所以明度是按档排的（sRGB 空间）：翅脉/翅缘 61% > 开掘足 52% > 腹部 44% >
- * 唇基 41% > 胸背 38% > 中后足 37% > 头 36% > 翅芽 27% > 蜕裂线 19% > 齿突与爪 11%。
+ * 翅芽 41% > 唇基 41% > 胸背 38% > 中后足 37% > 头 36% > 蜕裂线 19% > 齿突与爪 11%。
  * 开掘足比躯干**亮**是有依据的：常年掘土磨得发亮，实物就是琥珀色的光面，
  * 顺带让招牌结构从土褐的躯干上跳出来。
+ * 翅芽与胸背**同档**（41% vs 38%，还略亮一点点）是这一版最要紧的一处改动，
+ * 理由见上面招牌结构第 2 条 —— 「比背景更暗」只会把一个凸起读成一块斑。
+ * 它靠低一档的饱和度（32% vs 胸背 52%）和更高的 gloss 与胸背分开：
+ * 芽面是光的，胸背是挂泥的 punctate，两者在同一束光下的反应本就不一样。
  * 泥土质感靠 `surface: 'punctate'`（随机圆坑法线 + 坑内更糙）+ 极低 gloss。
  *
  * 单位与坐标系同成虫：1 = 1 厘米真实体长，+X 向前（头）、+Y 向上（背）、+Z 向右。
@@ -89,6 +113,23 @@ const FEMUR_R = 0.23
 const PAD_BASE: readonly [number, number, number] = [0.92, 0.34, 0.33]
 const PAD_TIP: readonly [number, number, number] = [-0.24, 0.23, 0.47]
 const PAD_DROOP = THREE.MathUtils.degToRad(40)
+
+/**
+ * 后缘翘起量：末端沿翅芽自身的「上」方向抬离体表多少（单位同全局，1 = 1 厘米）。
+ *
+ * 这是「盖片」与「膏药」的分界线。第一版这个量是 0 —— 整片翅芽贴着体表走，
+ * 末端实测甚至埋进腹部表面 0.01，于是它与体表之间一条阴影缝都没有，
+ * 四个机位一致读成一块深色斑纹。真实若虫的翅芽只有基部固定在胸上，
+ * 后缘是自由的、微微外张，「掀起一角」才是它的正确长相。
+ *
+ * 0.085 是按「投得出阴影、又不至于翘成兔耳朵」定的：末端间隙约 0.06，
+ * 在 3.2 厘米长的虫上是体长的 2%，成图里约 10 像素宽的一道缝 —— 看得见，
+ * 又不会让翅芽脱离躯干飘在空中。前 45% 不抬（PAD_LIFT_FROM），
+ * 因为翅芽的前端本来就是长在胸背上的，抬起来就成了浮在背上的一块板。
+ */
+const PAD_LIFT = 0.085
+/** 从翅芽长度的百分之几处开始翘 —— 之前仍贴合胸背 */
+const PAD_LIFT_FROM = 0.45
 
 // ---------------------------------------------------------------- 躯干断面表
 
@@ -144,15 +185,21 @@ const CLYPEUS: readonly Station[] = [
   [1.86, -0.02, 0.07, 0.06],
 ]
 
-/** 翅芽沿自身长轴的断面：[t, 半厚(背腹), 半宽(横向)]。基部窄 → 中段最宽 → 末端收成钝尖 */
+/**
+ * 翅芽沿自身长轴的断面：[t, 半厚(背腹), 半宽(横向)]。基部窄 → 中段最宽 → 末端收成钝圆。
+ *
+ * 末端不收成针尖（第一版末端半宽只有 0.026）：后缘要能投出一道有宽度的阴影缝，
+ * 尖成一点的末端在成图里连一条缝都占不满。真实的翅芽末端也是钝圆的一片。
+ */
 const PAD_PROFILE: readonly (readonly [number, number, number])[] = [
   [0, 0.04, 0.085],
   [0.12, 0.068, 0.19],
   [0.28, 0.066, 0.262],
   [0.5, 0.058, 0.278],
-  [0.72, 0.046, 0.242],
-  [0.88, 0.03, 0.152],
-  [1, 0.01, 0.026],
+  [0.72, 0.046, 0.246],
+  [0.86, 0.036, 0.198],
+  [0.95, 0.026, 0.132],
+  [1, 0.012, 0.046],
 ]
 
 // ---------------------------------------------------------------- 局部工具
@@ -326,6 +373,20 @@ function diggingForeleg(
 }
 
 /**
+ * 后缘翘起的包络：t 是沿翅芽长轴的参数（0 基部 / 1 末端），返回沿局部 +Y 抬起的量。
+ *
+ * 用 k²（缓入）而不是 smoothstep：smoothstep 在末端把斜率收回 0，翅芽会以
+ * 「平行于体表」的姿态结束，看起来像被压住的；k² 的斜率在末端最大，
+ * 后缘是越翘越开的 —— 那才是一片自由边的样子。起点处斜率为 0，
+ * 所以贴合段与翘起段之间不会出现一道折角。
+ */
+function padLift(t: number): number {
+  if (t <= PAD_LIFT_FROM) return 0
+  const k = (t - PAD_LIFT_FROM) / (1 - PAD_LIFT_FROM)
+  return PAD_LIFT * k * k
+}
+
+/**
  * 一枚翅芽（side = 1 右 / −1 左）。
  *
  * 姿态**显式给三根轴**，不用 `quaternion.setFromUnitVectors()`：
@@ -341,58 +402,106 @@ function wingPad(side: 1 | -1, padMaterial: THREE.Material, veinMaterial: THREE.
 
   const g = new THREE.Group()
 
-  // 局部几何沿 +X 长出：loft 的标架在这个走向下是 ry→+Y（厚）、rz→+Z（宽），
-  // 所以扁平面的法线就是局部 +Y，正好交给下面的 makeBasis 去指方向。
-  const blade = new THREE.Mesh(
-    loft(
-      PAD_PROFILE.map(([t, ry, rz]) => ({ at: new THREE.Vector3(t * len, 0, 0), ry, rz })),
-      20,
-    ),
-    padMaterial,
-  )
+  const sample = (t: number, col: 1 | 2): number => {
+    for (let i = 0; i < PAD_PROFILE.length - 1; i++) {
+      const a = PAD_PROFILE[i]
+      const b = PAD_PROFILE[i + 1]
+      if (t >= a[0] && t <= b[0]) return THREE.MathUtils.lerp(a[col], b[col], (t - a[0]) / (b[0] - a[0]))
+    }
+    return PAD_PROFILE[PAD_PROFILE.length - 1][col]
+  }
+  const halfThick = (t: number) => sample(t, 1)
+  const halfWidth = (t: number) => sample(t, 2)
+
+  /*
+   * 局部几何沿 +X 长出：loft 的标架在这个走向下是 ry→+Y（厚）、rz→+Z（宽），
+   * 所以扁平面的法线就是局部 +Y，正好交给下面的 makeBasis 去指方向。
+   *
+   * 站位数从 PAD_PROFILE 的 8 个加密到 16 个：中心线现在是弯的（padLift），
+   * 8 个站位会把这条弧折成几段直线，翘起来那一段会出现两道假棱。
+   * 断面形状仍然只由 PAD_PROFILE 定义，这里只是重采样。
+   */
+  const STATIONS = 16
+  const sections: Section[] = []
+  for (let i = 0; i <= STATIONS; i++) {
+    const t = i / STATIONS
+    sections.push({ at: new THREE.Vector3(t * len, padLift(t), 0), ry: halfThick(t), rz: halfWidth(t) })
+  }
+  const blade = new THREE.Mesh(loft(sections, 20), padMaterial)
   blade.name = 'wing-pad'
   g.add(blade)
 
-  const halfWidth = (t: number): number => {
-    for (let i = 0; i < PAD_PROFILE.length - 1; i++) {
-      const a = PAD_PROFILE[i]
-      const b = PAD_PROFILE[i + 1]
-      if (t >= a[0] && t <= b[0]) return THREE.MathUtils.lerp(a[2], b[2], (t - a[0]) / (b[0] - a[0]))
-    }
-    return PAD_PROFILE[PAD_PROFILE.length - 1][2]
-  }
-  const halfThick = (t: number): number => {
-    for (let i = 0; i < PAD_PROFILE.length - 1; i++) {
-      const a = PAD_PROFILE[i]
-      const b = PAD_PROFILE[i + 1]
-      if (t >= a[0] && t <= b[0]) return THREE.MathUtils.lerp(a[1], b[1], (t - a[0]) / (b[0] - a[0]))
-    }
-    return PAD_PROFILE[PAD_PROFILE.length - 1][1]
-  }
-
-  // 翅缘：两侧各一条浅色细边。真实翅芽的边缘就是加厚且色浅的一圈，
-  // 在这里还兼职把「这是一片有轮廓的翅」从深色芽面上勾出来。
-  for (const edge of [1, -1]) {
+  /*
+   * 翅缘。两条边**不对称**，这一点很要紧：
+   *
+   * - 外缘（局部 −Z，落在体侧那一边）是真正的**前缘**，也是翅芽唯一自由的
+   *   那条边。它用浅色、做粗一档，并且压在芽面的中面上（y ≈ 0）——
+   *   那是它在剪影里的位置。
+   * - 内缘（局部 +Z，压在背中线那一边）只用**翅芽自己的材质**做一道细棱。
+   *
+   * 第一版两边都用浅色、都架在上棱上，出图读成「一枚椭圆徽章」：一圈亮边
+   * 围着一块暗地，人眼的第一解释是凹进去的碟，不是盖上去的片。
+   * 真实的翅芽也只有外缘是加厚发亮的一条，内缘是掖在背中线下面的。
+   */
+  for (const [edge, mat, r0, yk] of [
+    [-1, veinMaterial, 0.025, 0.06],
+    [1, padMaterial, 0.017, 0.4],
+  ] as const) {
     const pts: THREE.Vector3[] = []
     const rs: number[] = []
-    for (let i = 0; i <= 8; i++) {
-      const t = 0.06 + (i / 8) * 0.88
-      pts.push(new THREE.Vector3(t * len, 0, edge * (halfWidth(t) - 0.01)))
-      rs.push(0.021 * (1 - t * 0.5))
+    for (let i = 0; i <= 12; i++) {
+      const t = 0.06 + (i / 12) * 0.9
+      pts.push(new THREE.Vector3(t * len, padLift(t) + halfThick(t) * yk, edge * halfWidth(t) * 0.97))
+      rs.push(r0 * (1 - t * 0.45))
     }
-    const rim = taperedTube(pts, rs, veinMaterial, 8)
+    const rim = taperedTube(pts, rs, mat, 8)
     rim.name = 'pad-rim'
     g.add(rim)
+  }
+
+  /*
+   * 前缘的肩棱：一道横跨芽面的隆脊，位置就在翅芽**钻出胸背的那一处**。
+   *
+   * 翅芽的基部四分之一是埋在中胸里的（真实若虫也是这样：翅芽从前胸背板的
+   * 后缘底下长出来），所以人眼看到的「翅芽从哪儿开始」不在 t=0，
+   * 而在它露头的那条线上 —— 实测在 t ≈ 0.25。没有这道棱，露头处是芽面与
+   * 胸背两个曲面相切着**渐变**出来的一条软边，读不出边界；
+   * 有了它，翅芽的轮廓在前端闭合，成了一片有边界的盖片。
+   *
+   * 高度取 halfThick×0.95 + 管半径：必须真的**探出芽面的脊**才看得见。
+   * 第一版放在 halfThick×0.42 处，整条棱藏在芽面内部，等于没做
+   * ——「几何写了但埋在别的几何里」是这个项目反复踩的坑（东方蝼蛄的挖掘足、
+   * 蝉卵的卵室底都栽过），改完一定要回到出图上确认它真的露出来了。
+   *
+   * 刻意用翅芽自己的材质而不是浅色翅缘色 —— 这道棱要靠明暗转折被看见，
+   * 画一条亮线就又退回「靠色不靠形」了。
+   */
+  {
+    const t0 = 0.27
+    const w = halfWidth(t0)
+    const pts: THREE.Vector3[] = []
+    const rs: number[] = []
+    for (let i = 0; i <= 10; i++) {
+      const u = -1 + (i / 10) * 2
+      // 中间略向前（−x）鼓一点：真实翅芽的前缘是一道弧，不是一根横杠
+      pts.push(
+        new THREE.Vector3(t0 * len - (1 - u * u) * 0.05, padLift(t0) + halfThick(t0) * 0.95, u * w * 0.92),
+      )
+      rs.push(0.027 * (1 - Math.abs(u) * 0.35))
+    }
+    const shoulder = taperedTube(pts, rs, padMaterial, 10)
+    shoulder.name = 'pad-shoulder'
+    g.add(shoulder)
   }
 
   // 三条翅脉：从基部向末端扇开 —— 这是「里面装的确实是一副翅」的可视证据
   for (const k of [-1, 0, 1]) {
     const pts: THREE.Vector3[] = []
     const rs: number[] = []
-    for (let i = 0; i <= 6; i++) {
-      const t = 0.14 + (i / 6) * 0.76
-      const spread = THREE.MathUtils.lerp(0.02, 0.062, (t - 0.14) / 0.76)
-      pts.push(new THREE.Vector3(t * len, halfThick(t) * 0.86, k * spread))
+    for (let i = 0; i <= 10; i++) {
+      const t = 0.2 + (i / 10) * 0.72
+      const spread = THREE.MathUtils.lerp(0.02, 0.072, (t - 0.2) / 0.72)
+      pts.push(new THREE.Vector3(t * len, padLift(t) + halfThick(t) * 0.86, k * spread))
       rs.push(0.014 * (1 - t * 0.4))
     }
     const vein = taperedTube(pts, rs, veinMaterial, 6)
@@ -401,10 +510,16 @@ function wingPad(side: 1 | -1, padMaterial: THREE.Material, veinMaterial: THREE.
   }
 
   const xAxis = tip.clone().sub(base).normalize()
-  // 扁平面法线：从 +Y 向外侧倾 40°（PAD_DROOP）—— 外缘下垂、内缘压在背上，
-  // 就是「贴伏」的姿态。角度是四机位出图调出来的折中：更小则顶视好看、侧视变成
-  // 一道划痕；更大则侧视好看、顶视看不见。40° 时翅芽的外缘在侧视里探出腹部
-  // 轮廓约 0.15，顶视也还能看到芽面。
+  /*
+   * 扁平面法线：从 +Y 向外侧倾 40°（PAD_DROOP）—— 外缘下垂、内缘压在背上，
+   * 就是「贴伏」的姿态。这个角度保留：第一版把翅芽读不出来的账算在它头上，
+   * 是算错了（顶视机位角度最有利、照样读成条纹，见文件头招牌结构第 2 条），
+   * 真正的两个根因是明度排反与后缘没缝，都跟外倾几度无关。
+   * 40° 时翅芽的外缘在侧视里探出腹部轮廓约 0.15，顶视也还能看到整片芽面。
+   *
+   * 注意后缘的翘起（padLift）是沿**这根 yAxis** 抬的，不是沿世界 +Y：
+   * 翅芽要离开的是它自己趴着的那个面，而那个面是斜的。
+   */
   const n = new THREE.Vector3(0, Math.cos(PAD_DROOP), Math.sin(PAD_DROOP) * side)
   const yAxis = n.addScaledVector(xAxis, -n.dot(xAxis)).normalize()
   const zAxis = new THREE.Vector3().crossVectors(xAxis, yAxis)
@@ -425,7 +540,15 @@ export function buildCicadaNymph(): InsectModel {
   const headMat = chitin({ color: '#8a5a2c', gloss: 0.18, surface: 'punctate' })
   const clypeusMat = chitin({ color: '#9c6a35', gloss: 0.2, surface: 'punctate' })
   const clypeusGrooveMat = chitin({ color: '#6b4520', gloss: 0.18 })
-  const padMat = chitin({ color: '#68471f', gloss: 0.22 })
+  /*
+   * 翅芽：41% 明度，与胸背（38%）同档、还略亮一点点。
+   * 这是这一版最关键的一处 —— 它此前是 27%，比自己趴着的那个面还暗，
+   * 于是四个机位一致读成「胸背上的一块深色斑纹」（详见文件头）。
+   * 饱和度压到 32%（胸背 52%）、gloss 提到 0.3 且不上 punctate：
+   * 芽面是光的，胸背是挂泥的，同一束光下两者的反应不一样 ——
+   * 这是**质感差**，跟明度差不是一回事，也不会把凸起读成斑。
+   */
+  const padMat = chitin({ color: '#8d6f46', gloss: 0.3, clearcoat: 0.12 })
   const padVeinMat = chitin({ color: '#c2a074', gloss: 0.25 })
   const foreMat = chitin({ color: '#c08b48', gloss: 0.38, clearcoat: 0.2 }) // 掘土磨亮：全身最亮的结构色
   const toothMat = chitin({ color: '#2a1a0c', gloss: 0.45, clearcoat: 0.25 })
@@ -456,7 +579,9 @@ export function buildCicadaNymph(): InsectModel {
     r0: 0.47,
     r1: 0.31,
     segments: 7,
-    groove: 0.13,
+    // 0.13 时侧视里的节间棱偏硬，像一串套在一起的圆环；知了猴的腹是软的、
+    // 节间沟只是一道浅浅的凹陷（脱壳前腹部还要胀大），所以浅一档到 0.1
+    groove: 0.1,
     flat: 1.02,
     bulge: 0.4,
     color: abdomenColor,
@@ -545,15 +670,17 @@ export function buildCicadaNymph(): InsectModel {
 
   /*
    * 中足与后足：普通行走足，细。
-   * thickness 0.062 → 最粗处约 0.097，与开掘足腿节的 0.266 差 2.7 倍，
+   * thickness 0.070 → 最粗处约 0.11，与开掘足腿节的 0.266 差 2.4 倍，
    * 这个差值就是「三对腿不一样粗」这句话的可测形式。
+   * 从 0.062 提到 0.070 是因为四机位实拍里中后足细得像铁丝、
+   * 与躯干的质感脱节；与前足的反差仍然一眼看得出（下限 2.2 还留着余量）。
    * 名字统一打成 walk-leg，测试按名字取「最粗处」与前足对比。
    */
   for (const spec of [
     { base: [0.62, -0.26, 0.44] as [number, number, number], femur: 0.38, tibia: 0.36, tarsus: 0.16, splay: 18, sweep: 14, knee: 82 },
     { base: [0.18, -0.28, 0.43] as [number, number, number], femur: 0.42, tibia: 0.4, tarsus: 0.18, splay: 16, sweep: 38, knee: 84 },
   ]) {
-    const pair = legPair({ ...spec, thickness: 0.062 }, legMat)
+    const pair = legPair({ ...spec, thickness: 0.07 }, legMat)
     pair.traverse((o) => {
       if ((o as THREE.Mesh).isMesh) o.name = 'walk-leg'
     })
