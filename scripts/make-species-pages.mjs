@@ -112,6 +112,85 @@ function ogImageFor(id, locale) {
   return locale === 'zh' ? `${SITE}/og.png` : `${SITE}/og-en.png`
 }
 
+// ---------- 静态正文（SEO） ----------
+
+/**
+ * 壳页要不要带可爬的正文？要，而且这是这套壳页真正的价值所在。
+ *
+ * 之前的壳页只有 title / description / og，`<body>` 里的可见文字长度是 **0** ——
+ * 正文要等 JS 跑完才有。Google 能渲染 JS 但优先级低、延迟大，**百度基本不行**，
+ * 而中文访客是第一大来源。结果是 126 个本该带来长尾流量的入口全部空转：
+ * 实测只有首页被收录，`/s/<id>/` 一张都没进。
+ *
+ * ## 为什么放进 `#root` 里面
+ *
+ * `createRoot(el).render()` 在首次渲染时会清空容器，所以这段静态正文
+ * **会被应用接管**，用户最终看到的还是那个 SPA。这不是「给爬虫看一套、
+ * 给用户看另一套」—— 内容与应用里显示的是同一份数据，只是先用纯 HTML 呈一遍。
+ *
+ * 顺带修掉一件事：在这之前，从落地到应用挂载之间 `#root` 是空的，
+ * 移动端 4G 冷缓存那 2.6 秒是纯白等；现在那 2.6 秒里已经可以读这只虫了。
+ * 所以这段的排版要**当成正式内容排**，不能是一坨裸文字。
+ *
+ * ⚠️ 内联样式里的字体名必须用**单引号**：整段样式是塞进 `style="…"` 的双引号
+ * 属性里的，字体名再用双引号会把属性提前截断 —— 浏览器容错所以肉眼看不出来，
+ * 但属性后半截（颜色、行高）实际被丢掉了，而且生成的是畸形 HTML，
+ * 爬虫的解析器未必同样宽容。这正是这段代码存在的理由所反对的。
+ *
+ * ⚠️ 用内联样式而不是类名：`global.css` 里的类是带内容哈希的 CSS Module，
+ * 名字每次构建都变，脚本追不上；而颜色走 CSS 变量并带回退值，
+ * 明暗两套主题都能看（`theme-boot.js` 在首帧前就设好了 data-theme）。
+ */
+const PANEL = {
+  zh: { facts: '关键数据', ecology: '生态角色', trivia: '你知道吗', life: '生活史', range: '分布', status: '状态', more: '打开可交互的 3D 标本' },
+  en: { facts: 'Key figures', ecology: 'Ecological role', trivia: 'Did you know', life: 'Life cycle', range: 'Range', status: 'Status', more: 'Open the interactive 3D specimen' },
+}
+
+const S = {
+  wrap: 'max-width:46rem;margin:0 auto;padding:3rem 1.25rem 4rem;font-family:\'Noto Serif SC\',Georgia,serif;color:var(--ink,#2b2622);line-height:1.75',
+  name: 'font-family:\'Playfair Display\',Georgia,serif;font-size:2rem;margin:0 0 .25rem',
+  latin: 'font-style:italic;opacity:.72;margin:0 0 .1rem',
+  epithet: 'color:var(--bronze,#7d6128);margin:0 0 1.25rem',
+  h2: 'font-size:.82rem;letter-spacing:.14em;text-transform:uppercase;opacity:.6;margin:1.6rem 0 .5rem;font-family:system-ui,sans-serif',
+  dl: 'display:grid;grid-template-columns:auto 1fr;gap:.35rem 1rem;margin:0',
+  dt: 'opacity:.62',
+  dd: 'margin:0',
+  p: 'margin:0',
+  ul: 'margin:0;padding-left:1.1rem',
+}
+
+/** 生成一页的静态正文。内容与应用里显示的是同一份数据。 */
+function staticBody(locale, insect) {
+  const L = PANEL[locale]
+  const li = (x) => `<li>${esc(x)}</li>`
+  return [
+    `<article style="${S.wrap}">`,
+    `<h1 style="${S.name}">${esc(insect.name)}</h1>`,
+    `<p style="${S.latin}">${esc(insect.latin)}</p>`,
+    `<p style="${S.epithet}">${esc(insect.epithet)}</p>`,
+    `<p style="${S.p}">${esc(insect.summary)}</p>`,
+    `<h2 style="${S.h2}">${esc(L.facts)}</h2>`,
+    `<dl style="${S.dl}">`,
+    ...insect.facts.map((f) => `<dt style="${S.dt}">${esc(f.key)}</dt><dd style="${S.dd}">${esc(f.value)}</dd>`),
+    `</dl>`,
+    `<h2 style="${S.h2}">${esc(L.life)}</h2>`,
+    `<p style="${S.p}">${insect.lifecycle.map(esc).join(' → ')}</p>`,
+    `<h2 style="${S.h2}">${esc(L.ecology)}</h2>`,
+    `<p style="${S.p}">${esc(insect.ecology)}</p>`,
+    `<h2 style="${S.h2}">${esc(L.trivia)}</h2>`,
+    `<p style="${S.p}">${esc(insect.trivia)}</p>`,
+    `<h2 style="${S.h2}">${esc(L.range)}</h2>`,
+    `<p style="${S.p}">${esc(insect.range)}</p>`,
+    `<h2 style="${S.h2}">${esc(L.status)}</h2>`,
+    `<p style="${S.p}">${esc(insect.status)}</p>`,
+    insect.hotspots?.length
+      ? `<h2 style="${S.h2}">${locale === 'zh' ? '身体构造' : 'Anatomy'}</h2><ul style="${S.ul}">${insect.hotspots.map((h) => li(`${h.label}${locale === 'zh' ? '：' : ' — '}${h.note}`)).join('')}</ul>`
+      : '',
+    `<p style="${S.h2};margin-top:2rem">${esc(L.more)}</p>`,
+    `</article>`,
+  ].join('')
+}
+
 function buildPage(locale, insect) {
   const t = templates[locale]
   const zhUrl = `${SITE}/s/${insect.id}/`
@@ -175,6 +254,18 @@ function buildPage(locale, insect) {
     /<meta property="og:image" content="[^"]*"\s*\/>/,
     `<meta property="og:image" content="${ogImageFor(insect.id, locale)}" />`,
     'og:image',
+  )
+
+  // 静态正文注入 #root —— 见 staticBody() 的注释
+  html = replaceOnce(
+    html,
+    /<div id="root"><\/div>/,
+    `<div id="root">${staticBody(locale, insect)}</div>`,
+    'root 容器',
+  )
+  assert(
+    html.includes(esc(insect.summary.slice(0, 20))),
+    `${insect.id} 的壳页里没有 summary —— 静态正文注入失败，这页对爬虫又变回空的了`,
   )
 
   const dir =
