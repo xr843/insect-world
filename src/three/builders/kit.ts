@@ -13,6 +13,57 @@ import { facetNormalMap } from './eyes'
 
 // ---------------------------------------------------------------- 类型契约
 
+// ---------------------------------------------------------------- 骨架（rig）
+
+/**
+ * 可驱动的骨架句柄。动作层（`src/three/motion/`）只写这些节点的 rotation，
+ * 绝不碰几何 —— 几何是构建期的产物，动作是渲染期的状态，两者不能混。
+ *
+ * 为什么不是「每个物种自己声明骨架」：63 个物种里 62 个用的是 kit 的
+ * `leg()`/`legPair()`，31 个用 `wing()`/`wingPair()`。部件函数自己给产物打上
+ * 标记、`finalize()` 统一收集，物种文件一个字都不用改，将来新增物种也自动带上。
+ *
+ * `rest` 记的是构建完成时的静止姿态。动作层必须以它为基准做**偏移**，
+ * 不能直接写绝对角度 —— 每个物种的腿/翅摆位都是逐只调出来的，写绝对角度
+ * 等于把 63 只虫的姿态一起抹平。
+ */
+export interface WingRig {
+  /** 翅的枢轴节点（`wing()` 里那层 pivot），绕它转就是扑翅 */
+  pivot: THREE.Object3D
+  /** 静止姿态，动作层的基准 */
+  rest: THREE.Euler
+  /** +1 右翅，−1 左翅。⚠️ 左翅的 pivot 带 scale.z = −1，绕 Y/X 的旋转在观感上会反号，动作层要按它取符号 */
+  side: 1 | -1
+  /** 前翅 / 后翅。物种在 WingSpec 里显式给出才有值，kit 不做猜测 */
+  role?: 'fore' | 'hind'
+  /** 翅基在模型局部坐标里的位置（已随 finalize 的居中一起平移），供动作层按前后排相位 */
+  base: THREE.Vector3
+}
+
+/** 一条足的四个可转关节。层级：coxa → femur → tibia → tarsus，每节挂在父节点末端。 */
+export interface LegRig {
+  /** 体—基节关节：转它 = 整条腿前后摆（步态的主运动） */
+  coxa: THREE.Object3D
+  /** 基节—腿节关节：转它 = 抬腿/落腿 */
+  femur: THREE.Object3D
+  /** 膝（腿节—胫节） */
+  tibia: THREE.Object3D
+  /** 胫—跗关节 */
+  tarsus: THREE.Object3D
+  rest: { coxa: THREE.Euler; femur: THREE.Euler; tibia: THREE.Euler; tarsus: THREE.Euler }
+  /** +1 右腿，−1 左腿。⚠️ 同 WingRig.side，左腿整组带 scale.z = −1 */
+  side: 1 | -1
+  /** 足基在模型局部坐标里的位置，供动作层判前/中/后足（三角步态要分相位） */
+  base: THREE.Vector3
+}
+
+export interface InsectRig {
+  legs?: LegRig[]
+  wings?: WingRig[]
+  /** 物种自行登记的可动件：鞘翅、口器、尾须、捕捉足…… 用 `registerPart()` 挂 */
+  parts?: Record<string, THREE.Object3D>
+}
+
 /** 一个物种模型的产出。局部坐标系：+X 向前(头)，+Y 向上(背)，+Z 向右。 */
 export interface InsectModel {
   group: THREE.Group
@@ -27,6 +78,65 @@ export interface InsectModel {
    * 包围半径本身不动：它仍是「模型有多大」的事实。
    */
   frameRadius?: number
+  /**
+   * 可驱动骨架。**缺省即静态** —— 没有 rig 的物种和从前完全一样，
+   * 现有契约一个字不动。由 `finalize()` 从打过标记的部件里收集。
+   */
+  rig?: InsectRig
+}
+
+/**
+ * 骨架标记挂在 `userData` 的这个键下。
+ *
+ * 用一个不像业务字段的名字是有原因的：物种文件里的 userData 已经很挤了 ——
+ * longhorn-beetle 用 `base`/`phase`/`joints`，water-strider 用 `knee`/`tip`，
+ * darkling-beetle 用 `hip`，silk-moth 用 `hairCount`。撞名会静默覆盖，
+ * 而覆盖掉的那个字段坏了不会报错，只会让某只虫的某处悄悄不对。
+ */
+const RIG_TAG = '__rig'
+
+type RigTag =
+  | { kind: 'wing'; side: 1 | -1; role?: 'fore' | 'hind'; rest: THREE.Euler }
+  | { kind: 'leg'; side: 1 | -1; rest: LegRig['rest']; joints: Omit<LegRig, 'rest' | 'side' | 'base'> }
+  | { kind: 'part'; name: string }
+
+/**
+ * 把一个自写部件登记进骨架，动作层就能按名字拿到它转。
+ *
+ * 给的是 kit 覆盖不到的那些东西：甲虫的鞘翅、螳螂的捕捉足、蝗虫的弹跳后足、
+ * 水黾的划水中足。物种文件在 `finalize()` 之前调用即可。
+ *
+ * 返回传入的对象本身，方便 `g.add(registerPart(elytra, 'elytra-right'))` 这样串写。
+ */
+export function registerPart<T extends THREE.Object3D>(obj: T, name: string): T {
+  obj.userData[RIG_TAG] = { kind: 'part', name } satisfies RigTag
+  return obj
+}
+
+/**
+ * 把一片**自写的**翅登记进骨架。
+ *
+ * 为什么需要这个出口：普查一跑就露馅了 —— 翅最值得扑的那 17 只
+ * （帝王蝶、碧伟蜓、柞蚕蛾、草蛉、齿蛉、大蚊、家蝇、库蚊……）恰恰全是
+ * 自己搭翅的。它们要在翅面上做斑纹、镶边、翅室，`wing()` 那片素膜给不了，
+ * 所以各自用 `wingGeometry()` 拼了自己的 pivot/blade。
+ * 结果就是：只给 `wing()` 打标记的话，能扑的没几只，而**不能扑的那些不会报错，
+ * 只会安静地不动** —— 和 D 轮触角那 9 只是同一个坑。
+ *
+ * 传进来的必须是**枢轴节点本身**（翅基处、绕它转就能扇动的那个 group），
+ * 不是翅面 mesh。rest 在此刻快照，所以调用点要放在姿态摆完之后。
+ */
+export function registerWing<T extends THREE.Object3D>(
+  pivot: T,
+  opts: { side: 1 | -1; role?: 'fore' | 'hind' },
+): T {
+  pivot.userData[RIG_TAG] = {
+    kind: 'wing',
+    side: opts.side,
+    role: opts.role,
+    rest: pivot.rotation.clone(),
+  } satisfies RigTag
+  return pivot
 }
 
 export type InsectBuilder = () => InsectModel
@@ -807,6 +917,12 @@ export interface WingSpec {
   sweep?: number
   /** 厚度，默认 0.012 */
   thickness?: number
+  /**
+   * 前翅 / 后翅。只影响骨架层（`WingRig.role`）—— 扑翅时后翅要比前翅
+   * 差一点相位，真实的四翅昆虫就是这么飞的。不填也能扑，只是四片同相。
+   * kit 不猜：翅基的前后位置分不开前后翅（膜翅目两对翅基几乎重合）。
+   */
+  role?: 'fore' | 'hind'
 }
 
 /** 由轮廓生成一片翅的几何体（位于 XZ 平面，翅基在原点，向 +X 延伸） */
@@ -910,6 +1026,15 @@ export function wing(
   pivot.rotation.y = side * (Math.PI / 2 - THREE.MathUtils.degToRad(spec.spread)) + THREE.MathUtils.degToRad(spec.sweep ?? 0)
   pivot.rotation.x = side * THREE.MathUtils.degToRad(spec.tilt ?? 0)
   pivot.scale.z = side
+
+  // 骨架标记：rest 必须在姿态摆完之后才快照，否则动作层拿到的基准是零位，
+  // 一驱动就把逐只调出来的展角/上扬角全抹平了。
+  pivot.userData[RIG_TAG] = {
+    kind: 'wing',
+    side,
+    role: spec.role,
+    rest: pivot.rotation.clone(),
+  } satisfies RigTag
   return pivot
 }
 
@@ -1093,7 +1218,12 @@ export function finalize(
   const shifted: Record<string, THREE.Vector3> = {}
   for (const [k, v] of Object.entries(anchors)) shifted[k] = v.clone().sub(center)
 
+  // 骨架标记在这趟遍历里一并收走 —— 63 个模型的场景图不值得走第二遍。
+  const tagged: { node: THREE.Object3D; tag: RigTag }[] = []
+
   group.traverse((o) => {
+    const tag = o.userData[RIG_TAG] as RigTag | undefined
+    if (tag) tagged.push({ node: o, tag })
     if ((o as THREE.Mesh).isMesh) {
       o.castShadow = true
       o.receiveShadow = true
@@ -1114,7 +1244,46 @@ export function finalize(
 
   const model: InsectModel = { group, anchors: shifted, radius: boundingRadius(group) }
   if (opts.frameRadius !== undefined) model.frameRadius = opts.frameRadius
+
+  const rig = collectRig(group, tagged)
+  if (rig) model.rig = rig
   return model
+}
+
+/**
+ * 把遍历到的骨架标记整理成 `InsectRig`。
+ *
+ * base 位置在**居中之后**才取：`finalize()` 已经把 group 平移过，这里
+ * `updateMatrixWorld` 出来的世界坐标就是模型局部坐标，与 `anchors` 同一套空间。
+ * 若在居中之前取，动作层按 base 分相位时会整体偏掉半个身长。
+ *
+ * 一个标记都没有就返回 undefined —— 静态物种的 model 上不该凭空多出一个空 rig，
+ * 「有没有 rig」是普查测试的判据。
+ */
+function collectRig(group: THREE.Group, tagged: { node: THREE.Object3D; tag: RigTag }[]): InsectRig | undefined {
+  if (tagged.length === 0) return undefined
+  group.updateMatrixWorld(true)
+
+  const wings: WingRig[] = []
+  const legs: LegRig[] = []
+  const parts: Record<string, THREE.Object3D> = {}
+
+  for (const { node, tag } of tagged) {
+    const base = node.getWorldPosition(new THREE.Vector3())
+    if (tag.kind === 'wing') {
+      wings.push({ pivot: node, rest: tag.rest, side: tag.side, role: tag.role, base })
+    } else if (tag.kind === 'leg') {
+      legs.push({ ...tag.joints, rest: tag.rest, side: tag.side, base })
+    } else {
+      parts[tag.name] = node
+    }
+  }
+
+  const rig: InsectRig = {}
+  if (legs.length) rig.legs = legs
+  if (wings.length) rig.wings = wings
+  if (Object.keys(parts).length) rig.parts = parts
+  return rig
 }
 
 /** 沿 Z 轴镜像复制一个部件（用于成对结构的快捷装配） */
