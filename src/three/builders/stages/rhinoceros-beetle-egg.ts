@@ -38,12 +38,17 @@ const EGG_LENGTH = 0.34
 const EGG_WIDTH = 0.3
 
 /**
- * 土粒数量与半径区间。上限 0.038 ≈ 卵短径的 1/4 —— 再大就读成「一圈石块」
- * 而不是腐殖土（第一版给到 0.062，出图是一圈咖啡豆）。
+ * 土粒数量与半径区间。上限 0.048 ≈ 卵短径的 1/6 —— 再大就读成「一圈石块」
+ * 而不是腐殖土。
+ *
+ * **区间必须拉得开（这里 5.3 倍），而且不能均匀取样。** 第二版是 0.016~0.038
+ * 均匀分布 —— 只差 2.4 倍、还都挤在中间，出图是一圈大小相仿的滚圆珠子，
+ * 整体读成「珍珠配巧克力球」。真实腐殖土的粒径接近幂律：细屑极多、粗块很少，
+ * 正是这个「多数很细、偶有大块」的分布让人认出它是土而不是装饰。
  */
-const GRAIN_COUNT = 96
-const GRAIN_MIN = 0.016
-const GRAIN_MAX = 0.038
+const GRAIN_COUNT = 150
+const GRAIN_MIN = 0.009
+const GRAIN_MAX = 0.048
 
 /**
  * 种子化 PRNG（mulberry32）。土粒必须是**确定性**的随机：
@@ -102,7 +107,8 @@ function soilChamber(material: readonly THREE.Material[]): THREE.Group {
     // 俯角随 i 从 8° 铺到 80°，于是这条螺旋从土室口沿一路盘到室底。
     const azimuth = i * 2.399963
     const dip = THREE.MathUtils.degToRad(8 + Math.pow(i / GRAIN_COUNT, 0.8) * 72 + (rand() - 0.5) * 9)
-    const size = GRAIN_MIN + rand() * (GRAIN_MAX - GRAIN_MIN)
+    // 幂律取样：rand()^2.2 把取值压向 0，于是细屑多、粗块少（均匀取样做不出土）
+    const size = GRAIN_MIN * Math.pow(GRAIN_MAX / GRAIN_MIN, Math.pow(rand(), 2.2))
     // 贴着卵面外侧一点，微微嵌入（0.9）读成「土压着卵」而不是「土浮在旁边」
     const a = EGG_LENGTH / 2 + size * 0.9
     const b = EGG_WIDTH / 2 + size * 0.9
@@ -112,13 +118,53 @@ function soilChamber(material: readonly THREE.Material[]): THREE.Group {
       Math.cos(dip) * Math.sin(azimuth) * b,
     )
 
-    // 两档土色轮换：一色到底的土粒会读成一圈规整的巧克力豆，
-    // 腐殖土的辨识特征本来就有一半在「颜色不匀」上
-    const grain = new THREE.Mesh(new THREE.SphereGeometry(size, 9, 7), material[i % material.length])
+    /*
+     * 土色**按随机数取**而不是 `i % n`：金角螺旋下相邻两粒的 i 恒相差 1，
+     * 按下标轮换等于让颜色沿螺旋严格交替 —— 那是一种规整，正好抵消掉
+     * 「颜色不匀」本来要制造的杂乱感。
+     */
+    const grain = new THREE.Mesh(
+      new THREE.SphereGeometry(size, 9, 7),
+      material[Math.floor(rand() * material.length)],
+    )
     grain.name = 'soil-grain'
     grain.position.copy(p)
-    grain.scale.set(1 - rand() * 0.35, 1 - rand() * 0.35, 1 - rand() * 0.35)
+    /*
+     * 各轴缩放拉到 0.42~1.0（第二版只到 0.65，最扁的粒也就 1.5:1，仍是球）。
+     * 土屑是崩出来的碎块，长宽厚差两倍以上很常见；配上随机滚转，
+     * 整圈才不会读成一堆珠子。
+     */
+    grain.scale.set(0.42 + rand() * 0.58, 0.42 + rand() * 0.58, 0.42 + rand() * 0.58)
     grain.rotation.set(rand() * Math.PI, rand() * Math.PI, rand() * Math.PI)
+    g.add(grain)
+  }
+
+  /*
+   * 第二层：更外、更深、更稀的一圈粗屑。
+   *
+   * 只铺一层薄壳的土永远读成「围着卵摆了一圈东西」——土是**堆**出来的，
+   * 得有厚度、有互相压叠。这一层刻意让它与内层交错（方位角偏半个金角、
+   * 俯角整体更深），于是从任何机位看，土的边缘轮廓都是参差的而不是一条圆弧。
+   */
+  const rand2 = rng(0x9a1c37)
+  for (let i = 0; i < Math.floor(GRAIN_COUNT * 0.45); i++) {
+    const azimuth = i * 2.399963 + 1.2
+    const dip = THREE.MathUtils.degToRad(26 + Math.pow(i / (GRAIN_COUNT * 0.45), 0.7) * 62 + (rand2() - 0.5) * 12)
+    const size = GRAIN_MIN * Math.pow(GRAIN_MAX / GRAIN_MIN, Math.pow(rand2(), 1.7))
+    const a = EGG_LENGTH / 2 + size * 0.9 + 0.028
+    const b = EGG_WIDTH / 2 + size * 0.9 + 0.028
+    const grain = new THREE.Mesh(
+      new THREE.SphereGeometry(size, 8, 6),
+      material[Math.floor(rand2() * material.length)],
+    )
+    grain.name = 'soil-grain'
+    grain.position.set(
+      Math.cos(dip) * Math.cos(azimuth) * a,
+      -Math.sin(dip) * b,
+      Math.cos(dip) * Math.sin(azimuth) * b,
+    )
+    grain.scale.set(0.42 + rand2() * 0.58, 0.42 + rand2() * 0.58, 0.42 + rand2() * 0.58)
+    grain.rotation.set(rand2() * Math.PI, rand2() * Math.PI, rand2() * Math.PI)
     g.add(grain)
   }
   return g
@@ -130,14 +176,22 @@ export function buildRhinocerosBeetleEgg(): InsectModel {
   /*
    * 卵壳材质。三个数都是「防白铬」的：
    * gloss 0.4 → roughness ≈ 0.63（宽而软的高光，不是镜面点）；
-   * clearcoat 0.05 → 几乎没有第二层角度高光（elytra 的 0.55 在这个亮度上必炸）；
-   * translucent → transmission 0.35，光从卵背面透过来，这才是「卵」的质感来源。
+   * clearcoat 0.05 → 几乎没有第二层角度高光（elytra 的 0.55 在这个亮度上必炸）。
+   *
+   * ⚠️ **不要加回 `translucent: true`。** 它原本是为了「光从卵背面透过来」的
+   * 次表面感，但 transmission 0.35 会在 `loft()` 的放样接缝上折射出一道贯穿
+   * 卵身的浅色亮线 —— 出图里读成「卵壳裂了一道缝」。做过对照实验：同一机位
+   * 开/关 transmission 各渲一次，关掉那道线当场消失，别的地方几乎看不出差别。
+   * 也就是说这个尺度下半透没换来多少可见的通透感，却换来一道明显的缺陷。
+   *
+   * （这跟 2026-08-13 那次「瓢虫壳裂开露白」是同一类症状、不同病因：那次是
+   * loft 的绕向导致背面剔除看穿，这次是接缝上的折射。共同点是**都不是材质
+   * 参数调得不对，而是几何接缝与渲染特性撞在了一起**，逐项调参数永远调不好。）
    */
   const shellMat = chitin({
     color: '#ecdfc2',
     gloss: 0.4,
     clearcoat: 0.05,
-    translucent: true,
     surface: 'smooth',
   })
   /*
@@ -149,6 +203,11 @@ export function buildRhinocerosBeetleEgg(): InsectModel {
   const soilMats = [
     chitin({ color: '#4b3b2b', gloss: 0.12, clearcoat: 0 }),
     chitin({ color: '#5a4632', gloss: 0.1, clearcoat: 0 }),
+    // 两档不够：两档 + 随机取色仍然只有两种明度，土的「不匀」撑不起来。
+    // 五档跨 #3f3428~#6b5540，最深的那档压住背光面，最浅的做被光照到的棱。
+    chitin({ color: '#3f3428', gloss: 0.11, clearcoat: 0 }),
+    chitin({ color: '#6b5540', gloss: 0.09, clearcoat: 0 }),
+    chitin({ color: '#52402c', gloss: 0.13, clearcoat: 0 }),
   ]
 
   const egg = new THREE.Mesh(eggBody(), shellMat)
