@@ -80,6 +80,38 @@
   margin-top: 14px;
 }
 
+/* 「看实物照片」：紧贴总述的黄铜小胶囊。
+   要显眼 —— 它是程序化模型之外唯一能看到实物的出口，而上一版埋在按钮组最底
+   （右栏可视 688px / 内容 1358px，它在 y≈1306），有人专门来找都没找到。
+   但也不能盖过主按钮：所以是**描边胶囊**不是通栏实底，宽度随内容收，
+   与下面那一列通栏按钮在体量上明确分层。
+   配色沿用 --brass 一族，对比度由 contrast.test.ts 守着。 */
+.photoLink {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 12px;
+  padding: 6px 12px;
+  border: 1px solid var(--brass);
+  border-radius: 999px;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--brass-bright);
+  text-decoration: none;
+  background: transparent;
+  transition: background 0.16s ease, color 0.16s ease, transform 0.16s ease;
+}
+
+.photoLink svg {
+  color: currentColor;
+}
+
+.photoLink:hover {
+  background: var(--brass);
+  color: var(--on-primary);
+  transform: translateY(-1px);
+}
+
 .rule {
   height: 1px;
   background: var(--line);

@@ -99,6 +99,37 @@ export function DetailPanel({
       <div className={s.epithet}>{insect.epithet}</div>
       <p className={s.summary}>{insect.summary}</p>
 
+      {/*
+        「看实物照片」为什么放在这里 —— 这是第二次搬家，两次都是被实测推着走的。
+
+        第一次从下面的 meta 区（分布/现状/近缘那三行灰字）搬进按钮组，理由是
+        「它是动作不是静态属性，埋在灰字里等于没有」。方向对，但**没解决问题**：
+        右栏是独立滚动容器，实测可视 688px、内容 1358px —— 只能看到一半，
+        而它作为按钮组最后一项落在 y≈1306，几乎在最底。
+        结果是一位专门来找实拍图的老师在 issue #3 里问「如果顺便支持实拍图片
+        就更好了」—— 功能一直都在，他只是没滚到。**那不是他的问题，是入口的问题。**
+        （见 https://github.com/xr843/insect-world/issues/3）
+        
+        现在贴着总述放，实测 y≈430，落在折叠线以内、不用滚就看得见。
+        位置也讲得通：程序化模型的写实度有上限，「它真长什么样」是**认这只虫**
+        的一部分，属于身份区，不属于底部的动作清单。
+        做成紧凑的黄铜小胶囊而不是通栏实底按钮：要显眼，但不能盖过主按钮。
+        没有对应 taxon 记录的物种不渲染，见 data/external.ts（63 种里 61 种有）。
+      */}
+      {photoUrl(insect.id) && (
+        <a
+          className={s.photoLink}
+          href={photoUrl(insect.id) as string}
+          target="_blank"
+          rel="noopener noreferrer"
+          onClick={() => track(EVENTS.PHOTO_LINK, { species_id: insect.id })}
+        >
+          <IconGlobe size={12} />
+          {t('detail.photosLink')}
+          <IconArrowRight size={11} />
+        </a>
+      )}
+
       <div className={s.rule} />
       <div className="eyebrow">{t('detail.facts')}</div>
 
@@ -168,25 +199,6 @@ export function DetailPanel({
           {copied ? <IconCheck size={13} /> : <IconShare size={13} />}
           {copied ? t('detail.linkCopied') : canShare ? t('detail.share') : t('detail.copyLink')}
         </button>
-        {/*
-          实物照片放在按钮组而不是下面的 meta 区：那三行（分布/现状/近缘）是静态属性，
-          这一条是**动作**，性质不同。而且本项目的模型是程序生成的、写实度有上限，
-          「想看真长什么样」是真实需求（linux.do 佬友明确提过），埋在灰字里等于没有。
-          用 --brass 与站内按钮区分，配外链箭头，让人点之前就知道会离开本站。
-          没有对应 taxon 记录的物种不渲染此按钮，见 data/external.ts。
-        */}
-        {photoUrl(insect.id) && (
-          <a
-            className={`${s.ghost} ${s.wide} ${s.external}`}
-            href={photoUrl(insect.id) as string}
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <IconGlobe size={13} />
-            {t('detail.photosLink')}
-            <IconArrowRight size={12} />
-          </a>
-        )}
       </div>
 
       <div className={s.meta}>
