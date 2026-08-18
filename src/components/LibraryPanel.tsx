@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, type UIEvent } from 'react'
 import type { Insect } from '../data/types'
 import { InsectGlyph } from './InsectGlyph'
 import { IconArrowRight, IconBookmark, IconLeafSolid } from './icons'
@@ -6,6 +6,10 @@ import { fitName } from './fitName'
 import s from './LibraryPanel.module.css'
 import { useLabels, useLocale, useT } from '../i18n/useT'
 import { pinyinOf } from '../data/pinyin'
+import { EVENTS, track } from '../analytics'
+
+/** 滚动深度节流窗口：滚动中最多这么频地上报一次，见组件内注释 */
+const SCROLL_REPORT_THROTTLE_MS = 1200
 
 export function LibraryPanel({
   insects,
@@ -61,6 +65,64 @@ export function LibraryPanel({
     activeRef.current.scrollIntoView({ block: 'nearest', inline: 'nearest', behavior: 'auto' })
   }, [activeId, insects])
 
+  /**
+   * 左栏滚动深度埋点 —— 首页①号问题（63 种里人均只翻到 5~6 种，且是
+   * 同样的那几种）直接量的就是这条曲线，所以专门做了节流 + 兜底补报，
+   * 不能因为「怕吵」把最深的那一次滚动漏报了。
+   *
+   * maxDepthRef 记的是本轮列表里滚到过的最深名次，只增不减 —— 往回滚
+   * 不撤销「曾经到过第 N 只」这个事实。节流窗口内只更新这个记录、不
+   * 发请求；窗口过了才真发。窗口内产生的「更深」由 flushTimer 在窗口
+   * 结束后补发一次 —— 否则「快速滑到底就停手」这种典型手势，最深的
+   * 名次会被节流直接吞掉、永远上报不出去。
+   *
+   * 手机上 `.list` 被 CSS 改成横向滑条（见 module.css 的 900px 分支），
+   * 所以两个轴都要判：谁有溢出量就用谁。
+   */
+  const maxDepthRef = useRef(0)
+  const lastSentRef = useRef({ index: 0, at: 0 })
+  const flushTimerRef = useRef<number>()
+
+  // 换筛选（换目、切「只看笔记」）时分母变了，旧的深度记录不能带过去
+  useEffect(() => {
+    maxDepthRef.current = 0
+    lastSentRef.current = { index: 0, at: 0 }
+    window.clearTimeout(flushTimerRef.current)
+  }, [insects])
+
+  useEffect(() => () => window.clearTimeout(flushTimerRef.current), [])
+
+  const onListScroll = (e: UIEvent<HTMLDivElement>) => {
+    if (insects.length === 0) return
+    const el = e.currentTarget
+    const vScroll = el.scrollHeight - el.clientHeight
+    const hScroll = el.scrollWidth - el.clientWidth
+    let frac: number
+    if (vScroll > 0) frac = (el.scrollTop + el.clientHeight) / el.scrollHeight
+    else if (hScroll > 0) frac = (el.scrollLeft + el.clientWidth) / el.scrollWidth
+    // 一屏放得下，没有滚动可言
+    else return
+
+    const index = Math.min(insects.length, Math.max(1, Math.ceil(frac * insects.length)))
+    if (index <= maxDepthRef.current) return
+    maxDepthRef.current = index
+
+    const now = Date.now()
+    if (now - lastSentRef.current.at >= SCROLL_REPORT_THROTTLE_MS) {
+      lastSentRef.current = { index, at: now }
+      track(EVENTS.LIBRARY_SCROLL_DEPTH, { index, total: insects.length })
+      return
+    }
+    // 节流窗口内：先不发，窗口结束后如果没有更新的深度顶替它，就把这次补上去
+    window.clearTimeout(flushTimerRef.current)
+    flushTimerRef.current = window.setTimeout(() => {
+      if (maxDepthRef.current > lastSentRef.current.index) {
+        lastSentRef.current = { index: maxDepthRef.current, at: Date.now() }
+        track(EVENTS.LIBRARY_SCROLL_DEPTH, { index: maxDepthRef.current, total: insects.length })
+      }
+    }, SCROLL_REPORT_THROTTLE_MS)
+  }
+
   return (
     <aside className={`card stage-height ${s.panel} detail-left`}>
       <div className={s.head}>
@@ -83,7 +145,7 @@ export function LibraryPanel({
         </button>
       )}
 
-      <div className={s.list}>
+      <div className={s.list} onScroll={onListScroll}>
         {insects.length === 0 && (
           <div className={s.none}>
             {notedOnly ? t('library.emptyNoted') : t('library.emptyFiltered')}
@@ -97,7 +159,10 @@ export function LibraryPanel({
               ref={active ? activeRef : undefined}
               className={s.item}
               data-active={active}
-              onClick={() => onSelect(i.id)}
+              onClick={() => {
+                track(EVENTS.SPECIES_SWITCH, { source: 'list', species_id: i.id, order: i.order })
+                onSelect(i.id)
+              }}
             >
               <span
                 className={s.thumb}

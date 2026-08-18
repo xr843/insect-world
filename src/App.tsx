@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import type { Order } from './data/types'
+import { EVENTS, track } from './analytics'
 import { useLabels, useLocale, useSpecies, useT } from './i18n/useT'
 import { notesToMarkdown, useFieldNotes } from './hooks/useFieldNotes'
 import { NotesPanel } from './components/NotesPanel'
@@ -43,6 +44,24 @@ export default function App() {
   const [activeId, setActiveId] = useState(
     () => speciesFromUrl(location.pathname, location.search, SPECIES.map((i) => i.id)) ?? SPECIES[0].id,
   )
+
+  /**
+   * 深链埋点：只在挂载时判定一次，且只有地址栏真的带着识别出来的物种
+   * （不是没带、回落到默认物种）才算一次 deeplink —— 裸首页访问不该被
+   * 计成「深链」，那会把首页真实的落地量做低。
+   *
+   * 没有复用上面 activeId 的初值：那个初值已经和 SPECIES[0] 的回落结果
+   * 合并了，从结果上分不出「本来就带物种」还是「没带、回落的」，只能
+   * 重新问一次地址栏。之后地址栏会被下面的 URL 同步 effect 改写，
+   * 所以这里必须留空依赖数组，只在首帧问这一次。
+   */
+  useEffect(() => {
+    const fromUrl = speciesFromUrl(location.pathname, location.search, SPECIES.map((i) => i.id))
+    const target = fromUrl ? SPECIES.find((i) => i.id === fromUrl) : undefined
+    if (target) track(EVENTS.SPECIES_SWITCH, { source: 'deeplink', species_id: target.id, order: target.order })
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
   const [galleryOpen, setGalleryOpen] = useState(false)
   const [notesOpen, setNotesOpen] = useState(false)
   const [compareId, setCompareId] = useState<string | null>(null)
@@ -152,7 +171,9 @@ export default function App() {
       const pool = listed.length > 0 ? listed : SPECIES
       const idx = pool.findIndex((i) => i.id === activeId)
       const next = idx === -1 ? (delta > 0 ? 0 : pool.length - 1) : (idx + delta + pool.length) % pool.length
-      select(pool[next].id)
+      const target = pool[next]
+      track(EVENTS.SPECIES_SWITCH, { source: 'keyboard', species_id: target.id, order: target.order })
+      select(target.id)
     },
     [activeId, select, listed, SPECIES],
   )
@@ -184,19 +205,38 @@ export default function App() {
     [activeId, SPECIES],
   )
 
+  /**
+   * 两个函数都不用 setCompareId 的函数式更新形式来夹带埋点 —— React 18
+   * StrictMode 在开发环境会把 state 更新函数（updater）额外多跑一遍以探测
+   * 副作用，塞在里面的 track() 调用会被跟着多发一次。改成先用当前渲染里
+   * 已经拿到的 compareId 算出 next，track 完再调用 setCompareId(next)，
+   * track 就是一条普通语句，不会被这套探测机制重放。
+   */
   const toggleCompare = useCallback(() => {
-    setCompareId((cur) => (cur ? null : pickPeer(1)))
-  }, [pickPeer])
+    if (compareId) {
+      setCompareId(null)
+      return
+    }
+    const next = pickPeer(1)
+    const target = SPECIES.find((i) => i.id === next)
+    if (target) track(EVENTS.SPECIES_SWITCH, { source: 'compare', species_id: next, order: target.order })
+    setCompareId(next)
+  }, [compareId, pickPeer, SPECIES])
 
   const cycleCompare = useCallback(() => {
-    setCompareId((cur) => {
-      if (!cur) return pickPeer(1)
-      const from = SPECIES.findIndex((i) => i.id === cur)
-      let next = (from + 1) % SPECIES.length
-      if (SPECIES[next].id === activeId) next = (next + 1) % SPECIES.length
-      return SPECIES[next].id
-    })
-  }, [activeId, pickPeer, SPECIES])
+    let next: string
+    if (!compareId) {
+      next = pickPeer(1)
+    } else {
+      const from = SPECIES.findIndex((i) => i.id === compareId)
+      let idx = (from + 1) % SPECIES.length
+      if (SPECIES[idx].id === activeId) idx = (idx + 1) % SPECIES.length
+      next = SPECIES[idx].id
+    }
+    const target = SPECIES.find((i) => i.id === next)
+    if (target) track(EVENTS.SPECIES_SWITCH, { source: 'compare', species_id: next, order: target.order })
+    setCompareId(next)
+  }, [activeId, compareId, pickPeer, SPECIES])
 
   // 换物种时，之前挑的对照对象若正好是新选中的，就顺延一个
   useEffect(() => {
@@ -226,7 +266,11 @@ export default function App() {
         onCopyNotes={copyNotes}
         onClearNotes={clear}
         theme={theme}
-        onToggleTheme={() => setTheme((t) => (t === 'dark' ? 'light' : 'dark'))}
+        onToggleTheme={() => {
+          const next = theme === 'dark' ? 'light' : 'dark'
+          track(EVENTS.THEME_TOGGLE, { theme: next })
+          setTheme(next)
+        }}
       />
 
       <main className="workbench">

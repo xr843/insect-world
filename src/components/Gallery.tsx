@@ -4,6 +4,7 @@ import { useLabels, useT } from '../i18n/useT'
 import { InsectGlyph } from './InsectGlyph'
 import { fitName } from './fitName'
 import s from './Gallery.module.css'
+import { EVENTS, track } from '../analytics'
 
 /** 关掉弹层的通用行为：Esc 键 + 打开时锁住背景滚动 */
 function useDismiss(onClose: () => void) {
@@ -74,6 +75,7 @@ export function Gallery({
                   className={s.tile}
                   data-active={i.id === activeId}
                   onClick={() => {
+                    track(EVENTS.SPECIES_SWITCH, { source: 'gallery', species_id: i.id, order: i.order })
                     onSelect(i.id)
                     onClose()
                   }}

@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import type { Insect, Order } from '../data/types'
+import { EVENTS, track } from '../analytics'
 import { useLabels, useLocale, useT } from '../i18n/useT'
 import { hrefForLocale } from '../i18n/hrefForLocale'
 import { LOCALE_AUTONYM } from '../i18n/locales'
@@ -139,6 +140,22 @@ export function TopBar({
       : []
   const hits = [...primary, ...secondary].slice(0, 12)
 
+  /**
+   * 搜索埋点：等输入停顿再报一次「发起了一次搜索」，不追每个按键 ——
+   * 按键就报的话，敲「瓢虫」两个字会在 Umami 里炸出两条，且这批用不上
+   * 那种密度。只报「有没有结果」这一个布尔，绝不上报 query 本身：
+   * 搜索词是用户主动打的自由文本，最接近个人输入痕迹，隐私上不能报。
+   */
+  useEffect(() => {
+    if (!q) return
+    const timer = window.setTimeout(() => {
+      track(EVENTS.SEARCH, { has_results: hits.length > 0 })
+    }, 500)
+    return () => window.clearTimeout(timer)
+    // hits 由 q 与 insects 派生，随 q 变化必然重新求值，不需要单独进依赖
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [q])
+
   return (
     <header className={s.bar}>
       <div className={s.brand}>
@@ -223,6 +240,10 @@ export function TopBar({
               href={locale === code ? undefined : hrefForLocale(code, activeId)}
               aria-current={locale === code ? 'true' : undefined}
               lang={code === 'zh' ? 'zh-Hans' : 'en'}
+              onClick={() => {
+                // 当前语言那个 <a> 没有 href，点了也不会跳转，不该记一次「切换」
+                if (locale !== code) track(EVENTS.LANGUAGE_SWITCH, { to: code })
+              }}
             >
               {LOCALE_AUTONYM[code]}
             </a>
@@ -259,6 +280,7 @@ export function TopBar({
                     key={i.id}
                     className={s.result}
                     onClick={() => {
+                      track(EVENTS.SPECIES_SWITCH, { source: 'search', species_id: i.id, order: i.order })
                       onPick(i.id)
                       setOpen(false)
                       setQuery('')

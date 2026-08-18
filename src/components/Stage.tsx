@@ -2,6 +2,7 @@ import { Component, useCallback, useEffect, useRef, useState, type ReactNode } f
 import type { Insect } from '../data/types'
 import { InsectCanvas, type ViewMode } from '../three/InsectCanvas'
 import { webglAvailable } from '../three/webgl'
+import { EVENTS, track, type StageTool } from '../analytics'
 import { CompareBar } from './CompareBar'
 import { InsectGlyph } from './InsectGlyph'
 import {
@@ -126,6 +127,10 @@ export function Stage({
 
   const toggleMode = (m: ViewMode) => setMode((cur) => (cur === m ? 'normal' : m))
 
+  /** 工具条六个按钮共用同一条埋点，「对比」不算在内 —— 它换的是物种，
+      走 App.tsx 里的 species_switch(source:'compare')，见 analytics.ts 的注释 */
+  const clickTool = (tool: StageTool) => track(EVENTS.STAGE_TOOL, { tool })
+
   return (
     <section className={`card stage-height ${s.stage}`}>
       {/* 无障碍名挂在包装层：r3f v8 的 Canvas 会把未知 props 当 root 配置吞掉，
@@ -152,7 +157,15 @@ export function Stage({
               mode={mode}
               spin={spin}
               openHotspot={openHotspot}
-              onToggleHotspot={setOpenHotspot}
+              onToggleHotspot={(id) => {
+                // 只有真的打开了某个标注点才算一次点击；传 null 是关掉
+                // （再点一次同一个点、或点在模型外），不该也记一条
+                if (id) {
+                  const anchor = insect.hotspots.find((h) => h.id === id)?.anchor ?? id
+                  track(EVENTS.HOTSPOT_CLICK, { anchor })
+                }
+                setOpenHotspot(id)
+              }}
               zoomNonce={zoomNonce}
               resetNonce={resetNonce}
               focusAnchor={focusAnchor}
@@ -174,18 +187,34 @@ export function Stage({
       {/* 工具条整条随 WebGL 一起撤：旋转/剖切/聚焦全是对着 canvas 说话的，
           兜底页上留一排按不动的按钮比没有更糟（本站原则：不留只有样子的按钮） */}
       {!webglDead && <div className={s.rail}>
-        <button className={s.tool} data-active={spin} onClick={() => setSpin((v) => !v)}>
+        <button
+          className={s.tool}
+          data-active={spin}
+          onClick={() => {
+            clickTool('rotate')
+            setSpin((v) => !v)
+          }}
+        >
           <IconRotate size={17} />
           <span className={s.toolLabel}>{t('stage.tool.rotate')}</span>
         </button>
-        <button className={s.tool} onClick={() => setZoomNonce((n) => n + 1)}>
+        <button
+          className={s.tool}
+          onClick={() => {
+            clickTool('zoom')
+            setZoomNonce((n) => n + 1)
+          }}
+        >
           <IconZoom size={17} />
           <span className={s.toolLabel}>{t('stage.tool.zoom')}</span>
         </button>
         <button
           className={s.tool}
           data-active={mode === 'isolate'}
-          onClick={() => toggleMode('isolate')}
+          onClick={() => {
+            clickTool('focus')
+            toggleMode('isolate')
+          }}
         >
           <IconIsolate size={17} />
           <span className={s.toolLabel}>{t('stage.tool.focus')}</span>
@@ -193,7 +222,10 @@ export function Stage({
         <button
           className={s.tool}
           data-active={mode === 'section'}
-          onClick={() => toggleMode('section')}
+          onClick={() => {
+            clickTool('section')
+            toggleMode('section')
+          }}
         >
           <IconSection size={17} />
           <span className={s.toolLabel}>{t('stage.tool.section')}</span>
@@ -201,7 +233,10 @@ export function Stage({
         <button
           className={s.tool}
           data-active={mode === 'layers'}
-          onClick={() => toggleMode('layers')}
+          onClick={() => {
+            clickTool('layers')
+            toggleMode('layers')
+          }}
         >
           <IconLayers size={17} />
           <span className={s.toolLabel}>{t('stage.tool.layers')}</span>
@@ -214,6 +249,7 @@ export function Stage({
         <button
           className={s.tool}
           onClick={() => {
+            clickTool('reset')
             setResetNonce((n) => n + 1)
             setMode('normal')
             setOpenHotspot(null)

@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { hrefForLocale } from './hrefForLocale'
 import { useLocale } from './useT'
 import s from './LanguageHint.module.css'
+import { EVENTS, track } from '../analytics'
 
 const DISMISS_KEY = 'iw-lang-hint-dismissed'
 
@@ -43,7 +44,12 @@ export function LanguageHint({ speciesId }: { speciesId: string }) {
       <span className={s.text} lang={locale === 'zh' ? 'en' : 'zh-Hans'}>
         {copy.text}
       </span>
-      <a className={s.cta} href={hrefForLocale(other, speciesId)} lang={locale === 'zh' ? 'en' : 'zh-Hans'}>
+      <a
+        className={s.cta}
+        href={hrefForLocale(other, speciesId)}
+        lang={locale === 'zh' ? 'en' : 'zh-Hans'}
+        onClick={() => track(EVENTS.LANGUAGE_SWITCH, { to: other })}
+      >
         {copy.cta}
       </a>
       <button
