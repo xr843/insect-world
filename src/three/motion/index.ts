@@ -34,4 +34,4 @@ export function animatedSpecies(): string[] {
 }
 
 export { HOVERERS, makeHover } from './hover'
-export { visualWingbeat, type Motion } from './types'
+export { BLEND_RATE, applyBlended, stepBlend, visualWingbeat, type Motion } from './types'

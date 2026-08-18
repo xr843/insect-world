@@ -9,7 +9,7 @@
  */
 import { describe, expect, it } from 'vitest'
 import * as THREE from 'three'
-import { HOVERERS, animatedSpecies, makeHover, motionFor, visualWingbeat } from '..'
+import { HOVERERS, animatedSpecies, applyBlended, makeHover, motionFor, stepBlend, visualWingbeat } from '..'
 
 describe('visualWingbeat：真实频率压到屏幕能显示的范围', () => {
   it('保住物种之间的相对次序', () => {
@@ -185,5 +185,86 @@ describe('注册表', () => {
     const ids = new Set(INSECTS.map((i) => i.id))
     const stale = animatedSpecies().filter((id) => !ids.has(id))
     expect(stale, `注册表里这些 id 已不在图鉴中：${stale.join('、')}`).toEqual([])
+  })
+})
+
+describe('进出场的幅度权重（回归：翅不许僵在冲程中间）', () => {
+  /** 造一片翅，rest 带一个非零展角 —— 收拢必须回到它，不是回到零位 */
+  function oneWing(restX = 0.31) {
+    const pivot = new THREE.Object3D()
+    pivot.rotation.set(restX, 1.1, -0.2)
+    const rest = pivot.rotation.clone()
+    return {
+      rig: { wings: [{ pivot, rest, side: 1 as const, base: new THREE.Vector3() }] },
+      pivot,
+      restX,
+    }
+  }
+  const motion = makeHover({ freq: 9, amplitude: 0.7, hindPhase: 0 })
+
+  it('stepBlend 朝目标推进，永不越过', () => {
+    expect(stepBlend(0, 1, 0.016)).toBeCloseTo(0.064, 6)
+    expect(stepBlend(1, 0, 0.016)).toBeCloseTo(0.936, 6)
+    // 大 dt 直接到位而不冲过头
+    expect(stepBlend(1, 0, 5)).toBe(0)
+    expect(stepBlend(0, 1, 5)).toBe(1)
+    expect(stepBlend(0.5, 0.5, 1)).toBe(0.5)
+  })
+
+  it('blend 归零那一帧必须把翅按回 rest —— 哪怕是一帧从 1 直接掉到 0', () => {
+    /*
+     * 这条测的就是实测撞出来的那个 bug：早期写法是「blend > 0 才写姿态」，
+     * 于是 dt*4 ≥ 1 时 blend 一帧从 1 跳到 0、那一帧整个跳过写入，
+     * 上一帧的全幅姿态永久留在模型上。而 blend 到 0 之后调用方不再续帧，
+     * 再也没有下一帧来纠正 —— 翅就那么僵在冲程中间。
+     *
+     * dt=0.4 不是编出来的：按需渲染下从暂停里醒来的第一帧就是这个量级。
+     */
+    const { rig, pivot, restX } = oneWing()
+    // 先扇到一个明显偏离 rest 的位置
+    let blend = 1
+    applyBlended(rig, motion, 1 / (4 * 9), blend)
+    expect(Math.abs(pivot.rotation.x - restX)).toBeGreaterThan(0.5)
+
+    // 一帧超大 dt，blend 直接掉到 0
+    blend = stepBlend(blend, 0, 0.4)
+    expect(blend).toBe(0)
+    applyBlended(rig, motion, 2, blend)
+    expect(pivot.rotation.x).toBe(restX)
+  })
+
+  it('正常帧率下是渐收，约 0.25 秒回到 rest', () => {
+    const { rig, pivot, restX } = oneWing()
+    const AMP = 0.7
+    let blend = 1
+    for (let f = 0; f < 20; f++) {
+      blend = stepBlend(blend, 0, 1 / 60)
+      applyBlended(rig, motion, 0.3 + f / 60, blend)
+      /*
+       * 断言的是**包络**不是瞬时值：正弦还在振荡，幅度在收，
+       * 但某一帧的瞬时偏移完全可能比上一帧大（正弦正走向峰值）。
+       * 第一版这里写成「逐帧单调不增」，红了 —— 是断言错了不是代码错了。
+       * 真正该管住的是「偏移不超过当前权重允许的幅度」。
+       */
+      expect(Math.abs(pivot.rotation.x - restX)).toBeLessThanOrEqual(AMP * blend + 1e-9)
+    }
+    // 0.25 秒 = 15 帧，到此必须精确落在 rest 上（不是「接近」）
+    expect(blend).toBe(0)
+    expect(pivot.rotation.x).toBe(restX)
+  })
+
+  it('blend=1 时是恒等：与直接调用动作结果一致', () => {
+    const a = oneWing()
+    const b = oneWing()
+    applyBlended(a.rig, motion, 0.137, 1)
+    motion(b.rig, 0.137)
+    expect(a.pivot.rotation.x).toBe(b.pivot.rotation.x)
+  })
+
+  it('只动 X 轴，收拢也不碰另外两轴', () => {
+    const { rig, pivot } = oneWing()
+    applyBlended(rig, motion, 0.2, 0.4)
+    expect(pivot.rotation.y).toBe(1.1)
+    expect(pivot.rotation.z).toBe(-0.2)
   })
 })
