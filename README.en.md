@@ -65,6 +65,49 @@ In the right column, **the guided walkthrough** steps through the anatomy and mo
 
 ![Guided walkthrough — the camera follows the step being described](docs/screenshots/06-lesson.jpg)
 
+## They are alive
+
+Idle insects make very small postural adjustments (about 1.7°, the six legs
+phase-offset by where they attach). The **eight species that genuinely hover** —
+dragonfly, damselfly, honeybee, bumblebee, hoverfly, lacewing, hawk-moth and
+crane-fly — beat their wings in place; in Odonata the fore and hind wings beat
+**in antiphase**, which is part of why they can hover and is the dead giveaway
+that you are looking at a dragonfly.
+
+Wingbeat frequencies are **compressed, deliberately and openly**: a honeybee
+really beats at 230 Hz and a hoverfly at 200 Hz, while a 60 fps screen tops out
+at 30 Hz by Nyquist. Driving the real numbers does not look "fast", it **aliases** —
+the wings appear to drift slowly backwards. A log compression maps them into
+4–12 Hz and **preserves the ordering between species**; the real frequencies stay
+in the data table with the compression function right next to them.
+
+There is no full walk cycle, and the reason is in the code: the stand is a
+turntable with the insect at its centre, so legs that stride while the body stays
+put read as a **treadmill**, not as walking. Hovering has no such problem —
+hovering really is stationary.
+
+## A whole life
+
+The **life cycle** card at the bottom steps the stand through egg, larva and pupa
+as you page through the panel. Four species so far: **Japanese rhinoceros beetle**
+(a creamy white grub → a pupa that already carries the beginnings of the horn →
+the glossy black adult), **monarch**, **Chinese oak silkmoth** (the caterpillar
+plus a half-sectioned cocoon), and **the black cicada** — the only incomplete-
+metamorphosis species in the set, whose nymph carries a pair of wing pads on its
+back as the visible evidence that the wings are still "buds".
+
+![The life of a rhinoceros beetle](docs/screenshots/08-lifecycle.jpg)
+
+Stages do **not** morph into one another. A caterpillar turning into a butterfly
+is not a continuous deformation in the first place (tissue histolysis plus
+imaginal discs), so a smooth morph would look good and be wrong. The one thing
+that *is* animated continuously is **wing expansion at emergence** — because that
+really is continuous: a freshly eclosed wing is a small crumpled pad of soft
+tissue that haemolymph pressure inflates and then hardens.
+
+![Emergence — the wing expands from a crumpled pad to full size](docs/screenshots/09-emerge.jpg)
+
+
 ## Project layout
 
 ```
