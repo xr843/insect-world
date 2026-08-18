@@ -22,6 +22,15 @@
 /assets/*
   Cache-Control: public, max-age=31536000, immutable
 
+# 主题引导脚本：<head> 里的**同步阻塞**脚本，Cloudflare Pages 默认给它
+# max-age=0, must-revalidate —— 于是每次访问都要为这个 1KB 文件付一次
+# 完整往返（真机实测 209~216ms，热缓存下这一段是纯白等，因为其余产物
+# 全在磁盘缓存里免费拿）。它的内容是「读 localStorage 设 data-theme」，
+# 一年都不会变，给一天的缓存即可；真要改它，连同 index.html 里的引用一起
+# 换个文件名，新名字不在任何人的缓存里，立即生效。
+/theme-boot.js
+  Cache-Control: public, max-age=86400
+
 # HTML 每次都回源校验，保证发新版后用户立刻拿到
 /*.html
   Cache-Control: public, max-age=0, must-revalidate

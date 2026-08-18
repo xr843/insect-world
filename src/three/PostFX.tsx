@@ -14,10 +14,16 @@
  * 直到它卸载才还原。不在链尾补一个 ToneMapping 效果的话，桌面画面会跳出
  * onCreated 里调好的 ACES Filmic 观感，全场变灰白、高光炸掉。
  */
+import { useEffect } from 'react'
 import { Bloom, EffectComposer, N8AO, ToneMapping } from '@react-three/postprocessing'
 import { ToneMappingMode } from 'postprocessing'
+import { pmark } from '../perf'
 
 export default function PostFX({ radius }: { radius: number }) {
+  // 首帧分段计时（默认关闭，见 src/perf.ts）：这个组件的挂载点是首帧时间线上
+  // 一个关键分界 —— EffectComposer 一挂上，全部材质要按 HDR 离屏目标重编一遍
+  useEffect(() => pmark('postfx-effect'), [])
+  pmark('postfx-render')
   const d = Math.max(radius, 0.001)
   // AO 半径取包围半径的三成：大了会把整只虫糊成一片灰阴影，起不到局部接触阴影的效果；
   // distanceFalloff 跟着同比例收，否则景深剔除会松到把半个虫身都当成"贴着"的遮挡物

@@ -7,7 +7,7 @@
  * clearcoat 材质会显得像塑料。
  */
 import { Suspense, lazy, memo, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
-import { Canvas, useFrame, useThree } from '@react-three/fiber'
+import { Canvas, advance, useFrame, useThree } from '@react-three/fiber'
 import { Environment, Html, Lightformer, OrbitControls } from '@react-three/drei'
 import * as THREE from 'three'
 import type { OrbitControls as OrbitControlsImpl } from 'three-stdlib'
@@ -15,9 +15,16 @@ import type { Insect } from '../data/types'
 import type { InsectModel } from './builders/kit'
 import { loadInsectModel } from './registry'
 import { bindContextLoss } from './webgl'
+import { installGLProbes, installThreeProbes, markFirstFrame, pexpose, pinfo, pmark } from '../perf'
 
 /** 后期管线懒加载：+103KB gzip 的 postprocessing 只让真正会用它的桌面端下载（详见 PostFX.tsx 头注释） */
-const PostFX = lazy(() => import('./PostFX'))
+const PostFX = lazy(() => {
+  pmark('postfx-import-start')
+  return import('./PostFX').then((m) => {
+    pmark('postfx-module-loaded')
+    return m
+  })
+})
 
 /**
  * 触屏设备一次性判定，用于渲染降配。
@@ -30,6 +37,15 @@ const PDB = typeof window !== 'undefined' && new URLSearchParams(window.location
 /** 系统「减少动态效果」：CSS 那侧有全局规则兜底，JS 驱动的触角微动在这里问一次 */
 const REDUCED_MOTION =
   typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches
+
+/** 主光阴影贴图边长（见 StudioLights 的注释） */
+const SHADOW_MAP_SIZE = COARSE ? 1024 : 2048
+/** 反射环境立方体贴图边长（见 StudioLights 的注释） */
+const ENV_RESOLUTION = COARSE ? 256 : 512
+
+// 把 THREE 挂进 ?perf=1 的调试出口：真机上的微基准要在**页面挂载之前**就能用
+// （后台标签页里 r3f 压根不挂载，见 README「踩过的坑」）
+pexpose({ three: THREE, loadInsectModel, advance })
 
 /** 标注四色经 CSS token 解析（var(--coral) 等），自动跟随明暗主题 */
 const TONE_VAR: Record<string, string> = {
@@ -114,6 +130,7 @@ function InsectMesh({
 
     const box = new THREE.Box3().setFromObject(model.group)
     onReady(box)
+    pmark('model-committed')
   }, [model, onReady])
 
   // 剖切：用裁剪平面把虫体从矢状面切开，看内部结构关系
@@ -486,7 +503,7 @@ function StudioLights({ radius, dark }: { radius: number; dark: boolean }) {
         intensity={2.35}
         color="#fff6ea"
         castShadow
-        shadow-mapSize={COARSE ? [1024, 1024] : [2048, 2048]}
+        shadow-mapSize={[SHADOW_MAP_SIZE, SHADOW_MAP_SIZE]}
         shadow-bias={-0.0006}
         shadow-normalBias={0.02}
       >
@@ -509,7 +526,7 @@ function StudioLights({ radius, dark }: { radius: number; dark: boolean }) {
           resolution 只在桌面提到 512：这张 cubemap 只烘一次（frames={1}），
           手机维持 256 别多花那份烘图开销。 */}
       <Suspense fallback={null}>
-        <Environment resolution={COARSE ? 256 : 512} frames={1}>
+        <Environment resolution={ENV_RESOLUTION} frames={1}>
           <Lightformer form="rect" intensity={2.6} color="#fffaf2" position={[0, 4, 2]} scale={[8, 3, 1]} rotation={[-Math.PI / 3, 0, 0]} />
           <Lightformer form="rect" intensity={1.5} color="#e8f0ff" position={[-4, 1, -2]} scale={[5, 4, 1]} rotation={[0, Math.PI / 2.4, 0]} />
           <Lightformer form="rect" intensity={1.1} color="#ffeeda" position={[4, 0.5, -1.5]} scale={[4, 3, 1]} rotation={[0, -Math.PI / 2.6, 0]} />
@@ -609,11 +626,15 @@ function Scene({
       }
       return null
     })
+    pmark('model-load-start')
     loadInsectModel(insect.id)
       .then((m) => {
         if (!alive) return
+        pmark('model-ready')
         setModel(m)
         notify.current.onLoaded()
+        // 模型进场后的下一次 render 就是「虫子出现」的那一帧
+        markFirstFrame()
       })
       .catch((e) => {
         if (!alive) return
@@ -785,7 +806,20 @@ export const InsectCanvas = memo(function InsectCanvas({
       // toDataURL 取帧，默认关着省一份缓冲拷贝（未来照片模式同走此门）。
       gl={{ antialias: COARSE, alpha: true, preserveDrawingBuffer: PDB, powerPreference: 'high-performance' }}
       camera={{ fov: 34, position: [2, 1, 3] }}
-      onCreated={({ gl, invalidate }) => {
+      onCreated={({ gl, invalidate, scene, camera }) => {
+        // 首帧分段计时（默认关闭，?perf=1 才装探针；见 src/perf.ts）
+        pmark('gl-created')
+        installThreeProbes(THREE)
+        installGLProbes(gl as unknown as Parameters<typeof installGLProbes>[0])
+        pexpose({ gl, scene, camera })
+        const ctx = gl.getContext()
+        pinfo({
+          coarse: COARSE,
+          dpr: gl.getPixelRatio(),
+          glRenderer: String(ctx.getParameter(ctx.RENDERER)),
+          shadowMapSize: SHADOW_MAP_SIZE,
+          envResolution: ENV_RESOLUTION,
+        })
         gl.toneMapping = THREE.ACESFilmicToneMapping
         gl.toneMappingExposure = 1.02
         /**

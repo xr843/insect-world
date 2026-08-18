@@ -163,18 +163,30 @@
   animation: fade-up 0.3s ease both;
 }
 
-.spinnerRing {
-  width: 26px;
-  height: 26px;
-  border-radius: 999px;
-  border: 2px solid var(--line);
-  border-top-color: var(--active-fg);
-  animation: spin 0.85s linear infinite;
+/*
+ * 加载态的「标本正在显影」剪影。
+ *
+ * 存在理由是实测出来的：首帧压不进一秒（热缓存 1.8s、冷缓存 3.7s，
+ * 其中网络与几何构建两段动不了，分段见 docs/perf-notes.md），
+ * 那就别让展台在这段时间里完全空着。压得很淡并做呼吸，是为了让它读作
+ * 「还没显影完的标本」而不是「已经画好的图」—— 立体标本一长出来就换掉它。
+ */
+/* 颜色由 InsectGlyph 的 fill 决定（取该物种的 accent，与 WebGL 兜底页同规），
+   这里只管淡到什么程度和怎么呼吸 */
+.developing {
+  display: block;
+  animation: developing 1.8s ease-in-out infinite;
 }
 
-@keyframes spin {
-  to {
-    transform: rotate(360deg);
+@keyframes developing {
+  0%,
+  100% {
+    opacity: 0.13;
+    transform: scale(0.97);
+  }
+  50% {
+    opacity: 0.3;
+    transform: scale(1.03);
   }
 }
 
