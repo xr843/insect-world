@@ -31,6 +31,7 @@ import {
   loft,
   membrane,
   ocelli,
+  registerWing,
   segmentedAbdomen,
   spindle,
   wingGeometry,
@@ -133,6 +134,9 @@ function buildWing(spec: WingSpec, faceMat: THREE.Material, veinMat: THREE.Mater
   pivot.rotation.y = side * (Math.PI / 2 - THREE.MathUtils.degToRad(spec.spread)) + THREE.MathUtils.degToRad(spec.sweep ?? 0)
   pivot.rotation.x = side * THREE.MathUtils.degToRad(spec.tilt ?? 0)
   pivot.scale.z = side
+  // 骨架标记：双翅目只有一对前翅是真正的翅，平衡棒（haltere）是另一处
+  // 独立的自写部件，不在这里、也不该被登记成翅。
+  registerWing(pivot, { side, role: 'fore' })
   return { pivot, blade, tipLocal: new THREE.Vector3(spec.length * 0.94, 0, 0) }
 }
 

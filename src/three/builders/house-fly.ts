@@ -29,6 +29,7 @@ import {
   loft,
   membrane,
   mirrorZ,
+  registerWing,
   spindle,
   segmentedAbdomen,
   abdomenEnvelope,
@@ -319,6 +320,9 @@ export function buildHouseFly(): InsectModel {
     pivot.rotation.y = side * (Math.PI / 2 - THREE.MathUtils.degToRad(wingSpec.spread)) + THREE.MathUtils.degToRad(wingSpec.sweep ?? 0)
     pivot.rotation.x = side * THREE.MathUtils.degToRad(wingSpec.tilt ?? 0)
     pivot.scale.z = side
+    // 骨架标记：双翅目只有一对前翅是真正的翅，平衡棒（haltere）是另一处
+    // 独立的自写部件，不在这里、也不该被登记成翅。
+    registerWing(pivot, { side, role: 'fore' })
     wings.add(pivot)
     if (side === 1) rightBladeRef = blade
   }
