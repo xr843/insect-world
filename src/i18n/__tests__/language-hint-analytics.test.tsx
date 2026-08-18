@@ -33,6 +33,6 @@ describe('语言提示条 CTA —— language_switch(to)', () => {
     Object.defineProperty(window.navigator, 'language', { value: 'en-US', configurable: true })
     renderZh(<LanguageHint speciesId="ladybird" />)
     fireEvent.click(screen.getByText(/View in English/))
-    expect(trackMock).toHaveBeenCalledWith(EVENTS.LANGUAGE_SWITCH, { to: 'en' })
+    expect(trackMock).toHaveBeenCalledWith(EVENTS.LANGUAGE_SWITCH, { to: 'en', from: 'hint' })
   })
 })

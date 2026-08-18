@@ -29,6 +29,7 @@ import {
   legPair,
   loft,
   membrane,
+  registerWing,
   spindle,
   wingGeometry,
   type InsectModel,
@@ -276,6 +277,10 @@ export function buildDragonfly(): InsectModel {
   for (const side of [1, -1] as const) {
     const fw = dragonflyWing(foreSpec, wingFaceMat, veinMat, stigmaMat, 13, side)
     const hw = dragonflyWing(hindSpec, wingFaceMat, veinMat, stigmaMat, 12, side)
+    // 骨架标记：dragonflyWing() 复刻的是 kit.wing() 的枢轴装配方式，
+    // registerWing 补上 kit 内建 wing() 打不到的这一份。
+    registerWing(fw.pivot, { side, role: 'fore' })
+    registerWing(hw.pivot, { side, role: 'hind' })
     g.add(fw.pivot, hw.pivot)
     if (side === 1) {
       foreTip = fw

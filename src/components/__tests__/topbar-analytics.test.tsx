@@ -121,7 +121,7 @@ describe('语言切换埋点', () => {
   it('点切到英文的链接，上报 to: en', () => {
     mount()
     fireEvent.click(screen.getByText('EN'))
-    expect(trackMock).toHaveBeenCalledWith(EVENTS.LANGUAGE_SWITCH, { to: 'en' })
+    expect(trackMock).toHaveBeenCalledWith(EVENTS.LANGUAGE_SWITCH, { to: 'en', from: 'topbar' })
   })
 
   it('当前语言那个链接点了不上报 —— 它本来就没有 href，点了也不会跳转', () => {

@@ -13,6 +13,57 @@ import { facetNormalMap } from './eyes'
 
 // ---------------------------------------------------------------- 类型契约
 
+// ---------------------------------------------------------------- 骨架（rig）
+
+/**
+ * 可驱动的骨架句柄。动作层（`src/three/motion/`）只写这些节点的 rotation，
+ * 绝不碰几何 —— 几何是构建期的产物，动作是渲染期的状态，两者不能混。
+ *
+ * 为什么不是「每个物种自己声明骨架」：63 个物种里 62 个用的是 kit 的
+ * `leg()`/`legPair()`，31 个用 `wing()`/`wingPair()`。部件函数自己给产物打上
+ * 标记、`finalize()` 统一收集，物种文件一个字都不用改，将来新增物种也自动带上。
+ *
+ * `rest` 记的是构建完成时的静止姿态。动作层必须以它为基准做**偏移**，
+ * 不能直接写绝对角度 —— 每个物种的腿/翅摆位都是逐只调出来的，写绝对角度
+ * 等于把 63 只虫的姿态一起抹平。
+ */
+export interface WingRig {
+  /** 翅的枢轴节点（`wing()` 里那层 pivot），绕它转就是扑翅 */
+  pivot: THREE.Object3D
+  /** 静止姿态，动作层的基准 */
+  rest: THREE.Euler
+  /** +1 右翅，−1 左翅。⚠️ 左翅的 pivot 带 scale.z = −1，绕 Y/X 的旋转在观感上会反号，动作层要按它取符号 */
+  side: 1 | -1
+  /** 前翅 / 后翅。物种在 WingSpec 里显式给出才有值，kit 不做猜测 */
+  role?: 'fore' | 'hind'
+  /** 翅基在模型局部坐标里的位置（已随 finalize 的居中一起平移），供动作层按前后排相位 */
+  base: THREE.Vector3
+}
+
+/** 一条足的四个可转关节。层级：coxa → femur → tibia → tarsus，每节挂在父节点末端。 */
+export interface LegRig {
+  /** 体—基节关节：转它 = 整条腿前后摆（步态的主运动） */
+  coxa: THREE.Object3D
+  /** 基节—腿节关节：转它 = 抬腿/落腿 */
+  femur: THREE.Object3D
+  /** 膝（腿节—胫节） */
+  tibia: THREE.Object3D
+  /** 胫—跗关节 */
+  tarsus: THREE.Object3D
+  rest: { coxa: THREE.Euler; femur: THREE.Euler; tibia: THREE.Euler; tarsus: THREE.Euler }
+  /** +1 右腿，−1 左腿。⚠️ 同 WingRig.side，左腿整组带 scale.z = −1 */
+  side: 1 | -1
+  /** 足基在模型局部坐标里的位置，供动作层判前/中/后足（三角步态要分相位） */
+  base: THREE.Vector3
+}
+
+export interface InsectRig {
+  legs?: LegRig[]
+  wings?: WingRig[]
+  /** 物种自行登记的可动件：鞘翅、口器、尾须、捕捉足…… 用 `registerPart()` 挂 */
+  parts?: Record<string, THREE.Object3D>
+}
+
 /** 一个物种模型的产出。局部坐标系：+X 向前(头)，+Y 向上(背)，+Z 向右。 */
 export interface InsectModel {
   group: THREE.Group
@@ -27,6 +78,80 @@ export interface InsectModel {
    * 包围半径本身不动：它仍是「模型有多大」的事实。
    */
   frameRadius?: number
+  /**
+   * 可驱动骨架。**缺省即静态** —— 没有 rig 的物种和从前完全一样，
+   * 现有契约一个字不动。由 `finalize()` 从打过标记的部件里收集。
+   */
+  rig?: InsectRig
+}
+
+/**
+ * 骨架标记挂在 `userData` 的这个键下。
+ *
+ * 用一个不像业务字段的名字是有原因的：物种文件里的 userData 已经很挤了 ——
+ * longhorn-beetle 用 `base`/`phase`/`joints`，water-strider 用 `knee`/`tip`，
+ * darkling-beetle 用 `hip`，silk-moth 用 `hairCount`。撞名会静默覆盖，
+ * 而覆盖掉的那个字段坏了不会报错，只会让某只虫的某处悄悄不对。
+ */
+const RIG_TAG = '__rig'
+
+/**
+ * 标记里**只准放 JSON 安全的纯数据** —— 不许放 Object3D 引用，也不许放
+ * THREE.Euler / Vector3 这类带原型的对象。
+ *
+ * 为什么（2026-08-18 当场撞出来的）：`Object3D.copy()` 是用
+ * `JSON.parse(JSON.stringify(source.userData))` 深拷 userData 的。
+ * 第一版把四个关节的**对象引用**塞进了标记，于是
+ * `userData.__rig.joints.coxa.userData.__rig...` 成了循环结构，
+ * `mirrorZ()` 一 clone 就抛 "Converting circular structure to JSON"，
+ * 15 个测试文件一起红。
+ * 放 Euler 更阴 —— 它能序列化，但 JSON.parse 回来是个没有原型的普通对象，
+ * `rest.x` 变成 undefined（Euler 内部字段是 `_x`，靠 getter 暴露 x）。
+ * 那不会抛异常，只会让克隆出来的部件安静地动错，正是最难查的一类。
+ *
+ * 所以：句柄与 rest 都不进 userData，全部由 `collectRig()` 在收集时
+ * 按层级重组、按当时的 rotation 取快照。finalize 紧跟在构建之后，
+ * 那一刻的姿态就是静止姿态，比在部件函数里提前记更准。
+ */
+type RigTag =
+  | { kind: 'wing'; side: 1 | -1; role?: 'fore' | 'hind' }
+  /** 一条腿的根（coxa）。其余三节靠层级关系找，不靠 id —— clone 出来的那条腿自带自己的子树 */
+  | { kind: 'leg'; side: 1 | -1 }
+  | { kind: 'leg-joint'; role: 'femur' | 'tibia' | 'tarsus' }
+  | { kind: 'part'; name: string }
+
+/**
+ * 把一个自写部件登记进骨架，动作层就能按名字拿到它转。
+ *
+ * 给的是 kit 覆盖不到的那些东西：甲虫的鞘翅、螳螂的捕捉足、蝗虫的弹跳后足、
+ * 水黾的划水中足。物种文件在 `finalize()` 之前调用即可。
+ *
+ * 返回传入的对象本身，方便 `g.add(registerPart(elytra, 'elytra-right'))` 这样串写。
+ */
+export function registerPart<T extends THREE.Object3D>(obj: T, name: string): T {
+  obj.userData[RIG_TAG] = { kind: 'part', name } satisfies RigTag
+  return obj
+}
+
+/**
+ * 把一片**自写的**翅登记进骨架。
+ *
+ * 为什么需要这个出口：普查一跑就露馅了 —— 翅最值得扑的那 17 只
+ * （帝王蝶、碧伟蜓、柞蚕蛾、草蛉、齿蛉、大蚊、家蝇、库蚊……）恰恰全是
+ * 自己搭翅的。它们要在翅面上做斑纹、镶边、翅室，`wing()` 那片素膜给不了，
+ * 所以各自用 `wingGeometry()` 拼了自己的 pivot/blade。
+ * 结果就是：只给 `wing()` 打标记的话，能扑的没几只，而**不能扑的那些不会报错，
+ * 只会安静地不动** —— 和 D 轮触角那 9 只是同一个坑。
+ *
+ * 传进来的必须是**枢轴节点本身**（翅基处、绕它转就能扇动的那个 group），
+ * 不是翅面 mesh。静止姿态由 `finalize()` 收集时快照，这里不用管顺序。
+ */
+export function registerWing<T extends THREE.Object3D>(
+  pivot: T,
+  opts: { side: 1 | -1; role?: 'fore' | 'hind' },
+): T {
+  pivot.userData[RIG_TAG] = { kind: 'wing', side: opts.side, role: opts.role } satisfies RigTag
+  return pivot
 }
 
 export type InsectBuilder = () => InsectModel
@@ -553,6 +678,35 @@ export interface LegSpec {
 /**
  * 一条昆虫足：基节→腿节→胫节→跗节，四段折线。
  * 关节处用球体填充，避免折角处出现破面。
+ *
+ * ## 为什么是嵌套的骨架，而不是一堆绝对坐标的线段
+ *
+ * 原先这里把 kneePt / anklePt / tipPt 三个**绝对坐标**算出来，再在点之间画锥管，
+ * 全部塞进一个扁平 group。几何是对的，但**没有关节，所以转不动** —— 想让虫走路，
+ * 只能整条腿重算重建。D 轮触角摆能靠 `userData.base` 在展台侧重新锚定绕过去，
+ * 那招对单段触角行，对三段折线的腿不行。
+ *
+ * 现在改成 `coxa → femur → tibia → tarsus` 的嵌套：每一节挂在父节点的末端，
+ * 几何在各自的关节局部坐标里，摆姿靠**转 group** 而不是重算端点。
+ * 62/63 个物种用的是这个函数（只有淡色库蚊自写腿），所以这一处改动 = 62 只虫同时能动。
+ *
+ * ## 静止姿态必须逐像素不变
+ *
+ * 姿态仍然烘在几何里（四个关节的 rotation 静止时全是零位），所以默认渲染结果
+ * 与改前完全一致 —— 这不是「应该差不多」，是硬门禁：`__tests__/leg-rig.test.ts`
+ * 里带着改前那版的参考实现逐顶点比对，`__tests__/rig-invariance.test.ts` 拿
+ * 63 只虫的顶点统计/包围半径/锚点对基线。改坏了这两处会红。
+ *
+ * 之所以这么较真：63 只虫的形态是逐只目视调出来的，一次悄悄的整体漂移，
+ * 所有形态断言照样全绿（断言量的是数字，人看的是长相 —— 这个跟头本项目栽过多次）。
+ *
+ * ## 返回结构的兼容性
+ *
+ * 返回的仍是那个 position 为零、几何在绝对坐标语义下的外层 group，
+ * `userData.tip` / `userData.knee` 仍是**绝对坐标**（water-strider、jewel-beetle 等
+ * 13 个物种按 `legPair().children[0].userData.tip` 取值）。
+ * 外层 group 保持在原点尤其关键：`legPair()` 是在这一层翻 `scale.z = -1` 做镜像的，
+ * 若把它挪到 base 上，镜像面就从体中线变成了该腿的基节，左腿会整条飞到错的地方。
  */
 export function leg(spec: LegSpec, material: THREE.Material): THREE.Group {
   const g = new THREE.Group()
@@ -595,28 +749,52 @@ export function leg(spec: LegSpec, material: THREE.Material): THREE.Group {
     return new THREE.Mesh(loft(sections, 12), material)
   }
 
-  g.add(seg(base, kneePt, th * 1.45, th * 0.92)) // 腿节：基部粗（肌肉所在）
-  g.add(seg(kneePt, anklePt, th * 0.9, th * 0.6)) // 胫节
-  g.add(seg(anklePt, tipPt, th * 0.55, th * 0.28)) // 跗节
+  // 每一节在自己关节的局部坐标里，从原点指向下一个关节。
+  // 三条向量都是**差值**，与绝对位置无关 —— loft() 的平行传输只看切向量，
+  // 纯平移不改截面标架，所以局部放样与原来的绝对放样得到的是同一个形状。
+  const femurVec = new THREE.Vector3().subVectors(kneePt, base)
+  const tibiaVec = new THREE.Vector3().subVectors(anklePt, kneePt)
+  const tarsusVec = new THREE.Vector3().subVectors(tipPt, anklePt)
+  const ORIGIN = new THREE.Vector3()
 
-  for (const [p, r] of [
-    [base, th * 1.5],
-    [kneePt, th * 1.0],
-    [anklePt, th * 0.62],
+  // coxa 与 femur 同处基节点、分成两层，是为了给动作层两个独立的自由度：
+  // coxa 管前后摆（步态的主运动，三角步态就靠它），femur 管抬腿落腿。
+  // 合成一层的话，两种运动会互相污染对方的旋转轴。
+  const coxa = new THREE.Group()
+  coxa.position.copy(base)
+  const femurJ = new THREE.Group()
+  const tibiaJ = new THREE.Group() // 膝
+  tibiaJ.position.copy(femurVec)
+  const tarsusJ = new THREE.Group() // 胫跗关节
+  tarsusJ.position.copy(tibiaVec)
+  coxa.add(femurJ)
+  femurJ.add(tibiaJ)
+  tibiaJ.add(tarsusJ)
+  g.add(coxa)
+
+  femurJ.add(seg(ORIGIN, femurVec, th * 1.45, th * 0.92)) // 腿节：基部粗（肌肉所在）
+  tibiaJ.add(seg(ORIGIN, tibiaVec, th * 0.9, th * 0.6)) // 胫节
+  tarsusJ.add(seg(ORIGIN, tarsusVec, th * 0.55, th * 0.28)) // 跗节
+
+  // 关节球：各自落在所属关节的原点上（改前是 base / kneePt / anklePt 三个绝对点）
+  for (const [joint, r] of [
+    [femurJ, th * 1.5],
+    [tibiaJ, th * 1.0],
+    [tarsusJ, th * 0.62],
   ] as const) {
-    const j = new THREE.Mesh(new THREE.SphereGeometry(r, 12, 10), material)
-    j.position.copy(p)
-    g.add(j)
+    joint.add(new THREE.Mesh(new THREE.SphereGeometry(r, 12, 10), material))
   }
 
   if (spec.spines) {
-    const dir = new THREE.Vector3().subVectors(anklePt, kneePt)
+    // 胫节刺挂进 tibiaJ，坐标随之改成以膝为原点。方向向量与叉积都是差值运算，
+    // 平移不变，所以刺的形状与朝向和改前一模一样。
+    const dir = tibiaVec.clone()
     const len = dir.length()
     dir.normalize()
     const side = new THREE.Vector3().crossVectors(dir, new THREE.Vector3(0, 1, 0)).normalize()
     for (let i = 1; i <= 4; i++) {
       const t = i / 5
-      const p = kneePt.clone().addScaledVector(dir, len * t)
+      const p = new THREE.Vector3().addScaledVector(dir, len * t)
       const tip = p.clone().addScaledVector(side, th * 1.8).addScaledVector(dir, th * 0.6)
       const s = new THREE.Mesh(
         loft(
@@ -628,12 +806,28 @@ export function leg(spec: LegSpec, material: THREE.Material): THREE.Group {
         ),
         material,
       )
-      g.add(s)
+      tibiaJ.add(s)
     }
   }
 
   g.userData.tip = tipPt
   g.userData.knee = kneePt
+
+  /**
+   * 骨架标记挂在 coxa 上而不是外层 g：`collectRig()` 取的是节点的世界位置，
+   * 挂在 g 上会得到模型原点，动作层就没法按前/中/后足分相位了。
+   *
+   * 其余三节各自打 leg-joint 标记，`collectRig()` 顺着 coxa 的子树认领 ——
+   * **不用 id 配对**，因为 `mirrorZ()` 会整条腿 clone，id 会跟着复制，
+   * 两条腿的关节就串到一起去了。层级天然是分开的。
+   *
+   * side 先按 leg() 自身的固有手性记为 +1（内部算出的腿节方向 z 分量恒为正，
+   * 单独调用 leg() 拿到的永远是「右腿」形态）；`legPair()` / `mirrorZ()` 会翻成 −1。
+   */
+  coxa.userData[RIG_TAG] = { kind: 'leg', side: 1 } satisfies RigTag
+  femurJ.userData[RIG_TAG] = { kind: 'leg-joint', role: 'femur' } satisfies RigTag
+  tibiaJ.userData[RIG_TAG] = { kind: 'leg-joint', role: 'tibia' } satisfies RigTag
+  tarsusJ.userData[RIG_TAG] = { kind: 'leg-joint', role: 'tarsus' } satisfies RigTag
   return g
 }
 
@@ -650,6 +844,9 @@ export function legPair(spec: LegSpec, material: THREE.Material): THREE.Group {
   const right = leg(spec, material)
   const left = leg(spec, material)
   left.scale.z = -1
+  // 骨架侧别：leg() 一律按固有手性记 +1，翻过 scale.z 的这条才是左腿。
+  // 动作层必须按它取符号 —— 左腿整组带负缩放，绕 Y/X 的旋转在观感上是反的。
+  flipRigSide(left)
   g.add(right, left)
   return g
 }
@@ -807,6 +1004,12 @@ export interface WingSpec {
   sweep?: number
   /** 厚度，默认 0.012 */
   thickness?: number
+  /**
+   * 前翅 / 后翅。只影响骨架层（`WingRig.role`）—— 扑翅时后翅要比前翅
+   * 差一点相位，真实的四翅昆虫就是这么飞的。不填也能扑，只是四片同相。
+   * kit 不猜：翅基的前后位置分不开前后翅（膜翅目两对翅基几乎重合）。
+   */
+  role?: 'fore' | 'hind'
 }
 
 /** 由轮廓生成一片翅的几何体（位于 XZ 平面，翅基在原点，向 +X 延伸） */
@@ -910,6 +1113,7 @@ export function wing(
   pivot.rotation.y = side * (Math.PI / 2 - THREE.MathUtils.degToRad(spec.spread)) + THREE.MathUtils.degToRad(spec.sweep ?? 0)
   pivot.rotation.x = side * THREE.MathUtils.degToRad(spec.tilt ?? 0)
   pivot.scale.z = side
+  pivot.userData[RIG_TAG] = { kind: 'wing', side, role: spec.role } satisfies RigTag
   return pivot
 }
 
@@ -1093,7 +1297,12 @@ export function finalize(
   const shifted: Record<string, THREE.Vector3> = {}
   for (const [k, v] of Object.entries(anchors)) shifted[k] = v.clone().sub(center)
 
+  // 骨架标记在这趟遍历里一并收走 —— 63 个模型的场景图不值得走第二遍。
+  const tagged: { node: THREE.Object3D; tag: RigTag }[] = []
+
   group.traverse((o) => {
+    const tag = o.userData[RIG_TAG] as RigTag | undefined
+    if (tag) tagged.push({ node: o, tag })
     if ((o as THREE.Mesh).isMesh) {
       o.castShadow = true
       o.receiveShadow = true
@@ -1114,14 +1323,109 @@ export function finalize(
 
   const model: InsectModel = { group, anchors: shifted, radius: boundingRadius(group) }
   if (opts.frameRadius !== undefined) model.frameRadius = opts.frameRadius
+
+  const rig = collectRig(group, tagged)
+  if (rig) model.rig = rig
   return model
 }
 
-/** 沿 Z 轴镜像复制一个部件（用于成对结构的快捷装配） */
+/**
+ * 把遍历到的骨架标记整理成 `InsectRig`。
+ *
+ * base 位置在**居中之后**才取：`finalize()` 已经把 group 平移过，这里
+ * `updateMatrixWorld` 出来的世界坐标就是模型局部坐标，与 `anchors` 同一套空间。
+ * 若在居中之前取，动作层按 base 分相位时会整体偏掉半个身长。
+ *
+ * 一个标记都没有就返回 undefined —— 静态物种的 model 上不该凭空多出一个空 rig，
+ * 「有没有 rig」是普查测试的判据。
+ */
+function collectRig(group: THREE.Group, tagged: { node: THREE.Object3D; tag: RigTag }[]): InsectRig | undefined {
+  if (tagged.length === 0) return undefined
+  group.updateMatrixWorld(true)
+
+  const wings: WingRig[] = []
+  const legs: LegRig[] = []
+  const parts: Record<string, THREE.Object3D> = {}
+
+  for (const { node, tag } of tagged) {
+    if (tag.kind === 'wing') {
+      wings.push({
+        pivot: node,
+        rest: node.rotation.clone(),
+        side: tag.side,
+        role: tag.role,
+        base: node.getWorldPosition(new THREE.Vector3()),
+      })
+    } else if (tag.kind === 'leg') {
+      const j = legJoints(node)
+      // 认不全就整条丢弃：半条腿的句柄比没有更危险 —— 动作层会驱动一半、
+      // 另一半僵着，读出来像模型坏了。宁可让普查测试报「这只虫没有腿骨架」。
+      if (j) {
+        legs.push({
+          coxa: node,
+          femur: j.femur,
+          tibia: j.tibia,
+          tarsus: j.tarsus,
+          rest: {
+            coxa: node.rotation.clone(),
+            femur: j.femur.rotation.clone(),
+            tibia: j.tibia.rotation.clone(),
+            tarsus: j.tarsus.rotation.clone(),
+          },
+          side: tag.side,
+          base: node.getWorldPosition(new THREE.Vector3()),
+        })
+      }
+    } else if (tag.kind === 'part') {
+      parts[tag.name] = node
+    }
+  }
+
+  const rig: InsectRig = {}
+  if (legs.length) rig.legs = legs
+  if (wings.length) rig.wings = wings
+  if (Object.keys(parts).length) rig.parts = parts
+  return rig
+}
+
+/** 顺着 coxa 的子树认领腿节/胫节/跗节。前序遍历，三节各出现一次且顺序天然正确。 */
+function legJoints(coxa: THREE.Object3D) {
+  const found: Partial<Record<'femur' | 'tibia' | 'tarsus', THREE.Object3D>> = {}
+  coxa.traverse((o) => {
+    const t = o.userData[RIG_TAG] as RigTag | undefined
+    if (t?.kind === 'leg-joint' && !found[t.role]) found[t.role] = o
+  })
+  const { femur, tibia, tarsus } = found
+  return femur && tibia && tarsus ? { femur, tibia, tarsus } : null
+}
+
+/**
+ * 把一棵子树里所有骨架标记的侧别翻过来。
+ * 给 `legPair()` 与 `mirrorZ()` 用 —— 它们都是靠 `scale.z = -1` 做镜像的，
+ * 翻过的那一份在观感上左右相反，动作层必须知道。
+ */
+function flipRigSide(root: THREE.Object3D): void {
+  root.traverse((o) => {
+    const tag = o.userData[RIG_TAG] as RigTag | undefined
+    if (tag && (tag.kind === 'leg' || tag.kind === 'wing')) tag.side = tag.side === 1 ? -1 : 1
+  })
+}
+
+/**
+ * 沿 Z 轴镜像复制一个部件（用于成对结构的快捷装配）。
+ *
+ * ⚠️ `Object3D.copy()` 深拷 userData 走的是 `JSON.parse(JSON.stringify(...))`，
+ * 所以任何塞进 userData 的东西都必须是 JSON 安全的纯数据 ——
+ * 放对象引用会成环直接抛异常，放 Vector3 / Euler 则会静默退化成没有原型的
+ * 普通对象（`p.x` 还在，但 `Euler` 的 `.x` 是 getter，克隆后读出来是 undefined）。
+ * 骨架标记就是按这条约束设计的。
+ */
 export function mirrorZ(obj: THREE.Object3D): THREE.Group {
   const g = new THREE.Group()
   const clone = obj.clone()
   clone.scale.z *= -1
+  // 镜像出来的那一份左右相反，骨架标记要跟着翻，否则动作层会把它当同侧驱动
+  flipRigSide(clone)
   g.add(obj, clone)
   return g
 }

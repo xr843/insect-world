@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import type { Insect, Order } from '../data/types'
 import { EVENTS, track } from '../analytics'
+import { rememberLocaleChoice } from '../i18n/rememberLocale'
 import { useLabels, useLocale, useT } from '../i18n/useT'
 import { hrefForLocale } from '../i18n/hrefForLocale'
 import { LOCALE_AUTONYM } from '../i18n/locales'
@@ -242,7 +243,11 @@ export function TopBar({
               lang={code === 'zh' ? 'zh-Hans' : 'en'}
               onClick={() => {
                 // 当前语言那个 <a> 没有 href，点了也不会跳转，不该记一次「切换」
-                if (locale !== code) track(EVENTS.LANGUAGE_SWITCH, { to: code })
+                if (locale === code) return
+                // 先记住明确选择：边缘分流（functions/index.ts）靠这个 cookie，
+                // 漏掉的话用户下次落地 `/` 又会被浏览器语言弹回去。
+                rememberLocaleChoice(code)
+                track(EVENTS.LANGUAGE_SWITCH, { to: code, from: 'topbar' })
               }}
             >
               {LOCALE_AUTONYM[code]}
