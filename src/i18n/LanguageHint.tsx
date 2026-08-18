@@ -1,26 +1,11 @@
 import { useEffect, useState } from 'react'
-import { LOCALE_COOKIE_NAME } from './edgeLocale'
 import { hrefForLocale } from './hrefForLocale'
+import { rememberLocaleChoice } from './rememberLocale'
 import { useLocale } from './useT'
-import type { Locale } from './types'
 import s from './LanguageHint.module.css'
+import { EVENTS, track } from '../analytics'
 
 const DISMISS_KEY = 'iw-lang-hint-dismissed'
-
-/**
- * 用户点了 hint 里的语言切换链接，记下这个明确选择。
- *
- * 存在的唯一理由是配合边缘分流（functions/index.ts）：那边读不到
- * localStorage，只能读 cookie。没有这一步的话，非中文 Accept-Language 的
- * 访客点"查看中文版"看了几页后只要重新落地 `/`，又会被边缘按 Accept-Language
- * 弹回 /en/ —— 明确选择被浏览器语言覆盖，体验上等于选择没生效。
- *
- * max-age 给一年；SameSite=Lax 足够（同站顶层导航场景），不设 Secure ——
- * `wrangler pages dev` 本地用 http 起服务时也要能写进去。
- */
-function rememberLocaleChoice(locale: Locale) {
-  document.cookie = `${LOCALE_COOKIE_NAME}=${locale}; path=/; max-age=31536000; SameSite=Lax`
-}
 
 /** 两侧文案都写死在这里，因为它天然是「用对方的语言说给对方听」 */
 const HINT = {
@@ -71,7 +56,12 @@ export function LanguageHint({ speciesId }: { speciesId: string }) {
         className={s.cta}
         href={hrefForLocale(other, speciesId)}
         lang={locale === 'zh' ? 'en' : 'zh-Hans'}
-        onClick={() => rememberLocaleChoice(other)}
+        onClick={() => {
+          // 顺序有讲究：先记住明确选择（功能性的，边缘分流靠它），再上报。
+          // track() 自己吞异常，但没必要让锦上添花的那一步排在前面。
+          rememberLocaleChoice(other)
+          track(EVENTS.LANGUAGE_SWITCH, { to: other, from: 'hint' })
+        }}
       >
         {copy.cta}
       </a>

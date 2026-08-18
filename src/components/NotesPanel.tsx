@@ -4,6 +4,7 @@ import type { FieldNotes } from '../hooks/useFieldNotes'
 import { InsectGlyph } from './InsectGlyph'
 import s from './NotesPanel.module.css'
 import { useT } from '../i18n/useT'
+import { EVENTS, track } from '../analytics'
 
 /** 关掉弹层的通用行为：Esc 键 + 打开时锁住背景滚动 */
 function useDismiss(onClose: () => void) {
@@ -63,7 +64,17 @@ export function NotesPanel({
     [notes, byId],
   )
 
-  const commit = () => onWrite(insect.id, draft)
+  /**
+   * commit 也挂在 textarea 的 onBlur 上 —— 单纯点一下别处失焦、正文没改
+   * 不该算一次「写入」，所以先跟上一次存的文本比一下，真有变化才报。
+   * 只报是不是清空了（cleared），不报正文本身：笔记内容是用户写的自由
+   * 文本，属于隐私要求里明确不能上报的那一类。
+   */
+  const commit = () => {
+    const prevText = notes[insect.id]?.text ?? ''
+    if (draft !== prevText) track(EVENTS.NOTE_WRITE, { cleared: draft.trim().length === 0 })
+    onWrite(insect.id, draft)
+  }
 
   return (
     <div className={s.backdrop} onMouseDown={onClose}>

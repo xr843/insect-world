@@ -20,6 +20,7 @@ import { useT, useLocale } from '../i18n/useT'
 import { canonicalPath } from '../i18n/hrefForLocale'
 import { photoUrl } from '../data/external'
 import { pinyinOf } from '../data/pinyin'
+import { EVENTS, track } from '../analytics'
 
 export function DetailPanel({
   insect,
@@ -46,6 +47,7 @@ export function DetailPanel({
   const copyTimer = useRef<number>()
   useEffect(() => () => window.clearTimeout(copyTimer.current), [])
   const share = () => {
+    track(EVENTS.SHARE_CLICK, { method: canShare ? 'system' : 'copy' })
     const url = location.origin + canonicalPath(locale, insect.id)
     if (canShare) {
       // 用户在系统面板里点了取消会 reject（AbortError），不是故障，安静吞掉

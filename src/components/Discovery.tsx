@@ -11,6 +11,7 @@ import { useT } from '../i18n/useT'
 import { InsectGlyph } from './InsectGlyph'
 import { IconArrowRight, IconGlobe, IconPlay, IconQuiz, IconSparkle } from './icons'
 import s from './Discovery.module.css'
+import { EVENTS, track } from '../analytics'
 
 export type DiscoveryKind = 'lesson' | 'motion' | 'quiz' | 'habitat'
 
@@ -48,6 +49,18 @@ export function Discovery({
     onClose()
   }, [onClose, onFocusAnchor])
 
+  /**
+   * 打开埋点：App.tsx 用 `{discovery && <Discovery .../>}` 控制这个组件的
+   * 有无，每次打开都是全新挂载、关掉即卸载 —— 挂载的时机就是「打开」这个
+   * 动作本身，一次性 effect 精确对应一次打开，不用去 App.tsx 里到处找
+   * setDiscovery(...) 的调用点。
+   */
+  useEffect(() => {
+    track(EVENTS.DISCOVERY_OPEN, { kind })
+    // kind 在这个组件实例的生命周期内不会变（换 kind 走的是整体重新挂载），故意留空依赖
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (e.key === 'Escape') close()
@@ -69,6 +82,24 @@ export function Discovery({
     if (kind !== 'lesson') return
     onFocusAnchor(current?.anchor ?? null)
   }, [kind, current, onFocusAnchor])
+
+  /**
+   * 小测的题目/完成态/得分提到组件顶层算，供下面的埋点 effect 用 ——
+   * Hooks 不能塞进 `if (kind === 'quiz')` 里面才调用（换 kind 换 step 数会
+   * 打乱调用顺序），所以这几个原本在 quiz 分支局部算的值搬到这里，
+   * 与 lesson 分支的 steps/current 同等对待。kind !== 'quiz' 时也会算，
+   * 但都是几个数组方法，成本可以忽略。
+   */
+  const qs = guide?.quiz ?? []
+  const quizDone = qs.length > 0 && picked.every((p) => p !== null)
+  const score = picked.filter((p, i) => p !== null && p === qs[i]?.answer).length
+
+  // 小测答完（每题都选了）时报一次最终得分；quizDone 从 false 变 true 那一刻只触发一次
+  useEffect(() => {
+    if (kind === 'quiz' && quizDone) track(EVENTS.QUIZ_SCORE, { score, total: qs.length })
+    // score/qs 在 quizDone 变 true 的那一刻已经稳定，不需要单独进依赖
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [kind, quizDone])
 
   const Badge = BADGE[kind]
 
@@ -125,6 +156,16 @@ export function Discovery({
   // ---------------------------------------------------------------- 分步讲解
   if (kind === 'lesson') {
     const last = step >= steps.length - 1
+    /**
+     * 前进/后退共用这一个：先报「翻到了第几步」（1 起数，目标步而不是
+     * 当前步）再真的翻页。track 是普通语句、不放进 setStep 的函数式更新
+     * 里 —— 和 App.tsx 里 toggleCompare 那条注释同一个理由，避免 React 18
+     * StrictMode 在开发环境重放 updater 时把埋点也重放一遍。
+     */
+    const goTo = (nextStep: number) => {
+      track(EVENTS.LESSON_STEP, { step: nextStep + 1, total: steps.length })
+      setStep(nextStep)
+    }
     return shell(
       <>
         <h2 className={s.title}>{current?.title ?? insect.name}</h2>
@@ -145,12 +186,19 @@ export function Discovery({
           ))}
         </div>
         <div className={s.actions}>
-          <button className={s.secondary} onClick={() => setStep((i) => i - 1)} disabled={step === 0}>
+          <button className={s.secondary} onClick={() => goTo(step - 1)} disabled={step === 0}>
             {t('discovery.back')}
           </button>
           <button
             className={s.primary}
-            onClick={() => (last ? close() : setStep((i) => i + 1))}
+            onClick={() => {
+              if (last) {
+                track(EVENTS.LESSON_COMPLETE, { total: steps.length })
+                close()
+              } else {
+                goTo(step + 1)
+              }
+            }}
           >
             {last ? t('discovery.done') : t('discovery.next')}
             <IconArrowRight size={15} />
@@ -162,7 +210,6 @@ export function Discovery({
 
   // ---------------------------------------------------------------- 小测
   if (kind === 'quiz') {
-    const qs = guide.quiz
     const q = qs[step]
     if (!q) {
       return shell(
@@ -180,8 +227,6 @@ export function Discovery({
     }
     const chosen = picked[step]
     const answered = chosen !== null
-    const done = picked.every((p) => p !== null)
-    const score = picked.filter((p, i) => p !== null && p === qs[i]?.answer).length
 
     return shell(
       <>
@@ -202,9 +247,10 @@ export function Discovery({
                 className={s.option}
                 data-state={state}
                 disabled={answered}
-                onClick={() =>
+                onClick={() => {
+                  track(EVENTS.QUIZ_ANSWER, { correct: i === q.answer })
                   setPicked((prev) => prev.map((p, k) => (k === step ? i : p)))
-                }
+                }}
               >
                 {answered && (i === q.answer || i === chosen) && (
                   <span className={s.mark} data-kind={i === q.answer ? 'correct' : 'wrong'}>
@@ -217,7 +263,7 @@ export function Discovery({
           })}
         </div>
         {answered && <div className={s.explain}>{q.explain}</div>}
-        {done && (
+        {quizDone && (
           <div className={s.score}>{t('quiz.score', { score, total: qs.length })}</div>
         )}
         <div className={s.actions}>
