@@ -58,3 +58,39 @@ export function needsLegs(fn: Motion): Motion {
 }
 
 export type { InsectRig }
+
+// ---------------------------------------------------------------- 进出场
+
+/** 幅度权重每秒变化多少（1/0.25s）—— 进出各 0.25 秒 */
+export const BLEND_RATE = 4
+
+/**
+ * 把幅度权重朝目标推一帧。
+ *
+ * 单独抽出来是因为它和下面的 `applyBlended` 一起出过一个只有实测才撞得出的 bug，
+ * 见那边的注释。留在这里能被 node 直接测。
+ */
+export function stepBlend(current: number, target: number, dt: number, rate = BLEND_RATE): number {
+  const delta = target - current
+  return current + Math.sign(delta) * Math.min(Math.abs(delta), dt * rate)
+}
+
+/**
+ * 按幅度权重施加一个动作。
+ *
+ * ⚠️ **收拢那一步无论 blend 是多少都要走**，blend 为 0 时它正好把部件按回 rest。
+ *
+ * 第一版写成了「blend > 0 才写」，实测当场翻车：`dt * rate` 一旦 ≥ 1，
+ * blend 会**一帧从 1 直接掉到 0**，那一帧就整个跳过了写入，上一帧的全幅姿态
+ * 于是永久留在模型上 —— 翅僵在冲程中间，而且再也不会有下一帧来纠正它
+ * （blend 到 0 之后调用方就不再续帧了）。
+ *
+ * dt ≥ 0.25s 听着离谱，但按需渲染（`frameloop='demand'`）下**从暂停里醒来的
+ * 第一帧就是这么大的 dt**；慢设备、后台标签页切回来同理。
+ */
+export function applyBlended(rig: InsectRig, motion: Motion, t: number, blend: number): void {
+  if (blend > 0) motion(rig, t)
+  for (const w of rig.wings ?? []) {
+    w.pivot.rotation.x = w.rest.x + (w.pivot.rotation.x - w.rest.x) * blend
+  }
+}

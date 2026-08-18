@@ -14,6 +14,7 @@ import type { OrbitControls as OrbitControlsImpl } from 'three-stdlib'
 import type { Insect } from '../data/types'
 import type { InsectModel } from './builders/kit'
 import { loadInsectModel } from './registry'
+import { applyBlended, motionFor, stepBlend } from './motion'
 import { bindContextLoss } from './webgl'
 import { installGLProbes, installThreeProbes, markFirstFrame, pexpose, pinfo, pmark } from '../perf'
 
@@ -68,6 +69,7 @@ export type ViewMode = 'normal' | 'isolate' | 'section' | 'layers'
  */
 function InsectMesh({
   model,
+  speciesId,
   mode,
   spin,
   pauseUntil,
@@ -79,6 +81,8 @@ function InsectMesh({
   /** 由 Scene 持有，Framing 需要用它把局部锚点换算成世界坐标 */
   groupRef: React.MutableRefObject<THREE.Group | null>
   model: InsectModel
+  /** 当前物种 id —— 动作层按它查表（查不到就是不动，没有默认动作） */
+  speciesId: string
   mode: ViewMode
   spin: boolean
   /** 交互后的「让转」截止时刻（performance.now() 基准） */
@@ -90,6 +94,10 @@ function InsectMesh({
   /** 触角枢轴列表（D 轮微动）；随模型重建 */
   const antennae = useRef<THREE.Group[]>([])
   const swayT = useRef(0)
+  /** 悬停振翅：累计相位与进出场的幅度权重（0=完全收拢到 rest） */
+  const motionT = useRef(0)
+  const flapBlend = useRef(0)
+  const motion = useMemo(() => motionFor(speciesId), [speciesId])
 
   // 切换物种时从略小的尺度弹入，避免生硬替换
   useLayoutEffect(() => {
@@ -191,8 +199,26 @@ function InsectMesh({
         pivot.rotation.x = s * 0.45
       }
     }
-    // 按需渲染下自己续帧：还在转、还没长完，都得有下一帧
-    if (live || born.current < 1) invalidate()
+
+    /**
+     * 悬停振翅（动作层，见 `three/motion/`）。
+     *
+     * 跟触角摆同一个 `live` 开关，但**不能像触角那样直接停**：触角停在某个
+     * 微小偏角上没人看得出来，翅膀停在冲程中间就是一只僵在半空的虫。
+     * 所以进出各用 0.25 秒把幅度揉进揉出 —— `blend` 落到 0 时，每片翅
+     * 正好回到 `rest`（逐只目视调出来的那个展角）。
+     *
+     * 收拢的写法对任何「以 rest 为基准做偏移」的动作都成立，
+     * 所以这段不必随每个新动作改一遍 —— 那也正是 rest 契约存在的意义。
+     */
+    if (motion && model.rig?.wings?.length && !REDUCED_MOTION) {
+      flapBlend.current = stepBlend(flapBlend.current, live ? 1 : 0, dt)
+      if (flapBlend.current > 0) motionT.current += dt
+      applyBlended(model.rig, motion, motionT.current, flapBlend.current)
+    }
+
+    // 按需渲染下自己续帧：还在转、还没长完、翅还没收拢完，都得有下一帧
+    if (live || born.current < 1 || flapBlend.current > 0) invalidate()
   })
 
   return (
@@ -693,6 +719,7 @@ function Scene({
           {/* 聚焦某个部位时停转：镜头锁在一点上而虫还在转，那个部位会自己溜走 */}
           <InsectMesh
             model={model}
+            speciesId={insect.id}
             mode={mode}
             spin={spin && !focus}
             pauseUntil={pauseUntil}
