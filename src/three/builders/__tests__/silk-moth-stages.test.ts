@@ -17,10 +17,17 @@
  * - 「茧包住蛹」不量包围盒（旋转过的包围盒会虚胖），而是**按 x 分箱对茧壳做最小
  *   二乘圆拟合**，逐个蛹顶点判断是否在拟合出的外壁之内。茧是剖开的，顶点的均值
  *   与包围盒中心都不在轴上，只有拟合拿得到真正的轴。
+ * - 卵壳「光洁不光洁」量的是**每个顶点到理想椭球方程的偏离**：第一版 16 个高斯
+ *   凹坑会把它推到 0.24，光洁椭球是 0.03 以内，差着一个量级。
+ *   （曾经还有一条「剪影/凸包面积比」，删了 —— 它在同一个模型上给出 0.736，
+ *   与上面那条自相矛盾，错的是它自己：按方位角分箱取最大半径再放回箱中心角，
+ *   UV 球两极附近在这个投影里按角度是稀疏的，量到的是采样的病不是形状的病。）
+ * - 云斑的「对比够不够」上下限都卡：只给下限，斑压得再黑也能过；只给上限，
+ *   斑淡到看不见也能过。两条一起才对应得上「低对比但不是没对比」这句话。
  */
 import * as THREE from 'three'
 import { describe, expect, it } from 'vitest'
-import { buildSilkMothEgg } from '../stages/silk-moth-egg'
+import { buildSilkMothEgg, mottleColorAt } from '../stages/silk-moth-egg'
 import { buildSilkMothLarva } from '../stages/silk-moth-larva'
 import { buildSilkMothPupa } from '../stages/silk-moth-pupa'
 import { buildSilkMoth } from '../silk-moth'
@@ -105,7 +112,7 @@ function taperTopBottom(m: THREE.Mesh, bins = 8): { top: number; bottom: number 
 describe('柞蚕卵 buildSilkMothEgg', () => {
   const model = buildSilkMothEgg()
   const shells = meshesNamed(model.group, 'egg-shell')
-  const blotches = meshesNamed(model.group, 'egg-blotch')
+  const bark = meshesNamed(model.group, 'egg-bark')
 
   it('能构建，无 NaN，面数在预算内', () => {
     const { nan, triangles } = inspect(model)
@@ -114,7 +121,7 @@ describe('柞蚕卵 buildSilkMothEgg', () => {
     expect(model.radius).toBeGreaterThan(0)
   })
 
-  it('一窝三粒，共用同一个几何体', () => {
+  it('一窝三粒，共用同一个几何体与材质', () => {
     let eggs = 0
     model.group.traverse((o) => {
       if (o.name === 'egg') eggs++
@@ -122,6 +129,7 @@ describe('柞蚕卵 buildSilkMothEgg', () => {
     expect(eggs, '柞蚕蛾成堆产卵，单独一粒读起来像颗药片').toBe(3)
     expect(shells).toHaveLength(3)
     expect(shells[0].geometry, '三粒是同一个几何体的三个实例').toBe(shells[1].geometry)
+    expect(shells[0].material, '三粒共用同一份材质（含同一张云斑贴图）').toBe(shells[1].material)
   })
 
   it('单粒是扁圆形：长 > 宽 > 厚，长径合真实的 3 毫米，厚只有长的六成', () => {
@@ -138,51 +146,136 @@ describe('柞蚕卵 buildSilkMothEgg', () => {
     expect(s.y / s.x).toBeLessThan(0.75)
   })
 
-  it('表面真的有凹陷，不是一颗光溜溜的椭球', () => {
+  it('卵壳是数学意义上光洁的三轴椭球：不再靠几何压凹坑做表面质感', () => {
     shells[0].geometry.computeBoundingBox()
     const size = new THREE.Vector3()
     shells[0].geometry.boundingBox!.getSize(size)
     const a = size.clone().multiplyScalar(0.5)
     const pos = shells[0].geometry.getAttribute('position')
-    let minQ = Infinity
-    let maxQ = -Infinity
+    let maxDev = 0
     for (let i = 0; i < pos.count; i++) {
-      // q = (x/a)²+(y/b)²+(z/c)²，完美椭球恒为 1；凹陷把它压到 1 以下
+      // q = (x/a)²+(y/b)²+(z/c)²，完美椭球恒为 1；q 偏离 1 就是几何在往里凹或往外鼓
       const q = (pos.getX(i) / a.x) ** 2 + (pos.getY(i) / a.y) ** 2 + (pos.getZ(i) / a.z) ** 2
-      minQ = Math.min(minQ, q)
-      maxQ = Math.max(maxQ, q)
+      maxDev = Math.max(maxDev, Math.abs(q - 1))
     }
-    // 换算成半径就是至少有处比理想椭球缩了 8%。把 DIMPLE_DEPTH 归零这条立刻红
-    expect(minQ, `最深的凹陷只有 ${(1 - Math.sqrt(minQ)).toFixed(3)}，读不出「表面略有凹陷」`).toBeLessThan(0.85)
-    // 上限：凹陷只准往里，不准鼓出一堆瘤（那就成了另一种虫的卵）
-    expect(maxQ).toBeLessThan(1.15)
+    // 第一版 DIMPLE_DEPTH=0.13 会把 q 压到约 0.76（偏离 0.24）；这条给 3% 的余量
+    // 容纳三角化的离散误差，把几何压凹坑加回来这条立刻红。
+    expect(maxDev, `椭球方程偏离最大到 ${maxDev.toFixed(3)}，说明又在用几何压凹坑了`).toBeLessThan(0.03)
   })
 
-  it('褐斑贴在壳上，且与灰白底色的明度差够大', () => {
-    expect(blotches.length, '14 块斑 × 3 粒').toBe(42)
-    shells[0].geometry.computeBoundingBox()
-    const size = new THREE.Vector3()
-    shells[0].geometry.boundingBox!.getSize(size)
-    const a = size.clone().multiplyScalar(0.5)
-    let minQ = Infinity
-    let maxQ = -Infinity
-    for (const b of blotches.slice(0, 14)) {
-      const pos = b.geometry.getAttribute('position')
-      for (let i = 0; i < pos.count; i++) {
-        const q = (pos.getX(i) / a.x) ** 2 + (pos.getY(i) / a.y) ** 2 + (pos.getZ(i) / a.z) ** 2
-        minQ = Math.min(minQ, q)
-        maxQ = Math.max(maxQ, q)
+  /*
+   * 这里原本还有一条「三个机位投影的剪影/凸包面积比都接近 1」。删掉了，因为
+   * **它量不准，而且与上面那条自相矛盾**：上面那条直接量每个顶点到椭球方程的
+   * 偏离（实测 < 0.03，而第一版的几何凹坑会把它推到 0.24），已经把「是不是
+   * 光洁椭球」判死了；剪影那条却在同一个模型上给出 0.736。
+   *
+   * 错的是剪影那条。它把每个角度箱里的**最大半径**放到**箱中心角**上重建多边形，
+   * 而 UV 球在两极附近的顶点在这个投影里按角度是稀疏的 —— 有些箱里只落得到
+   * 靠近中心的点，重建出来的多边形就凹进去一大块，量到的是采样的病不是形状的病。
+   *
+   * 教训与本项目那条老规矩同源：**断言量的是数字，人看的是长相，两者可以毫无
+   * 关系**。判据要挑直接的那个 —— 椭球方程偏离就是直接的，剪影面积比是绕了
+   * 一圈的近似，绕的那一圈里藏着自己的 bug。
+   */
+
+  it('云斑与底色的对比：卡住上限（不能倒回奶牛斑硬边），也卡住下限（不能糊到看不见斑）', () => {
+    // mottleColorAt 是贴图实际画像素时用的同一个函数，采样它就是在量「渲染出来
+    // 到底长什么样」，不是另算一套只服务于测试的近似值。
+    let maxL = -Infinity
+    let minL = Infinity
+    const N = 32
+    for (let i = 0; i < N; i++) {
+      for (let j = 0; j <= N; j++) {
+        const hsl = { h: 0, s: 0, l: 0 }
+        mottleColorAt(i / N, j / N).getHSL(hsl, THREE.SRGBColorSpace)
+        maxL = Math.max(maxL, hsl.l)
+        minL = Math.min(minL, hsl.l)
       }
     }
-    // 斑块的每个顶点都落在壳面附近（±12% 半径），不是浮在旁边的一片膜
-    expect(minQ).toBeGreaterThan(0.7)
-    expect(maxQ).toBeLessThan(1.3)
+    const contrast = maxL - minL
+    expect(maxL, `底色最亮处明度只有 ${maxL.toFixed(2)}，要接近灰白`).toBeGreaterThan(0.65)
+    // 上限：第一版底色/斑色明度差硬卡 0.5+，出图是奶牛斑；这条把它挡在外面
+    expect(contrast, `明度对比 ${contrast.toFixed(2)}——对比太高，是在往奶牛斑退`).toBeLessThan(0.38)
+    // 下限：不然斑色悄悄调得和底色一样也能过，「斑」直接从画面上消失
+    expect(contrast, `明度对比 ${contrast.toFixed(2)}——对比太低，斑纹会糊到看不见`).toBeGreaterThan(0.12)
+  })
 
-    const shellL = hslOf(shells[0]).l
-    const blotchL = hslOf(blotches[0]).l
-    // 第 5 轮「深灰叠深灰、招牌图案消失」的教训：对比要真的量出来
-    expect(shellL, '底色要接近白').toBeGreaterThan(0.75)
-    expect(shellL - blotchL, `明度差只有 ${(shellL - blotchL).toFixed(2)}`).toBeGreaterThan(0.35)
+  it('斑的边界是软的：相邻采样点之间的明度变化是连续小步，没有硬跳变', () => {
+    // 硬边网格拼出来的斑，明度会在网格边界处「跳」；程序化贴图的连续插值
+    // 不会跳。用细密采样网格里相邻格点的最大明度差来卡这一点。
+    const N = 48
+    const hsl = { h: 0, s: 0, l: 0 }
+    const lightness = (u: number, v: number) => {
+      mottleColorAt(u, v).getHSL(hsl, THREE.SRGBColorSpace)
+      return hsl.l
+    }
+    /*
+     * 判据是**明度分布不许双峰**，不是「相邻采样点的跳变小于某个数」。
+     *
+     * 一开始写的是后者，卡在 0.08。它错在两头：一是抓不住真正的病因 ——
+     * 第一版的「奶牛斑」是几何贴片的硬边界，压根不经过这张贴图，跳变阈值
+     * 对它无效；二是它实际惩罚的只是**对比度**（跳变 ≈ 对比 × 过渡带斜率），
+     * 于是为了让它变绿只能一路把斑调淡，调到最后三粒卵读成「木板上的白面团」——
+     * 断言绿了，长相反而更差。这正是本仓库那条老规矩的又一次现形：
+     * **断言量的是数字，人看的是长相，两者可以毫无关系。**
+     *
+     * 「硬阈值涂出来的斑」与「连续场插值出来的云」，真正的区别在分布形状：
+     * 前者把像素堆在底色与斑色两个极值上（双峰），中间几乎是空的；
+     * 后者铺满整个区间。所以量中间地带占多少 —— 这个量对整体对比度免疫，
+     * 想让它变绿只有一条路：真的把过渡做连续。
+     */
+    const samples: number[] = []
+    for (let i = 0; i < N; i++) for (let j = 0; j <= N; j++) samples.push(lightness(i / N, j / N))
+    const lo = Math.min(...samples)
+    const hi = Math.max(...samples)
+    const mid = samples.filter((l) => l > lo + (hi - lo) * 0.3 && l < lo + (hi - lo) * 0.7).length
+    const midFrac = mid / samples.length
+    expect(
+      midFrac,
+      `明度落在中间四成区间的采样只占 ${(midFrac * 100).toFixed(1)}%——分布往两头堆，是硬边界的斑不是软过渡的云`,
+    ).toBeGreaterThan(0.2)
+  })
+
+  it('三粒挤成一簇、贴在同一块基质上，不是散落的三颗骰子', () => {
+    expect(bark, '需要一块可供卵附着的基质，卵才不会看着像凭空悬浮的骰子').toHaveLength(1)
+
+    const eggCenters: THREE.Vector3[] = []
+    model.group.traverse((o) => {
+      if (o.name === 'egg') eggCenters.push(o.getWorldPosition(new THREE.Vector3()))
+    })
+    let maxPairDist = 0
+    for (let i = 0; i < eggCenters.length; i++) {
+      for (let j = i + 1; j < eggCenters.length; j++) {
+        maxPairDist = Math.max(maxPairDist, eggCenters[i].distanceTo(eggCenters[j]))
+      }
+    }
+    // 卵宽（Z 半轴 0.1225 的直径 0.245）是「紧贴一簇」的参照尺度：第一版最远
+    // 两粒中心相距 0.45（接近两个卵宽），这条给 0.22 的红线，明显收紧过。
+    expect(maxPairDist, `卵心最远相距 ${maxPairDist.toFixed(3)}，挤得不够紧，读不出「一簇」`).toBeLessThan(0.22)
+
+    // 「有接触面」：直接量基质顶面的实际世界坐标（不去手算 finalize() 居中
+    // 挪了多少——那样一算就要重复它的实现细节，量出来的才是唯一可信的），
+    // 每粒卵壳的最低点都应落在它附近：既没悬空飘着，也没整颗埋没进去。
+    const barkTopY = Math.max(...worldVerts(bark[0]).map((p) => p.y))
+    /*
+     * 单边判据，不是 `Math.abs()`：「浮在基质上方」与「陷进基质里」是两件事，
+     * 只有前者是错的。真实卵是用胶质粘在树皮上、底面压平微陷，陷一点正是
+     * 「粘住了」的样子；用绝对值一起卡，会把做对的那一侧也判红
+     * （实测陷入 0.033、占卵厚 0.185 的 18%，读起来完全正常）。
+     *
+     * 所以下界卡「不许浮起来」（允许 0.004 的三角化余量），
+     * 上界卡「别整粒沉进去」（不超过卵厚的 40%，再深就只剩个顶盖了）。
+     */
+    const eggThickness = 0.185
+    for (const shell of shells) {
+      const bottomY = Math.min(...worldVerts(shell).map((p) => p.y))
+      const sink = barkTopY - bottomY // 正 = 陷进去，负 = 浮起来
+      expect(sink, `卵壳最低点 y=${bottomY.toFixed(3)} 高于基质顶面 y=${barkTopY.toFixed(3)}，浮在空中`).toBeGreaterThan(-0.004)
+      expect(
+        sink,
+        `卵陷进基质 ${sink.toFixed(3)}，超过卵厚 ${eggThickness} 的四成，只剩个顶盖了`,
+      ).toBeLessThan(eggThickness * 0.4)
+    }
   })
 })
 
