@@ -75,8 +75,10 @@ export interface WingRig {
   pivot: THREE.Object3D
   rest: THREE.Euler
   side: 1 | -1
-  /** 前翅 / 后翅 */
-  pair: 'fore' | 'hind'
+  /** 前翅 / 后翅。物种在 WingSpec 里显式给出才有值，kit 不做猜测 */
+  role?: 'fore' | 'hind'
+  /** 翅基在模型局部坐标里的位置，供动作层按前后排相位 */
+  base: THREE.Vector3
 }
 
 export interface InsectRig {
@@ -96,6 +98,14 @@ export interface InsectModel {
 ```
 
 `rig` 是可选的：没有 rig 的物种照旧静态，现有契约一个字不动。
+
+> **落地后的两处修正（2026-08-18）**：
+> 1. 字段名 `pair` 改叫 `role`，并加了 `base`（模型局部坐标下的着生点，供动作层分相位）。
+> 2. **标记只准放 JSON 安全的纯数据。** 第一版把关节的对象引用塞进 `userData`，
+>    而 `Object3D.copy()` 深拷 userData 走的是 `JSON.parse(JSON.stringify(...))` ——
+>    成了循环结构，`mirrorZ()` 一 clone 就抛异常。放 `THREE.Euler` 更阴：能序列化，
+>    但 parse 回来没有原型，`rest.x` 静默变 `undefined`。句柄与 rest 改由
+>    `collectRig()` 在收集时按层级重组、按当时姿态快照。
 
 **这一层的验收线是「渲染结果逐像素不变」。** 默认姿态下新旧两版必须画出同一张图
 （用 2026-08-13 那套剪影差集法量，方法见 `docs/model-audit-notes.md`），否则
@@ -147,11 +157,11 @@ type Motion = (rig: InsectRig, t: number) => void
 
 ## 地基（与三层并行，不属于本设计的主线但必须做）
 
-1. **埋点**：Umami 自定义事件。要埋的第一批 —— 物种切换及其来源（列表 / 搜索 /
+1. **埋点**（进行中）：Umami 自定义事件。要埋的第一批 —— 物种切换及其来源（列表 / 搜索 /
    图鉴库 / 键盘 / 深链）、工具条六个按钮、标注点点击（哪个部位）、讲解打开与
    完成到第几步、小测作答与得分、笔记写入、主题切换、分享点击，以及
    **左栏滚到第几只** —— 最后这条直接量的就是①里那道天花板。
-2. **边缘按语言分流**：Cloudflare Pages Function，`/` 上按 `Accept-Language` 把
+2. **边缘按语言分流** ✅ [#4](https://github.com/xr843/insect-world/pull/4)：Cloudflare Pages Function，`/` 上按 `Accept-Language` 把
    非中文访客送到 `/en/`，带 `Vary: Accept-Language`。现状是非中日韩访客 450+，
    而 `/en/` 只有 42 次落地、4% 浏览量。
 3. **首帧性能：先量后改。** 线上实测热缓存 1920 宽下首帧到虫子出现 >5 秒。
@@ -177,9 +187,9 @@ type Motion = (rig: InsectRig, t: number) => void
 | 阶段 | 内容 | 并行度 |
 | --- | --- | --- |
 | P0 | 地基三件（埋点 / 语言分流 / 性能先量） | 3 路并行 |
-| P1 | rig 契约 + 翅句柄（小） | 单点，不并行 |
+| P1 | rig 契约 + 翅句柄 ✅ [#5](https://github.com/xr843/insect-world/pull/5) | 契约单点 + 17 只接线并行 |
 | P2 | 悬停振翅 + motion 模块地基 | 单点起，物种可并行 |
-| P3 | 腿骨架化（大，风险最高） | 单点，kit 手术 |
+| P3 | 腿骨架化 ✅ [#6](https://github.com/xr843/insect-world/pull/6) | 单点，kit 手术 |
 | P4 | 三角步态（62 只一起会走） | 单点起，验收可并行 |
 | P5 | 生活史 8 只 × 3 阶段 | 8 路并行（照过去物种轮次的作业法） |
 
