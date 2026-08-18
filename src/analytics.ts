@@ -72,6 +72,8 @@ export const EVENTS = {
   LANGUAGE_SWITCH: 'language_switch',
   /** 顶栏搜索：输入停顿后算发起一次，不追每个按键 */
   SEARCH: 'search',
+  /** 「在 iNaturalist 上看实物图」被点开 —— 用来量这个入口挪到总述下方之后有没有真被看见 */
+  PHOTO_LINK: 'photo_link',
   /** 左栏名录滚动深度 —— 首页①号问题（63 种里人均只翻到 5~6 种）直接量的就是这条 */
   LIBRARY_SCROLL_DEPTH: 'library_scroll_depth',
 } as const
