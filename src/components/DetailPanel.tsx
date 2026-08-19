@@ -97,8 +97,6 @@ export function DetailPanel({
       */}
       {pinyin && <div className={s.pinyin}>{pinyin}</div>}
       <div className={s.epithet}>{insect.epithet}</div>
-      <p className={s.summary}>{insect.summary}</p>
-
       {/*
         「看实物照片」为什么放在这里 —— 这是第二次搬家，两次都是被实测推着走的。
 
@@ -110,25 +108,61 @@ export function DetailPanel({
         就更好了」—— 功能一直都在，他只是没滚到。**那不是他的问题，是入口的问题。**
         （见 https://github.com/xr843/insect-world/issues/3）
         
-        现在贴着总述放，实测 y≈430，落在折叠线以内、不用滚就看得见。
+        第二次搬家（贴着总述放）在**中文站**上是对的（y≈332，折叠线内），但只在
+        中文站验过 —— 英文总述比中文长 148px，把这一行推到 y≈481，而 1280×720 的
+        右栏只看得到 518px，于是英文笔记本上它又落回了折叠线以下。
+
+        所以第三次搬到**总述之前**：位置不再跟着总述长度走，两种语言、任何视口
+        高度下都钉在同一格。代价是把两个小胶囊插进了「别称 → 总述」之间，
+        但那本来就是标题区结束、正文开始的位置，读起来是「标题—副标题—动作条—正文」，
+        不是打断。
         位置也讲得通：程序化模型的写实度有上限，「它真长什么样」是**认这只虫**
         的一部分，属于身份区，不属于底部的动作清单。
         做成紧凑的黄铜小胶囊而不是通栏实底按钮：要显眼，但不能盖过主按钮。
         没有对应 taxon 记录的物种不渲染，见 data/external.ts（63 种里 61 种有）。
       */}
-      {photoUrl(insect.id) && (
-        <a
-          className={s.photoLink}
-          href={photoUrl(insect.id) as string}
-          target="_blank"
-          rel="noopener noreferrer"
-          onClick={() => track(EVENTS.PHOTO_LINK, { species_id: insect.id })}
+      {/*
+        分享跟实物照片外链并排，理由和上面那段是同一条，只是量得更狠：
+        分享按钮原先在动作组里、y≈1134，而右栏一次只看得到 688px ——
+        **1527 次访问里被点了 4 次**。功能本身是好的（手机调系统分享面板，
+        能直达微信；桌面复制规范链接），坏的只有位置。
+
+        搬到这一行是因为这一行已经被证明看得见：实物照片外链就在 y≈332，
+        上线当天拿到 133 次点击。语义也对 —— 这两个都是「关于这只虫的次要
+        动作」，不是「继续读下去」。
+
+        ⚠️ 是**搬**不是复制。生活史那次保留了旧入口、靠 source 维度分辨；
+        这次直接搬走：旧位置在折叠线下本来就没量，留着只会让归因变浑。
+        改动后 share_click 涨了就只可能是新位置的功劳。
+
+        ⚠️ 这一行必须能只放一个：中华豆芫菁与猎蝽在 iNat 上只有别的种，
+        没有外链（63 种里 61 种有），那两只这里只剩分享。
+      */}
+      <div className={s.idActions}>
+        {photoUrl(insect.id) && (
+          <a
+            className={s.photoLink}
+            href={photoUrl(insect.id) as string}
+            target="_blank"
+            rel="noopener noreferrer"
+            onClick={() => track(EVENTS.PHOTO_LINK, { species_id: insect.id })}
+          >
+            <IconGlobe size={12} />
+            {t('detail.photosLink')}
+            <IconArrowRight size={11} />
+          </a>
+        )}
+        <button
+          className={`${s.photoLink} ${s.shareChip}`}
+          onClick={share}
+          data-copied={copied || undefined}
         >
-          <IconGlobe size={12} />
-          {t('detail.photosLink')}
-          <IconArrowRight size={11} />
-        </a>
-      )}
+          {copied ? <IconCheck size={12} /> : <IconShare size={12} />}
+          {copied ? t('detail.linkCopied') : canShare ? t('detail.share') : t('detail.copyLink')}
+        </button>
+      </div>
+
+      <p className={s.summary}>{insect.summary}</p>
 
       <div className={s.rule} />
       <div className="eyebrow">{t('detail.facts')}</div>
@@ -190,10 +224,6 @@ export function DetailPanel({
         <button className={`${s.ghost} ${s.wide}`} onClick={onCompare}>
           <IconBox size={13} />
           {t('detail.compareOthers')}
-        </button>
-        <button className={`${s.ghost} ${s.wide} ${s.share}`} onClick={share} data-copied={copied || undefined}>
-          {copied ? <IconCheck size={13} /> : <IconShare size={13} />}
-          {copied ? t('detail.linkCopied') : canShare ? t('detail.share') : t('detail.copyLink')}
         </button>
       </div>
 
