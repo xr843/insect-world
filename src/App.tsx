@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import type { Order } from './data/types'
-import { EVENTS, track } from './analytics'
+import { EVENTS, track, type DiscoverySource } from './analytics'
 import { useLabels, useLocale, useSpecies, useT } from './i18n/useT'
 import { notesToMarkdown, useFieldNotes } from './hooks/useFieldNotes'
 import { NotesPanel } from './components/NotesPanel'
@@ -66,7 +66,21 @@ export default function App() {
   const [galleryOpen, setGalleryOpen] = useState(false)
   const [notesOpen, setNotesOpen] = useState(false)
   const [compareId, setCompareId] = useState<string | null>(null)
-  const [discovery, setDiscovery] = useState<DiscoveryKind | null>(null)
+  /**
+   * 打开哪个弹窗、从哪个入口打开的。
+   *
+   * 带上 source 是为了能验证「生活史没人看是因为入口在折叠线以下」这个判断 ——
+   * 见 analytics.ts 的 DISCOVERY_SOURCES 注释。只记打开数说不清是新入口起了作用
+   * 还是那几天流量高。
+   */
+  const [discovery, setDiscovery] = useState<{
+    kind: DiscoveryKind
+    source: DiscoverySource
+  } | null>(null)
+  const openDiscovery = useCallback(
+    (kind: DiscoveryKind, source: DiscoverySource) => setDiscovery({ kind, source }),
+    [],
+  )
   const [focusAnchor, setFocusAnchor] = useState<string | null>(null)
   /**
    * 展台正在展示的生活史阶段；null = 成虫。由生活史讲解弹窗逐步下发，
@@ -272,7 +286,7 @@ export default function App() {
         insects={SPECIES}
         activeId={activeId}
         onPick={select}
-        onLessons={() => setDiscovery('lesson')}
+        onLessons={() => openDiscovery('lesson', 'topbar')}
         onLibrary={() => setGalleryOpen(true)}
         onNotes={() => setNotesOpen(true)}
         onExplore={backToExplore}
@@ -309,16 +323,21 @@ export default function App() {
           onCompareCycle={cycleCompare}
           focusAnchor={focusAnchor}
           lifeStage={lifeStage}
+          onLifecycle={() => openDiscovery('lifecycle', 'stage')}
           theme={theme}
         />
-        <DetailPanel insect={insect} onCompare={toggleCompare} onDiscover={setDiscovery} />
+        <DetailPanel
+          insect={insect}
+          onCompare={toggleCompare}
+          onDiscover={(kind) => openDiscovery(kind, 'panel')}
+        />
       </main>
 
       <BottomCards
         insect={insect}
         peers={SPECIES}
         onCompare={toggleCompare}
-        onDiscover={setDiscovery}
+        onDiscover={(kind) => openDiscovery(kind, 'card')}
         onExplore={() => setGalleryOpen(true)}
       />
 
@@ -355,7 +374,8 @@ export default function App() {
 
       {discovery && (
         <Discovery
-          kind={discovery}
+          kind={discovery.kind}
+          source={discovery.source}
           insect={insect}
           guide={getGuide(insect.id)}
           onClose={() => setDiscovery(null)}

@@ -18,7 +18,7 @@ vi.mock('../../analytics', async (importOriginal) => {
   return { ...actual, track: vi.fn() }
 })
 
-import { EVENTS, track } from '../../analytics'
+import { DISCOVERY_SOURCES, EVENTS, track, type DiscoverySource } from '../../analytics'
 
 const trackMock = vi.mocked(track)
 const ladybird = INSECTS.find((i) => i.id === 'ladybird')!
@@ -29,17 +29,36 @@ afterEach(() => {
   trackMock.mockClear()
 })
 
-function mount(kind: DiscoveryKind) {
+function mount(kind: DiscoveryKind, source: DiscoverySource = 'card') {
   renderZh(
-    <Discovery kind={kind} insect={ladybird} guide={guide} onClose={vi.fn()} onFocusAnchor={vi.fn()}
-      onLifeStage={vi.fn()} />,
+    <Discovery
+      kind={kind}
+      insect={ladybird}
+      guide={guide}
+      onClose={vi.fn()}
+      onFocusAnchor={vi.fn()}
+      source={source}
+      onLifeStage={vi.fn()}
+    />,
   )
 }
 
-describe('打开 —— discovery_open(kind)', () => {
+describe('打开 —— discovery_open(kind, source)', () => {
   it.each(['lesson', 'motion', 'quiz', 'habitat'] as const)('kind=%s 一挂载就报一次', (kind) => {
     mount(kind)
-    expect(trackMock).toHaveBeenCalledWith(EVENTS.DISCOVERY_OPEN, { kind })
+    expect(trackMock).toHaveBeenCalledWith(EVENTS.DISCOVERY_OPEN, { kind, source: 'card' })
+  })
+
+  /**
+   * source 必须原样报上去。
+   *
+   * 加这一维就是为了回答「生活史没人看，是没人想看还是没人看得见」——
+   * 展台入口与卡片入口混在一起，打开数涨了也说不清是新入口起了作用还是
+   * 那几天流量本来就高。报错来源会让这次改动**看起来有效而实际无法证伪**。
+   */
+  it.each(DISCOVERY_SOURCES)('source=%s 原样报上去，不写死', (source) => {
+    mount('lifecycle', source)
+    expect(trackMock).toHaveBeenCalledWith(EVENTS.DISCOVERY_OPEN, { kind: 'lifecycle', source })
   })
 })
 

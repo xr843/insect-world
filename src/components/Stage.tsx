@@ -1,6 +1,6 @@
 import { Component, useCallback, useEffect, useRef, useState, type ReactNode } from 'react'
 import type { Insect } from '../data/types'
-import type { LifeStage } from '../three/stages'
+import { metamorphosisOf, prefetchStages, type LifeStage } from '../three/stages'
 import { InsectCanvas, type ViewMode } from '../three/InsectCanvas'
 import { prefetchInsectModel } from '../three/registry'
 import { webglAvailable } from '../three/webgl'
@@ -12,6 +12,7 @@ import {
   IconBox,
   IconIsolate,
   IconLayers,
+  IconPlay,
   IconReset,
   IconRotate,
   IconSection,
@@ -48,6 +49,7 @@ export function Stage({
   onCompareCycle,
   focusAnchor = null,
   lifeStage = null,
+  onLifecycle,
   theme = 'dark',
 }: {
   insect: Insect
@@ -55,6 +57,14 @@ export function Stage({
   compareWith: Insect | null
   onCompareToggle: () => void
   onCompareCycle: () => void
+  /**
+   * 用户在展台上要求看生活史。
+   *
+   * 展台只负责**说出这件事**，弹窗由 App 打开 —— 沿用「弹窗驱动展台、
+   * 展台不知道弹窗存在」那条既有约定（见 Discovery 的 onLifeStage 注释），
+   * 不因为多一个入口就把方向反过来。
+   */
+  onLifecycle?: () => void
   /** 讲解弹窗下发的镜头指令 */
   focusAnchor?: string | null
   /** 生活史阶段；非 null 时展台展示阶段模型而不是成虫。由讲解弹窗下发，与 focusAnchor 同一条通路 */
@@ -165,6 +175,13 @@ export function Stage({
 
   const toggleMode = (m: ViewMode) => setMode((cur) => (cur === m ? 'normal' : m))
 
+  /**
+   * 这只虫做了阶段模型吗 —— 直接问注册表（有蛹＝完全变态、有若虫＝不完全变态），
+   * 不另设一张「哪 8 种有生活史」的名单：名单与文件两处都能改，迟早对不上。
+   * 返回的是完整路线（含成虫），所以「4 个阶段」这种说法用它的长度就是对的。
+   */
+  const lifeRoute = metamorphosisOf(insect.id)
+
   /** 工具条六个按钮共用同一条埋点，「对比」不算在内 —— 它换的是物种，
       走 App.tsx 里的 species_switch(source:'compare')，见 analytics.ts 的注释 */
   const clickTool = (tool: StageTool) => track(EVENTS.STAGE_TOOL, { tool })
@@ -215,6 +232,36 @@ export function Stage({
           </CanvasBoundary>
         )}
       </div>
+
+      {/*
+        生活史入口。为什么放在展台右上角：
+
+        2026-08-19 埋点实测，生活史此前唯一的入口是展台**下方**那张卡片，而它在
+        1440×900 与 1280×720 上都落在折叠线以下（y=993 / y=823），1920×1080 也只
+        露出一角。结果是有阶段模型的 8 种加上首页落地约 1975 次浏览里，生活史只被
+        打开 5 次 —— 约 1/400。不是没人想看，是没人看得见。
+
+        而同一份数据里展台工具条被用了 1059 次：**人本来就盯着展台**。所以入口挪到
+        展台上，与左上角的目/变态类型标签左右对称 —— 那个标签已经写着「完全变态」，
+        读者有了概念却没有可点的东西，这里正好接上。
+
+        只对做了阶段模型的物种出现（`metamorphosisOf` 直接问注册表，不另设名单）；
+        WebGL 兜底时不出现 —— 点开它展台要换成卵/幼虫的立体标本，兜底页做不到，
+        照本站的规矩不留只有样子的按钮。
+      */}
+      {!webglDead && onLifecycle && lifeRoute && (
+        <button
+          className={s.lifeCue}
+          onClick={onLifecycle}
+          // 悬停即预取阶段模型：弹窗一打开就要换标本，先下好这一步就不会白等
+          onMouseEnter={() => prefetchStages(insect.id)}
+          onFocus={() => prefetchStages(insect.id)}
+          aria-label={t('stage.lifeCueAria', { name: insect.name, n: lifeRoute.length })}
+        >
+          <IconPlay size={14} />
+          {t('stage.lifeCue', { n: lifeRoute.length })}
+        </button>
+      )}
 
       <div className={s.orderTag}>
         <span className={s.orderDot} style={{ background: insect.accent }} />

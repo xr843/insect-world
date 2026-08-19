@@ -17,6 +17,8 @@ export const PART = definePart(
     'stage.tool.compare': '对比',
     'stage.tool.reset': '复位',
     'stage.captionHint': '拖动旋转 · 滚轮细看 · 圆点＝观察点',
+    'stage.lifeCue': '看它的 {n} 个阶段',
+    'stage.lifeCueAria': '打开{name}的生活史，在展台上逐个看它的 {n} 个阶段',
     'stage.error': '这只虫的模型没能建起来：{error}',
     'stage.loading': '正在生成 {name} 的立体标本…',
     'stage.noWebgl': '这台设备开不了 3D 视图（WebGL 不可用），先用剪影代替。图鉴的文字内容不受影响。',
@@ -50,6 +52,8 @@ export const PART = definePart(
     'stage.tool.compare': 'Compare',
     'stage.tool.reset': 'Reset',
     'stage.captionHint': 'Drag to rotate · Scroll to zoom in · Dots mark points of interest',
+    'stage.lifeCue': 'See its {n} stages',
+    'stage.lifeCueAria': 'Open the life cycle of {name} and step through its {n} stages on the display',
     'stage.error': 'The 3D model for this insect could not be built: {error}',
     'stage.loading': 'Building the 3D specimen of {name}…',
     'stage.noWebgl':

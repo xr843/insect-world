@@ -11,7 +11,7 @@ import { useLabels, useT } from '../i18n/useT'
 import { InsectGlyph } from './InsectGlyph'
 import { IconArrowRight, IconGlobe, IconPlay, IconQuiz, IconSparkle } from './icons'
 import s from './Discovery.module.css'
-import { EVENTS, track } from '../analytics'
+import { EVENTS, track, type DiscoverySource } from '../analytics'
 import { builtStagesOf, metamorphosisOf, type LifeStage } from '../three/stages'
 
 /**
@@ -47,6 +47,7 @@ export function Discovery({
   onClose,
   onFocusAnchor,
   onLifeStage,
+  source,
 }: {
   kind: DiscoveryKind
   insect: Insect
@@ -62,6 +63,8 @@ export function Discovery({
    * 并行的 UI 架构。
    */
   onLifeStage: (stage: LifeStage | null) => void
+  /** 从哪个入口打开的 —— 只用于埋点，见 analytics.ts 的 DISCOVERY_SOURCES */
+  source: DiscoverySource
 }) {
   const t = useT()
   const labels = useLabels()
@@ -104,7 +107,7 @@ export function Discovery({
   }, [])
 
   useEffect(() => {
-    track(EVENTS.DISCOVERY_OPEN, { kind })
+    track(EVENTS.DISCOVERY_OPEN, { kind, source })
     // kind 在这个组件实例的生命周期内不会变（换 kind 走的是整体重新挂载），故意留空依赖
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
