@@ -10,11 +10,19 @@
 
 **线上：https://insect-world.pages.dev** · **English: https://insect-world.pages.dev/en/**
 
+<img src="docs/promo/emerge-monarch-butterfly.gif" width="250" align="right" alt="羽化 —— 帝王蝶从蛹里出来，翅从皱缩的一小团撑开成全尺寸">
+
 **每一只虫都是代码实时生成的，仓库里没有一个模型文件。**
 
 63 个物种覆盖 14 个目：鞘翅目 28、双翅目 5、鳞翅目 5、膜翅目 5、半翅目 4、直翅目 4，蜻蜓目、螳螂目、脉翅目、蜚蠊目各 2，䗛目、革翅目、广翅目、毛翅目各 1。
 
+右边这只帝王蝶正在**羽化**：翅从皱缩的一小团撑开成全尺寸，同时从下垂抬回静止姿态。
+它没有另做一套动画资产 —— **画成虫的那套代码，同样画得出卵、幼虫和蛹**。
+这是参数化几何做得到、而扫描来的模型做不到的事，八个物种有完整的生活史阶段模型。
+
 **长期目标 60 种 / 14 目已达成**，此后第 7 轮补上了三种日常昆虫（家蝇、淡色库蚊、德国小蠊）——读者指出图鉴里甲虫占了近半、身边最常见的虫却一种没有，这是兑现「后续会陆续添加」的公开承诺。物种史与打磨史见 [docs/roadmap.md](docs/roadmap.md) 与 [docs/polish-plan.md](docs/polish-plan.md)，模型审计方法见 [docs/model-audit-notes.md](docs/model-audit-notes.md)。
+
+<br clear="right">
 
 ![图鉴总览 —— 63 种 / 14 个目](docs/screenshots/05-gallery.jpg)
 
@@ -121,9 +129,9 @@ cookie 的访客不动，响应带 `Vary: Accept-Language`）。`functions/` 目
 成虫盘发育），硬 morph 出来好看但错。唯一做成连续的是**羽化展翅**——因为它
 本来就是连续的：刚出蛹的翅是一小团皱缩的软组织，靠血淋巴撑开再硬化。
 
-<img src="docs/promo/emerge-monarch-butterfly.gif" width="320" alt="羽化 —— 帝王蝶从蛹里出来，翅从皱缩的一小团撑开成全尺寸">
+（本页顶部那只正在羽化的帝王蝶就是这一段。）
 
-<sup>这段是实录，不是逐帧手调：`scripts/make-emerge-gif.mjs` 打开线上的生活史、翻到蛹、再翻一步，把浏览器合成器推出来的帧收下来。曲线是 <code>1-(1-u)³</code>——先快后慢，血淋巴一开始压力最大；翅在撑开的同时从下垂逐渐抬回静止姿态。</sup>
+<sup>它是实录，不是逐帧手调：`scripts/make-emerge-gif.mjs` 打开线上的生活史、翻到蛹、再翻一步，把浏览器合成器推出来的帧收下来。曲线是 <code>1-(1-u)³</code>——先快后慢，血淋巴一开始压力最大；翅在撑开的同时从下垂逐渐抬回静止姿态。</sup>
 
 ## 一个必须先讲清楚的决定：模型是代码生成的
 
