@@ -216,6 +216,37 @@
   gap: 9px;
 }
 
+/* 主按钮的栏内吸底条 —— 理由见 DetailPanel.tsx 里那段注释（可视 688 / 内容 1350）。
+   负外边距把左右与底部的栏内边距抵掉，让它铺满栏宽、贴住栏底。
+   实底 --paper 而不是半透明：下面滚过去的是密排的数据行，
+   透出来会糊成一团，反而不如干脆挡住。 */
+.stickyAction {
+  position: sticky;
+  bottom: 0;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  margin: 16px -20px -20px;
+  padding: 12px 20px 16px;
+  /* 必须是 --paper-solid 不是 --paper：后者带透明度（配 .card 的 backdrop-filter 用），
+     吸底条用它会把下面滚过去的数据行透出来，糊成一片。全站已备好实色那一档。 */
+  background: var(--paper-solid);
+  border-top: 1px solid var(--line);
+}
+
+/* 竖排布局下右栏不再是独立滚动容器（global.css 的 .detail-panel { height: auto }），
+   再吸底就会贴着视口底部乱飘 —— 还原成普通块。 */
+@media (max-width: 900px) {
+  .stickyAction {
+    position: static;
+    display: block;
+    margin: 16px 0 0;
+    padding: 0;
+    background: transparent;
+    border-top: 0;
+  }
+}
+
 .primary {
   display: flex;
   align-items: center;
