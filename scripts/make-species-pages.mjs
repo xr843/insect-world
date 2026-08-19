@@ -28,6 +28,9 @@ const SITE = 'https://insect-world.pages.dev'
 
 const { INSECTS: ZH } = await import('../src/data/insects.zh.ts')
 const { INSECTS: EN } = await import('../src/data/insects.en.ts')
+const { ORDER_LABEL } = await import('../src/i18n/orders.ts')
+
+const LISTS = { zh: ZH, en: EN }
 
 // ---------- 小工具 ----------
 
@@ -158,6 +161,10 @@ const S = {
   dd: 'margin:0',
   p: 'margin:0',
   ul: 'margin:0;padding-left:1.1rem',
+  li: 'margin:.2rem 0',
+  a: 'color:var(--bronze,#7d6128)',
+  latinInline: 'font-style:italic;opacity:.6',
+  nav: 'margin-top:2.75rem;padding-top:1.25rem;border-top:1px solid var(--line,#ded8cc)',
 }
 
 /** 生成一页的静态正文。内容与应用里显示的是同一份数据。 */
@@ -188,8 +195,112 @@ function staticBody(locale, insect) {
       ? `<h2 style="${S.h2}">${locale === 'zh' ? '身体构造' : 'Anatomy'}</h2><ul style="${S.ul}">${insect.hotspots.map((h) => li(`${h.label}${locale === 'zh' ? '：' : ' — '}${h.note}`)).join('')}</ul>`
       : '',
     `<p style="${S.h2};margin-top:2rem">${esc(L.more)}</p>`,
+    siblingNav(locale, insect),
     `</article>`,
   ].join('')
+}
+
+/**
+ * ## 内链：不执行 JS 的爬虫走到这些页面的唯一通路
+ *
+ * 在这之前，这批页面对百度这类不跑 JS 的爬虫是**一座座孤岛**：首页的
+ * `<body>` 可见文字长度是 0、指向物种页的链接 0 条；126 张壳页彼此不链接，
+ * 只有指向自己的 canonical 与 hreflang。上面那段静态正文让每页**有内容**了，
+ * 但没有任何一条路能**走到**它。
+ *
+ * 剩下的唯一通路是 sitemap，而 sitemap 最可靠的送达方式是站长平台提交 ——
+ * 那要账号（百度还要手机号实名）。`robots.txt` 里那行 `Sitemap:`
+ * Google 与 Bing 确定会读，百度没有明确说法，不能指望。
+ *
+ * 所以补两条不依赖任何账号的通路：
+ *
+ * 1. **首页列出全部物种**（按目分组）—— 任何一页都在首页一跳之内；
+ * 2. **每张壳页列出同目的其他物种 + 回首页** —— 横向能爬，链接权重也不再
+ *    只是单向汇入首页。
+ *
+ * 顺带对真实用户也是收益：落地到应用挂载之间那段白屏，现在是一份能读、
+ * 能点的名录 —— 移动端冷缓存下那两秒不再是纯等待。
+ */
+
+/** 站内物种页地址。英文站整站挂在 /en/ 下，链接必须跟着换前缀，否则跨语言互链 */
+const href = (locale, id) => (locale === 'zh' ? `/s/${id}/` : `/en/s/${id}/`)
+
+/**
+ * 每页最多列几只同目的。鞘翅目有 28 只，全列会让 28 张甲虫页各背上一大段
+ * 重复链接（爬虫看重复模板，人也没法读）。截断不丢页：首页列的是全部。
+ */
+const SIBLINGS = 12
+
+const NAV = {
+  zh: {
+    h1: '昆虫世界',
+    intro: (n) =>
+      `${n} 种昆虫的可交互 3D 标本馆。每一只都不是扫描来的模型，而是按形态学特征用代码逐段生成的 —— 可以旋转、可以点开身体各处的标注、可以看它振翅与蜕变。下面是全部名录。`,
+    same: (order) => `${order}的其他物种`,
+    home: (n) => `返回全部 ${n} 种昆虫`,
+    sep: '、',
+  },
+  en: {
+    h1: 'Insect World',
+    intro: (n) =>
+      `An interactive 3D cabinet of ${n} insects. Not one of them is a scan: each is generated from code, segment by segment, following its real morphology — rotate it, tap the annotated parts, watch it beat its wings and change shape. The full list follows.`,
+    same: (order) => `More from ${order}`,
+    home: (n) => `Back to all ${n} insects`,
+    sep: ' · ',
+  },
+}
+
+/** 壳页底部：同目的其他物种 + 回首页 */
+function siblingNav(locale, insect) {
+  const L = NAV[locale]
+  const list = LISTS[locale]
+  const sibs = list.filter((x) => x.order === insect.order && x.id !== insect.id).slice(0, SIBLINGS)
+  const links = sibs
+    .map((x) => `<a href="${href(locale, x.id)}" style="${S.a}">${esc(x.name)}</a>`)
+    .join(L.sep)
+  // 独占一目的（䗛目、革翅目、广翅目、毛翅目各只有一只）没有同伴，只留回首页那条
+  const same = sibs.length
+    ? `<h2 style="${S.h2}">${esc(L.same(ORDER_LABEL[locale][insect.order]))}</h2><p style="${S.p}">${links}</p>`
+    : ''
+  return (
+    `<nav style="${S.nav}">${same}` +
+    `<p style="${S.p};margin-top:1rem"><a href="${locale === 'zh' ? '/' : '/en/'}" style="${S.a}">${esc(L.home(list.length))}</a></p>` +
+    `</nav>`
+  )
+}
+
+/** 首页正文：站点一句话 + 按目分组的全部物种，每种一条链接 */
+function staticIndex(locale) {
+  const list = LISTS[locale]
+  const L = NAV[locale]
+  const groups = new Map()
+  for (const i of list) {
+    if (!groups.has(i.order)) groups.set(i.order, [])
+    groups.get(i.order).push(i)
+  }
+  const sections = [...groups]
+    .map(
+      ([key, items]) =>
+        `<h2 style="${S.h2}">${esc(ORDER_LABEL[locale][key])}</h2><ul style="${S.ul}">` +
+        items
+          .map(
+            (i) =>
+              `<li style="${S.li}"><a href="${href(locale, i.id)}" style="${S.a}">${esc(i.name)}</a>` +
+              ` <i style="${S.latinInline}">${esc(i.latin)}</i> — ${esc(i.epithet)}</li>`,
+          )
+          .join('') +
+        `</ul>`,
+    )
+    .join('')
+  return (
+    `<article style="${S.wrap}"><h1 style="${S.name}">${esc(L.h1)}</h1>` +
+    `<p style="${S.p}">${esc(L.intro(list.length))}</p>${sections}</article>`
+  )
+}
+
+/** 统计一段 HTML 里指向站内物种页的链接数（head 里的 canonical/hreflang 是绝对地址，不会被算进来） */
+function countSpeciesLinks(html) {
+  return (html.match(/href="\/(?:en\/)?s\/[a-z0-9-]+\/"/g) ?? []).length
 }
 
 function buildPage(locale, insect) {
@@ -268,6 +379,17 @@ function buildPage(locale, insect) {
     html.includes(esc(insect.summary.slice(0, 20))),
     `${insect.id} 的壳页里没有 summary —— 静态正文注入失败，这页对爬虫又变回空的了`,
   )
+  const sibs = LISTS[locale].filter((x) => x.order === insect.order && x.id !== insect.id)
+  assert(
+    countSpeciesLinks(html) === Math.min(SIBLINGS, sibs.length),
+    `${insect.id} 的壳页没有横向内链 —— 没有内链的壳页对不跑 JS 的爬虫是孤岛`,
+  )
+  // 独占一目的那四只（䗛/革翅/广翅/毛翅）同目链接本来就是 0 条，上面那条断言
+  // 对它们恒真。真正要守的是「每页至少走得出去」，所以单独钉回首页那条。
+  assert(
+    html.includes(esc(NAV[locale].home(LISTS[locale].length))),
+    `${insect.id} 的壳页没有回首页的链接 —— 爬虫进来了就出不去`,
+  )
 
   const dir =
     locale === 'zh' ? path.join(DIST, 's', insect.id) : path.join(DIST, 'en/s', insect.id)
@@ -286,6 +408,25 @@ assert(new Set(pages.map((p) => p.title)).size === pages.length, 'title 有重�
 const rootCanonicals = [`${SITE}/`, `${SITE}/en/`]
 const canonicals = pages.map((p) => p.canonical).concat(rootCanonicals)
 assert(new Set(canonicals).size === canonicals.length, 'canonical 有重复（或撞上根页面）')
+
+// ---------- 首页：可爬正文 + 通往全部物种的内链 ----------
+// 必须排在壳页生成之后 —— templates[*].html 存的是**原始**模板，壳页都从它复制；
+// 这里只改写落盘的 dist/index.html，内存里的模板不动。
+
+for (const [locale, t] of Object.entries(templates)) {
+  const html = replaceOnce(
+    t.html,
+    /<div id="root"><\/div>/,
+    `<div id="root">${staticIndex(locale)}</div>`,
+    `root 容器（${locale} 首页）`,
+  )
+  const n = countSpeciesLinks(html)
+  assert(
+    n === LISTS[locale].length,
+    `${locale} 首页应列出全部 ${LISTS[locale].length} 种，实际 ${n} 条链接 —— 首页是爬虫走到物种页的入口，漏一条就少一页`,
+  )
+  writeFileSync(t.file, html)
+}
 
 // ---------- sitemap.xml ----------
 
@@ -371,6 +512,6 @@ const speciesOg = ZH.filter(({ id }) =>
   existsSync(path.join(ROOT, 'public/og/species', `${id}.png`)),
 ).length
 console.log(
-  `✓ 物种壳页 ${pages.length} 页（${ZH.length} 种 × 中英）+ sitemap.xml ${entries.length} 条；` +
+  `✓ 物种壳页 ${pages.length} 页（${ZH.length} 种 × 中英）+ 首页名录 2 页 + sitemap.xml ${entries.length} 条；` +
     `逐物种 og 图 ${speciesOg}/${ZH.length}${speciesOg < ZH.length ? '（缺的回落全站卡）' : ''}`,
 )
