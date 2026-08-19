@@ -104,7 +104,9 @@ emperor dragonfly** nymph (the hinged, mask-like labium plus four wing pads).
 the difference between complete and incomplete metamorphosis is the first thing
 anyone is taught about insects, and it is the whole reason this feature exists.
 
-![The life of a rhinoceros beetle](docs/screenshots/08-lifecycle.jpg)
+![The life of a rhinoceros beetle](docs/promo/lifecycle-rhinoceros-beetle.png)
+
+<sup>All four panels share one camera and one crop box, so the size difference — a small clutch of eggs against a fat C-shaped grub — is the models' own, not a layout trick. Rendered from the same code that runs the site by `scripts/make-lifecycle-strip.mjs`.</sup>
 
 Stages do **not** morph into one another. A caterpillar turning into a butterfly
 is not a continuous deformation in the first place (tissue histolysis plus
@@ -113,7 +115,9 @@ that *is* animated continuously is **wing expansion at emergence** — because t
 really is continuous: a freshly eclosed wing is a small crumpled pad of soft
 tissue that haemolymph pressure inflates and then hardens.
 
-![Emergence — the wing expands from a crumpled pad to full size](docs/screenshots/09-emerge.jpg)
+<img src="docs/promo/emerge-monarch-butterfly.gif" width="320" alt="Emergence — a monarch leaves the chrysalis and its wings expand from a crumpled pad to full size">
+
+<sup>This is a recording, not a hand-tuned animation: <code>scripts/make-emerge-gif.mjs</code> opens the life cycle on the live site, steps to the pupa, steps once more, and collects the frames the browser's compositor pushes out. The curve is <code>1-(1-u)³</code> — fast then slow, because haemolymph pressure is highest at the start — and the wings lift out of their droop as they expand.</sup>
 
 
 ## Project layout
