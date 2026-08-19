@@ -315,3 +315,48 @@
     top: 12px;
   }
 }
+
+/*
+  生活史入口 —— 与左上角的 .orderTag 左右对称。
+
+  为什么是这个位置：2026-08-19 实测，生活史此前唯一的入口在展台**下方**，
+  1440×900 与 1280×720 上都在折叠线以下，1920×1080 也只露出一角；而同一份
+  数据里展台工具条被用了 1059 次。人本来就盯着展台，入口就该在展台上。
+
+  底色不透明：它压在 canvas 上，半透明会让 3D 模型从字缝里透出来。
+  用 --brass 描边而不是实心块：展台是这个页面的主角，入口要看得见但不能
+  盖过标本本身。
+*/
+.lifeCue {
+  position: absolute;
+  right: 20px;
+  top: 18px;
+  z-index: 5;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 7px 12px;
+  border: 1px solid var(--brass);
+  border-radius: 999px;
+  background: var(--paper-solid);
+  color: var(--brass);
+  font-size: 12.5px;
+  letter-spacing: 0.02em;
+  cursor: pointer;
+  transition: background 0.16s ease, color 0.16s ease, transform 0.16s ease;
+}
+
+.lifeCue:hover {
+  background: var(--brass);
+  color: var(--paper-solid);
+  transform: translateY(-1px);
+}
+
+@media (max-width: 900px) {
+  .lifeCue {
+    right: 12px;
+    top: 12px;
+    padding: 6px 10px;
+    font-size: 12px;
+  }
+}

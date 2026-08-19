@@ -37,6 +37,7 @@ function mountLifecycle(id: string) {
       guide={getGuide(id)}
       onClose={onClose}
       onFocusAnchor={vi.fn()}
+      source="card"
       onLifeStage={onLifeStage}
     />,
   )

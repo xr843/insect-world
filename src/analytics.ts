@@ -98,6 +98,23 @@ export const SPECIES_SWITCH_SOURCES = [
 ] as const
 export type SpeciesSwitchSource = (typeof SPECIES_SWITCH_SOURCES)[number]
 
+/**
+ * discovery_open 的入口来源。
+ *
+ * 加这一维是为了回答一个具体问题：**生活史被打开 5 次，是没人想看，还是没人看得见？**
+ * 2026-08-19 实测，有阶段模型的 8 种加上首页落地约 1975 次浏览，生活史只被打开
+ * 5 次（约 1/400）；而唯一的入口「生活史卡片」在 1440×900 与 1280×720 上都落在
+ * 折叠线以下（y=993 / y=823），1920×1080 也只露出一角。
+ *
+ * 展台上新加的入口与卡片入口必须分得开 —— 否则打开数涨了也说不清是新入口起了作用，
+ * 还是那几天流量本来就高。
+ *
+ * 值的含义：`stage` 展台右上角、`card` 展台下方的卡片、`panel` 右栏标本卡、
+ * `topbar` 顶栏「课程」。
+ */
+export const DISCOVERY_SOURCES = ['stage', 'card', 'panel', 'topbar'] as const
+export type DiscoverySource = (typeof DISCOVERY_SOURCES)[number]
+
 /** 展台工具条六个按钮；「对比」不在这里 —— 它换的是物种，走 species_switch(source:'compare') */
 export const STAGE_TOOLS = ['rotate', 'zoom', 'focus', 'section', 'layers', 'reset'] as const
 export type StageTool = (typeof STAGE_TOOLS)[number]

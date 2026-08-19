@@ -154,7 +154,7 @@ const S = {
   wrap: 'max-width:46rem;margin:0 auto;padding:3rem 1.25rem 4rem;font-family:\'Noto Serif SC\',Georgia,serif;color:var(--ink,#2b2622);line-height:1.75',
   name: 'font-family:\'Playfair Display\',Georgia,serif;font-size:2rem;margin:0 0 .25rem',
   latin: 'font-style:italic;opacity:.72;margin:0 0 .1rem',
-  epithet: 'color:var(--bronze,#7d6128);margin:0 0 1.25rem',
+  epithet: 'color:var(--brass,#7d6128);margin:0 0 1.25rem',
   h2: 'font-size:.82rem;letter-spacing:.14em;text-transform:uppercase;opacity:.6;margin:1.6rem 0 .5rem;font-family:system-ui,sans-serif',
   dl: 'display:grid;grid-template-columns:auto 1fr;gap:.35rem 1rem;margin:0',
   dt: 'opacity:.62',
@@ -162,7 +162,7 @@ const S = {
   p: 'margin:0',
   ul: 'margin:0;padding-left:1.1rem',
   li: 'margin:.2rem 0',
-  a: 'color:var(--bronze,#7d6128)',
+  a: 'color:var(--brass,#7d6128)',
   latinInline: 'font-style:italic;opacity:.6',
   nav: 'margin-top:2.75rem;padding-top:1.25rem;border-top:1px solid var(--line,#ded8cc)',
 }
