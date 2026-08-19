@@ -167,6 +167,16 @@ const S = {
   nav: 'margin-top:2.75rem;padding-top:1.25rem;border-top:1px solid var(--line,#ded8cc)',
 }
 
+/**
+ * ⚠️ 静态正文的**最外层必须是 `<article>`、且是 `#root` 的直接子元素**。
+ *
+ * `public/theme-boot.js` 靠 `#root > article` 这条选择器把它藏到应用挂载之后
+ * （否则真人会看见一整屏文字闪一下就没了，线上实测热缓存 87ms）。换个标签名、
+ * 或者外面再包一层 div，选择器就静默失配 —— 页面照常能用、正文照常可爬、
+ * 测试照常全绿，**只有真人打开时会看见那一闪**。下面有断言钉死这件事。
+ */
+const SEO_ROOT_TAG = 'article'
+
 /** 生成一页的静态正文。内容与应用里显示的是同一份数据。 */
 function staticBody(locale, insect) {
   const L = PANEL[locale]
@@ -379,6 +389,11 @@ function buildPage(locale, insect) {
     html.includes(esc(insect.summary.slice(0, 20))),
     `${insect.id} 的壳页里没有 summary —— 静态正文注入失败，这页对爬虫又变回空的了`,
   )
+  assert(
+    html.includes(`<div id="root"><${SEO_ROOT_TAG} `),
+    `${insect.id} 的静态正文最外层不是 <${SEO_ROOT_TAG}>、或不是 #root 的直接子元素 —— ` +
+      `theme-boot.js 的「#root > ${SEO_ROOT_TAG}」会失配，真人会看见正文闪一下`,
+  )
   const sibs = LISTS[locale].filter((x) => x.order === insect.order && x.id !== insect.id)
   assert(
     countSpeciesLinks(html) === Math.min(SIBLINGS, sibs.length),
@@ -419,6 +434,10 @@ for (const [locale, t] of Object.entries(templates)) {
     /<div id="root"><\/div>/,
     `<div id="root">${staticIndex(locale)}</div>`,
     `root 容器（${locale} 首页）`,
+  )
+  assert(
+    html.includes(`<div id="root"><${SEO_ROOT_TAG} `),
+    `${locale} 首页的静态正文最外层不是 <${SEO_ROOT_TAG}> —— 同上，真人会看见它闪一下`,
   )
   const n = countSpeciesLinks(html)
   assert(
