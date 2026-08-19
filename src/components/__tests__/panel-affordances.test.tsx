@@ -50,11 +50,28 @@ describe('实物照片入口的位置', () => {
     ).toBeTruthy()
   })
 
-  it('也排在总述之后 —— 它是「认这只虫」的一部分，不该插在名字和描述中间', () => {
+  /**
+   * ⚠️ 这条断言原先是**反的**（要求排在总述之后，理由是「不该插在名字和描述中间」）。
+   * 方向听着有道理，但只在中文站验过 —— 实测推翻了它：
+   *
+   *   中文 1280×720   这一行 y=321，可视 518   ✓
+   *   英文 1280×720   这一行 y=481，可视 518   ✗ 被切
+   *
+   * 英文总述比中文长 148px，把整块推出了折叠线。也就是说「贴着总述放」等于
+   * **让位置跟着正文长度走**，那是个会随内容漂移的锚点。改成放在总述之前，
+   * 位置就只取决于标题区，两种语言、任何视口高度下都钉在同一格（实测
+   * 中文 y=182 / 英文 y=240，全部整行可见）。
+   *
+   * 读起来是「标题—副标题—动作条—正文」，不是打断。
+   */
+  it('排在总述之前 —— 位置不能跟着正文长度走，否则换个语言就掉出折叠线', () => {
     mount()
     const link = screen.getByRole('link', { name: /实物图/ })
     const summary = screen.getByText(withPhoto.summary)
-    expect(summary.compareDocumentPosition(link) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+    expect(
+      link.compareDocumentPosition(summary) & Node.DOCUMENT_POSITION_FOLLOWING,
+      '实物照片入口跑到总述后面去了 —— 英文站上这会把它推出折叠线',
+    ).toBeTruthy()
   })
 
   it('是外链，且带 noopener', () => {
@@ -103,10 +120,62 @@ describe('主按钮「读它的图鉴详解」的位置', () => {
     ).not.toBe(compare.parentElement)
   })
 
-  it('动作组里剩下的四个仍在 —— 挪走主按钮不等于删掉别的', () => {
+  it('动作组里剩下的三个仍在 —— 挪走主按钮与分享不等于删掉别的', () => {
     mount()
     for (const name of [/动态演示/, /小测/, /与其他昆虫对比/]) {
       expect(screen.getByRole('button', { name })).toBeTruthy()
     }
+  })
+})
+
+/**
+ * 三、分享同样必须待在身份区。
+ *
+ * 这是同一个根因的第四次，也是量得最狠的一次：分享按钮原先是动作组的最后一项、
+ * y≈1134，而右栏一次只看得到 688px —— **1527 次访问里被点了 4 次（0.26%）**。
+ *
+ * 功能本身没问题：手机上调系统分享面板（能直达微信），桌面上复制规范链接并
+ * 亮 2 秒「已复制」。坏的只有位置。
+ *
+ * 同组里的「对比」是天然的对照：它同样躺在折叠线以下，却因为展台工具条上还有
+ * 一个入口而拿到 156 次。**同一个功能、同一个深度，差别只在有没有第二个入口。**
+ *
+ * 与生活史那次不同，这次是**搬**不是复制 —— 旧位置在折叠线下本来就没量，
+ * 留着只会让归因变浑：改动后 share_click 涨了就只可能是新位置的功劳。
+ */
+describe('分享入口的位置', () => {
+  const shareBtn = () => screen.getByRole('button', { name: /复制本页链接|分享这只虫|已复制/ })
+
+  it('排在「关键数据」之前 —— 在身份区，不在底部动作清单里', () => {
+    mount()
+    const facts = screen.getByText('关键数据')
+    expect(
+      shareBtn().compareDocumentPosition(facts) & Node.DOCUMENT_POSITION_FOLLOWING,
+      '分享又滑到「关键数据」后面去了 —— 那一段整块在折叠线以下',
+    ).toBeTruthy()
+  })
+
+  it('排在总述之前 —— 与实物照片同一行，位置不跟正文长度走', () => {
+    mount()
+    const summary = screen.getByText(withPhoto.summary)
+    expect(shareBtn().compareDocumentPosition(summary) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+  })
+
+  it('与实物照片外链同处一个容器 —— 两个是一组次要动作，不该被拆散', () => {
+    mount()
+    const link = screen.getByRole('link', { name: /实物图/ })
+    expect(shareBtn().parentElement).toBe(link.parentElement)
+  })
+
+  it('没有实物照片外链的物种照样有分享 —— 那一行不能假设永远是两个并排', () => {
+    mount(withoutPhoto)
+    expect(screen.queryByRole('link', { name: /实物图/ })).toBeNull()
+    expect(shareBtn()).toBeTruthy()
+  })
+
+  it('不在动作组里 —— 与「对比」不同父，否则说明又被塞回去了', () => {
+    mount()
+    const compare = screen.getByRole('button', { name: /与其他昆虫对比/ })
+    expect(shareBtn().parentElement).not.toBe(compare.parentElement)
   })
 })

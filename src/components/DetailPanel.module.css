@@ -299,17 +299,6 @@
   color: var(--muted);
 }
 
-/* 复制成功的短暂确认态：整钮转苔绿 2 秒。变色而不弹 toast ——
-   反馈就发生在手指按下去的那个位置，视线不用移开 */
-.share[data-copied] {
-  color: var(--sage);
-  border-color: var(--sage);
-}
-
-.share[data-copied] svg {
-  color: var(--sage);
-}
-
 /* ---------------------------------------------------------------- 页脚元数据 */
 
 .meta {
@@ -389,3 +378,38 @@
 .panel > *:nth-child(8) { animation-delay: 245ms; }
 .panel > *:nth-child(9) { animation-delay: 280ms; }
 .panel > *:nth-child(n + 10) { animation-delay: 315ms; }
+
+/*
+  身份区里那一行次要动作（实物照片外链 + 分享）。
+
+  两个都用 .photoLink 那副黄铜小胶囊的样子 —— 它们是同一类东西，长得一样
+  才读得出「这是一组」。wrap 是必须的：英文站的两条文案都更长
+  （"See real photos on iNaturalist" + "Copy page link"），窄栏下放不下一行。
+
+  gap 用 8px 而不是更大：这一行要显眼，但不能横向铺开到跟下面的「关键数据」
+  抢分量 —— 主按钮才是这一栏的重点。
+*/
+.idActions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+/* 分享是 <button> 不是 <a>，得把浏览器给按钮的默认外观按掉 */
+.shareChip {
+  margin-top: 12px;
+  font-family: inherit;
+  line-height: inherit;
+  cursor: pointer;
+}
+
+/*
+  复制成功的短暂确认态：整钮转苔绿 2 秒。变色而不弹 toast —— 反馈就发生在
+  手指按下去的那个位置，视线不用移开。这条是从原来 .share 上原样搬过来的，
+  换了位置不代表这个决定作废。
+*/
+.shareChip[data-copied] {
+  color: var(--sage);
+  border-color: var(--sage);
+}
