@@ -175,10 +175,6 @@ export function DetailPanel({
       </div>
 
       <div className={s.actions}>
-        <button className={s.primary} onClick={() => onDiscover('lesson')}>
-          {t('detail.readGuide')}
-          <IconArrowRight size={15} />
-        </button>
         <div className={s.pairRow}>
           <button className={s.ghost} onClick={() => onDiscover('motion')}>
             <IconPlay size={13} />
@@ -214,6 +210,30 @@ export function DetailPanel({
           <span className={s.metaKey}>{t('detail.relatives')}</span>
           <span className={s.metaValue}>{insect.relatives.join(' · ')}</span>
         </div>
+      </div>
+
+      {/*
+        主按钮做成**栏内吸底**，而不是待在底部的动作组里。
+
+        实测：右栏是独立滚动容器，可视 688px / 内容 1350px —— **只看得到 51%**。
+        动作组整块落在 y=1031，也就是折叠线以下 343px；被它上面那 285px 的
+        阅读性内容（生态角色 + 你知道吗 + 生活史）推下去的。
+        换句话说，这个站最主要的引导入口，多数人可能从没看见过。
+
+        为什么是吸底而不是把它上提：上提要么把 190px 的按钮堆插进身份区
+        （盖过内容本身），要么只挪一点点还是落在折叠线下。吸底不动阅读顺序，
+        又保证它始终在视野里 —— 代价是滚动途中会盖住一行内容，
+        但滚到底时它回到自然位置，什么都不会被永久遮住。
+
+        ≤900px 不吸底：那时布局竖排、右栏不再是独立滚动容器
+        （global.css 里 `.detail-panel { height: auto }`），
+        再 sticky 就会贴着视口底部乱飘。
+      */}
+      <div className={s.stickyAction}>
+        <button className={s.primary} onClick={() => onDiscover('lesson')}>
+          {t('detail.readGuide')}
+          <IconArrowRight size={15} />
+        </button>
       </div>
     </aside>
   )
