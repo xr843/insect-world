@@ -116,6 +116,134 @@ function ogImageFor(id, locale) {
   return locale === 'zh' ? `${SITE}/og.png` : `${SITE}/og-en.png`
 }
 
+// ---------- JSON-LD 结构化数据 ----------
+
+/**
+ * 为什么要 JSON-LD：title/description 只是字符串，结构化数据才把「这一页
+ * 讲的是一种昆虫、学名是什么、属于哪个目、首页在哪」变成搜索引擎能直接
+ * 消费的事实。BreadcrumbList 还能换来搜索结果里的面包屑展示。
+ * 物种实体用 schema.org 的 Taxon 类型（bioschemas 并入的，iNaturalist/GBIF
+ * 都在用），比硬套 Article/Product 诚实。
+ *
+ * ⚠️ 序列化时必须把 `<` 转成 \u003c：summary 是人写的文本，哪天出现
+ * `</script>` 这样的片段，整个 head 会被从中间截断。\u003c 在 JSON 里是
+ * 合法转义，解析回来还是同一个字符，页面上不损失任何内容。
+ */
+function jsonLdScript(data) {
+  return `<script type="application/ld+json">${JSON.stringify(data).replaceAll('<', '\\u003c')}</script>`
+}
+
+const LANG = { zh: 'zh-Hans', en: 'en' }
+const SITE_NAME = { zh: '昆虫世界', en: 'Insect World' }
+const homeOf = (locale) => (locale === 'zh' ? `${SITE}/` : `${SITE}/en/`)
+
+function websiteNode(locale) {
+  return {
+    '@type': 'WebSite',
+    '@id': `${homeOf(locale)}#website`,
+    url: homeOf(locale),
+    name: SITE_NAME[locale],
+    inLanguage: LANG[locale],
+  }
+}
+
+function speciesJsonLd(locale, insect, self, title, desc) {
+  const image = ogImageFor(insect.id, locale)
+  // 62 只是双名（种），淡色库蚊是三名（亚种）——按词数分，别把亚种标成种
+  const rank = insect.latin.trim().split(/\s+/).length >= 3 ? 'subspecies' : 'species'
+  return {
+    '@context': 'https://schema.org',
+    '@graph': [
+      websiteNode(locale),
+      {
+        '@type': 'ItemPage',
+        '@id': `${self}#webpage`,
+        url: self,
+        name: title,
+        description: desc,
+        inLanguage: LANG[locale],
+        isPartOf: { '@id': `${homeOf(locale)}#website` },
+        primaryImageOfPage: image,
+        breadcrumb: { '@id': `${self}#breadcrumb` },
+        mainEntity: { '@id': `${self}#taxon` },
+      },
+      {
+        '@type': 'BreadcrumbList',
+        '@id': `${self}#breadcrumb`,
+        itemListElement: [
+          // 末位是本页自身，Google 明说可以不带 item；首位必须带
+          { '@type': 'ListItem', position: 1, name: SITE_NAME[locale], item: homeOf(locale) },
+          { '@type': 'ListItem', position: 2, name: insect.name },
+        ],
+      },
+      {
+        '@type': 'Taxon',
+        '@id': `${self}#taxon`,
+        name: insect.name,
+        scientificName: insect.latin,
+        taxonRank: rank,
+        description: insect.summary,
+        image,
+        parentTaxon: {
+          '@type': 'Taxon',
+          name: ORDER_LABEL[locale][insect.order],
+          scientificName: insect.order[0].toUpperCase() + insect.order.slice(1),
+          taxonRank: 'order',
+        },
+      },
+    ],
+  }
+}
+
+function homeJsonLd(locale) {
+  const list = LISTS[locale]
+  const home = homeOf(locale)
+  return {
+    '@context': 'https://schema.org',
+    '@graph': [
+      websiteNode(locale),
+      {
+        '@type': 'CollectionPage',
+        '@id': `${home}#webpage`,
+        url: home,
+        name: SITE_NAME[locale],
+        inLanguage: LANG[locale],
+        isPartOf: { '@id': `${home}#website` },
+        mainEntity: { '@id': `${home}#list` },
+      },
+      {
+        '@type': 'ItemList',
+        '@id': `${home}#list`,
+        numberOfItems: list.length,
+        itemListElement: list.map((x, i) => ({
+          '@type': 'ListItem',
+          position: i + 1,
+          name: x.name,
+          item: `${SITE}${href(locale, x.id)}`,
+        })),
+      },
+    ],
+  }
+}
+
+/**
+ * 回读断言：从成品页里把 JSON-LD 抠出来重新 parse。任何转义或注入 bug
+ * （比如 summary 里的引号把 JSON 截断）都会在这里当场爆，而不是部署后
+ * 让搜索引擎静默丢弃整块数据。
+ */
+function assertJsonLd(html, pageLabel) {
+  const m = html.match(/<script type="application\/ld\+json">(.*?)<\/script>/s)
+  assert(m, `${pageLabel} 里没有 JSON-LD`)
+  let data
+  try {
+    data = JSON.parse(m[1])
+  } catch (e) {
+    assert(false, `${pageLabel} 的 JSON-LD 不是合法 JSON：${e.message}`)
+  }
+  assert(Array.isArray(data['@graph']) && data['@graph'].length >= 2, `${pageLabel} 的 JSON-LD 缺 @graph`)
+  return data
+}
+
 // ---------- 静态正文（SEO） ----------
 
 /**
@@ -377,6 +505,17 @@ function buildPage(locale, insect) {
     `<meta property="og:image" content="${ogImageFor(insect.id, locale)}" />`,
     'og:image',
   )
+  html = replaceOnce(
+    html,
+    /<\/head>/,
+    `${jsonLdScript(speciesJsonLd(locale, insect, self, title, desc))}</head>`,
+    'head 收尾（JSON-LD 注入点）',
+  )
+  const ld = assertJsonLd(html, `${insect.id}（${locale}）`)
+  assert(
+    ld['@graph'].some((n) => n['@type'] === 'Taxon' && n.scientificName === insect.latin),
+    `${insect.id} 的 JSON-LD 回读不到学名「${insect.latin}」—— 转义环节把数据弄丢了`,
+  )
 
   // 静态正文注入 #root —— 见 staticBody() 的注释
   html = replaceOnce(
@@ -429,11 +568,24 @@ assert(new Set(canonicals).size === canonicals.length, 'canonical 有重复（�
 // 这里只改写落盘的 dist/index.html，内存里的模板不动。
 
 for (const [locale, t] of Object.entries(templates)) {
-  const html = replaceOnce(
+  let html = replaceOnce(
     t.html,
     /<div id="root"><\/div>/,
     `<div id="root">${staticIndex(locale)}</div>`,
     `root 容器（${locale} 首页）`,
+  )
+  html = replaceOnce(
+    html,
+    /<\/head>/,
+    `${jsonLdScript(homeJsonLd(locale))}</head>`,
+    `head 收尾（${locale} 首页 JSON-LD）`,
+  )
+  const ld = assertJsonLd(html, `${locale} 首页`)
+  assert(
+    ld['@graph'].some(
+      (n) => n['@type'] === 'ItemList' && n.numberOfItems === LISTS[locale].length,
+    ),
+    `${locale} 首页的 JSON-LD 名录不是 ${LISTS[locale].length} 条 —— 列表与实际物种数脱节`,
   )
   assert(
     html.includes(`<div id="root"><${SEO_ROOT_TAG} `),
