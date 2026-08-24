@@ -47,6 +47,11 @@
   text-align: left;
   border: 1px solid transparent;
   transition: background 0.16s ease, border-color 0.16s ease;
+  /* 条目是 <a href>（爬虫要看得见链接，用户要能中键开新标签），
+     而 global.css 只重置了 button —— 链接色与下划线得在这里压掉 */
+  color: inherit;
+  text-decoration: none;
+  cursor: pointer;
 }
 
 .item:hover {

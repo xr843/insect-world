@@ -31,11 +31,12 @@ describe('图鉴库点一张卡片 —— species_switch(source: gallery)', () =
     const { container } = renderZh(
       <Gallery insects={INSECTS} activeId={INSECTS[0].id} onSelect={onSelect} onClose={onClose} />,
     )
-    const btn = Array.from(container.querySelectorAll('button')).find((b) =>
-      b.textContent?.includes(target.name),
+    // 卡片是 <a href>，理由同左栏名录
+    const tile = Array.from(container.querySelectorAll('a[href]')).find((a) =>
+      a.textContent?.includes(target.name),
     )
-    expect(btn, `没找到「${target.name}」这张卡`).toBeTruthy()
-    fireEvent.click(btn!)
+    expect(tile, `没找到「${target.name}」这张卡`).toBeTruthy()
+    fireEvent.click(tile!)
 
     expect(onSelect).toHaveBeenCalledWith('ladybird')
     expect(onClose).toHaveBeenCalledTimes(1)

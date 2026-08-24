@@ -52,11 +52,13 @@ describe('点击条目 —— species_switch(source: list)', () => {
     const onSelect = vi.fn()
     const { container } = renderZh(<LibraryPanel {...props} onSelect={onSelect} />)
     const second = INSECTS[1]
-    const btn = Array.from(container.querySelectorAll('button')).find((b) =>
-      b.textContent?.includes(second.name),
+    // 条目是 <a href>，不是 button —— 爬虫要在渲染后的 DOM 里看得见链接，
+    // 契约由 species-links-crawlable.test.tsx 盯着
+    const row = Array.from(container.querySelectorAll('a[href]')).find((a) =>
+      a.textContent?.includes(second.name),
     )
-    expect(btn, `没找到「${second.name}」这一行`).toBeTruthy()
-    fireEvent.click(btn!)
+    expect(row, `没找到「${second.name}」这一行`).toBeTruthy()
+    fireEvent.click(row!)
 
     expect(onSelect).toHaveBeenCalledWith(second.id)
     expect(trackMock).toHaveBeenCalledWith(EVENTS.SPECIES_SWITCH, {

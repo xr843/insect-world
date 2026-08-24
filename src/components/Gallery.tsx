@@ -1,9 +1,11 @@
 import { useEffect, useMemo } from 'react'
 import type { Insect, Order } from '../data/types'
-import { useLabels, useT } from '../i18n/useT'
+import { useLabels, useLocale, useT } from '../i18n/useT'
 import { InsectGlyph } from './InsectGlyph'
 import { fitName } from './fitName'
+import { isPlainLeftClick } from './speciesLink'
 import s from './Gallery.module.css'
+import { canonicalPath } from '../i18n/hrefForLocale'
 import { EVENTS, track } from '../analytics'
 
 /** 关掉弹层的通用行为：Esc 键 + 打开时锁住背景滚动 */
@@ -35,6 +37,7 @@ export function Gallery({
 }) {
   useDismiss(onClose)
   const t = useT()
+  const locale = useLocale()
   const { order: orderLabel } = useLabels()
 
   // 按目分组，让目录呈现分类学结构而不是一片平铺
@@ -70,11 +73,16 @@ export function Gallery({
             </div>
             <div className={s.grid}>
               {list.map((i) => (
-                <button
+                // 同左栏名录：卡片是 <a href>，见 speciesLink.ts
+                <a
                   key={i.id}
                   className={s.tile}
+                  href={canonicalPath(locale, i.id)}
                   data-active={i.id === activeId}
-                  onClick={() => {
+                  onClick={(e) => {
+                    // 新标签里开这一只，弹层要原样留着 —— 用户还想接着挑下一只
+                    if (!isPlainLeftClick(e)) return
+                    e.preventDefault()
                     track(EVENTS.SPECIES_SWITCH, { source: 'gallery', species_id: i.id, order: i.order })
                     onSelect(i.id)
                     onClose()
@@ -94,7 +102,7 @@ export function Gallery({
                     </div>
                     <div className={s.tileLatin}>{i.latin}</div>
                   </span>
-                </button>
+                </a>
               ))}
             </div>
           </div>
