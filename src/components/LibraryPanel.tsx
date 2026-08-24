@@ -3,7 +3,9 @@ import type { Insect } from '../data/types'
 import { InsectGlyph } from './InsectGlyph'
 import { IconArrowRight, IconBookmark, IconLeafSolid } from './icons'
 import { fitName } from './fitName'
+import { isPlainLeftClick } from './speciesLink'
 import s from './LibraryPanel.module.css'
+import { canonicalPath } from '../i18n/hrefForLocale'
 import { useLabels, useLocale, useT } from '../i18n/useT'
 import { pinyinOf } from '../data/pinyin'
 import { EVENTS, track } from '../analytics'
@@ -39,7 +41,8 @@ export function LibraryPanel({
 }) {
   const t = useT()
   const labels = useLabels()
-  const zh = useLocale() === 'zh'
+  const locale = useLocale()
+  const zh = locale === 'zh'
   /**
    * 让选中项跟着走。
    *
@@ -57,7 +60,7 @@ export function LibraryPanel({
    * 追不上高亮 —— 正好复现用户报的那个症状。「选中项可见」是正确性，
    * 不该架在动画上。顺带也就天然合了 prefers-reduced-motion。
    */
-  const activeRef = useRef<HTMLButtonElement>(null)
+  const activeRef = useRef<HTMLAnchorElement>(null)
 
   useEffect(() => {
     // 选中项被筛掉时没有这个节点，不滚 —— 展台仍显示它，但列表里没有它的位置
@@ -154,12 +157,19 @@ export function LibraryPanel({
         {insects.map((i) => {
           const active = i.id === activeId
           return (
-            <button
+            // 条目是 <a href> 而不是 <button>：渲染后的 DOM 必须留下通往
+            // 每一页的真链接，否则爬虫只看得到一座孤岛。见 speciesLink.ts
+            <a
               key={i.id}
               ref={active ? activeRef : undefined}
               className={s.item}
+              href={canonicalPath(locale, i.id)}
               data-active={active}
-              onClick={() => {
+              onClick={(e) => {
+                // 带修饰键的点击放行给浏览器：用户要的是新标签里那一只，
+                // 当前这只不该跟着变，埋点也不该记（新标签自己会记一次落地）
+                if (!isPlainLeftClick(e)) return
+                e.preventDefault()
                 track(EVENTS.SPECIES_SWITCH, { source: 'list', species_id: i.id, order: i.order })
                 onSelect(i.id)
               }}
@@ -186,7 +196,7 @@ export function LibraryPanel({
                   <IconLeafSolid size={15} />
                 </span>
               )}
-            </button>
+            </a>
           )
         })}
       </div>

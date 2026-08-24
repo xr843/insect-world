@@ -92,6 +92,10 @@
   background: var(--field);
   text-align: left;
   transition: transform 0.16s ease, border-color 0.16s ease, background 0.16s ease;
+  /* 同左栏名录：卡片是 <a href>，压掉链接默认样式 */
+  color: inherit;
+  text-decoration: none;
+  cursor: pointer;
 }
 
 .tile:hover {
