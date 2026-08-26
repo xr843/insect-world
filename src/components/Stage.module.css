@@ -128,6 +128,16 @@
   pointer-events: none;
 }
 
+/* 中文名只在手机上露面 —— 桌面右栏已有大标题，展台上不重复。理由见 Stage.tsx */
+.captionName {
+  display: none;
+  font-family: var(--serif);
+  font-size: 17px;
+  font-weight: 500;
+  line-height: 1.25;
+  color: var(--ink);
+}
+
 .captionLatin {
   font-family: var(--serif);
   font-style: italic;
@@ -260,6 +270,18 @@
 
 /* ---------------------------------------------------------------- 门牌 */
 
+/*
+  身份区。桌面上 `display: contents` 让这层包装从盒树里消失 —— 铭牌与门牌
+  各自绝对定位，位置与从前一模一样；手机上（≤640px）它变成左上角的一列。
+
+  ⚠️ 不认识 `display: contents` 的老浏览器把它当普通 div：它没有 position，
+  不会成为绝对定位子元素的包含块，于是两个子块照旧对着展台定位 ——
+  退化后正好等于现状，这是选它而不是复制一份 DOM 的理由。
+*/
+.identity {
+  display: contents;
+}
+
 /* 左上角的展厅门牌：目 · 变态类型 */
 .orderTag {
   position: absolute;
@@ -287,7 +309,43 @@
 /* ---------------------------------------------------------------- 手机展台 */
 
 @media (max-width: 640px) {
-  .caption {
+  /*
+    身份区从"两块各自钉在角上"变成左上角的一列：名字 → 学名 → 目/变态类型。
+
+    左下角在手机上是待不住的：底部中央是工具条，390px 宽下它横跨 x≈40~350，
+    铭牌留在那儿必撞 —— 这也是它此前干脆整个 display:none 的原因。
+
+    右边留出 62px 给右上角的生活史入口，避免两者在窄屏上挤到一起。
+  */
+  .identity {
+    display: flex;
+    position: absolute;
+    left: 12px;
+    top: 12px;
+    right: 62px;
+    z-index: 5;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 7px;
+    pointer-events: none;
+  }
+
+  /* 交给上面那个 flex 排，子块不再各自绝对定位 */
+  .identity > * {
+    position: static;
+  }
+
+  .captionName {
+    display: block;
+    font-size: 16px;
+  }
+
+  .captionLatin {
+    font-size: 11.5px;
+  }
+
+  /* 「拖动旋转 · 滚轮细看」：触屏上没有滚轮，这句在手机上本来就不成立 */
+  .captionHint {
     display: none;
   }
 
@@ -310,9 +368,10 @@
     margin: 4px 4px;
   }
 
+  /* 目名在英文下很长，压一档字号与内边距，少折一行 */
   .orderTag {
-    left: 12px;
-    top: 12px;
+    padding: 5px 10px;
+    font-size: 11px;
   }
 }
 

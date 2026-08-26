@@ -25,7 +25,8 @@ import { EVENTS, track } from '../../analytics'
 const trackMock = vi.mocked(track)
 
 beforeEach(() => {
-  // jsdom 不实现 scrollIntoView，组件内部换选中项时会调用它，装个空桩
+  // 应用代码已不再调用 scrollIntoView（换选中项走 scrollNearest，只滚名录不滚页面），
+  // 但 jsdom 仍不实现它 —— 留个空桩，免得将来某处误用时炸在无关的测试里
   Element.prototype.scrollIntoView = function () {}
 })
 

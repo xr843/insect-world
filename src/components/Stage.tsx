@@ -263,12 +263,6 @@ export function Stage({
         </button>
       )}
 
-      <div className={s.orderTag}>
-        <span className={s.orderDot} style={{ background: insect.accent }} />
-        {labels.order[insect.order]}
-        <span style={{ color: 'var(--muted)' }}>·</span>
-        <span style={{ color: 'var(--muted)' }}>{labels.metamorphosis[insect.metamorphosis]}</span>
-      </div>
 
       {/* 工具条整条随 WebGL 一起撤：旋转/剖切/聚焦全是对着 canvas 说话的，
           兜底页上留一排按不动的按钮比没有更糟（本站原则：不留只有样子的按钮） */}
@@ -346,10 +340,37 @@ export function Stage({
         </button>
       </div>}
 
-      <div className={s.caption}>
-        <div className={s.captionLatin}>{insect.latin}</div>
-        {/* 「拖动旋转 · 滚轮细看」在剪影兜底页上是一句谎话，撤掉；学名照留 */}
-        {!webglDead && <div className={s.captionHint}>{t('stage.captionHint')}</div>}
+      {/*
+        身份区 —— 展台铭牌（名字/学名）与展厅门牌（目 · 变态类型）。
+
+        **桌面上这层包装不存在**（CSS `display: contents`），两块各自绝对定位，
+        一个在左上角、一个在左下角，与从前一模一样；手机上它变成左上角的一列，
+        铭牌在上、门牌在下，读起来就是一张标本标签。
+
+        为什么要有这层包装、而不给铭牌写死一个 top：**门牌的高度不是常数**。
+        英文版的目名是「Butterflies & Moths (Lepidoptera)」加「Complete
+        metamorphosis (holometabolous)」，390px 宽下折成三行 —— 实测固定偏移
+        当场就撞上去，中文版却看不出任何问题。这类"只在另一种语言下坏掉"的
+        缺陷，靠的是把间距交给布局，而不是靠数出来的像素。
+
+        **中文名只在手机上出现**：桌面右栏就是那个大标题，展台再写一遍是重复；
+        而手机上右栏排到了第三位 —— 2026-08-26 实测物种名落在 y=1034 处、
+        视口只有 664，从分享链接进来的人第一屏看到的是**一只没有名字的虫**。
+      */}
+      <div className={s.identity}>
+        <div className={s.caption}>
+          <div className={s.captionName}>{insect.name}</div>
+          <div className={s.captionLatin}>{insect.latin}</div>
+          {/* 「拖动旋转 · 滚轮细看」在剪影兜底页上是一句谎话，撤掉；学名照留 */}
+          {!webglDead && <div className={s.captionHint}>{t('stage.captionHint')}</div>}
+        </div>
+
+        <div className={s.orderTag}>
+          <span className={s.orderDot} style={{ background: insect.accent }} />
+          {labels.order[insect.order]}
+          <span style={{ color: 'var(--muted)' }}>·</span>
+          <span style={{ color: 'var(--muted)' }}>{labels.metamorphosis[insect.metamorphosis]}</span>
+        </div>
       </div>
 
       {compareWith && (

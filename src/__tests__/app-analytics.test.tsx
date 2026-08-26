@@ -51,7 +51,8 @@ beforeAll(() => {
       value: () => ({ matches: false, addEventListener() {}, removeEventListener() {} }),
     })
   }
-  // jsdom 不实现 scrollIntoView，LibraryPanel 换选中项时会调用它
+  // jsdom 不实现 scrollIntoView。LibraryPanel 已经不再调用它（改走 scrollNearest，
+  // 只滚名录容器、不滚页面），这个空桩留作兜底
   Element.prototype.scrollIntoView = function () {}
 })
 

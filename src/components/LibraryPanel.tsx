@@ -4,6 +4,7 @@ import { InsectGlyph } from './InsectGlyph'
 import { IconArrowRight, IconBookmark, IconLeafSolid } from './icons'
 import { fitName } from './fitName'
 import { isPlainLeftClick } from './speciesLink'
+import { scrollNearestWithin } from './scrollNearest'
 import s from './LibraryPanel.module.css'
 import { canonicalPath } from '../i18n/hrefForLocale'
 import { useLabels, useLocale, useT } from '../i18n/useT'
@@ -50,22 +51,28 @@ export function LibraryPanel({
    * 滚进视野 —— 实测按 9 下之后高亮已经在列表下边缘之外 143px 处，而
    * 3D 展台照常换标本。于是症状看起来像「方向键坏了」，其实是列表没跟上。
    *
-   * nearest 是关键：已经可见就一动不动，只在真的看不见时滚最小距离。
-   * 换成 center/start 会让每一次点击都把列表（连带整页）拽一下。
-   * block 管桌面端的竖列，inline 管手机上那条横向滑条，两个轴都得给。
+   * nearest 语义是关键：已经可见就一动不动，只在真的看不见时滚最小距离。
+   * 换成 center/start 会让每一次点击都把列表拽一下。两个轴都要管 ——
+   * 桌面是竖列，手机上这条名录被 CSS 改成了横向滑条。
    *
-   * behavior 用 auto（瞬时）而不是 smooth，是实测之后改回来的：
-   * 平滑滚动由 rAF 驱动，在后台标签页里一次都不跑（实测 1.5 秒纹丝不动，
-   * 同一刻 auto 立刻到位）；连按方向键时动画又会被反复打断重启，列表
-   * 追不上高亮 —— 正好复现用户报的那个症状。「选中项可见」是正确性，
-   * 不该架在动画上。顺带也就天然合了 prefers-reduced-motion。
+   * ⚠️ **不能用 `scrollIntoView`**（2026-08-26 撤掉）：它会把每一个可滚动
+   * 祖先都调一遍，最外面那个是页面本身。手机上名录落在首屏之外，于是
+   * 「让选中项可见」被执行成「把整页往下拽 179px」，页头整个滚出屏外，
+   * 每换一次物种再拽一次。改用 `scrollNearestWithin`，只动这一个容器 ——
+   * 理由与实测数字写在那个文件里。
+   *
+   * 瞬时而不是平滑，也是实测之后定的：平滑滚动由 rAF 驱动，在后台标签页里
+   * 一次都不跑（实测 1.5 秒纹丝不动）；连按方向键时动画还会被反复打断重启，
+   * 列表追不上高亮 —— 正好复现用户报的那个症状。「选中项可见」是正确性，
+   * 不该架在动画上。直接改 scrollTop/scrollLeft 天然就是瞬时的。
    */
   const activeRef = useRef<HTMLAnchorElement>(null)
+  const listRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     // 选中项被筛掉时没有这个节点，不滚 —— 展台仍显示它，但列表里没有它的位置
-    if (!activeRef.current) return
-    activeRef.current.scrollIntoView({ block: 'nearest', inline: 'nearest', behavior: 'auto' })
+    if (!activeRef.current || !listRef.current) return
+    scrollNearestWithin(listRef.current, activeRef.current)
   }, [activeId, insects])
 
   /**
@@ -148,7 +155,7 @@ export function LibraryPanel({
         </button>
       )}
 
-      <div className={s.list} onScroll={onListScroll}>
+      <div className={s.list} ref={listRef} onScroll={onListScroll}>
         {insects.length === 0 && (
           <div className={s.none}>
             {notedOnly ? t('library.emptyNoted') : t('library.emptyFiltered')}
