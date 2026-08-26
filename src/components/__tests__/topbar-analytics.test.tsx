@@ -2,7 +2,7 @@
  * @vitest-environment jsdom
  *
  * 顶栏三处埋点：搜索结果点击（species_switch, source:'search'）、
- * 输入停顿后的搜索发起（search, has_results）、语言切换点击
+ * 输入停顿后的搜索发起（search, has_results + tier）、语言切换点击
  * （language_switch）。track() 本身的防御性另有 analytics.test.ts 覆盖，
  * 这里只管「点了/停顿了会不会调用，调用时事件名与字段对不对」。
  */
@@ -79,14 +79,26 @@ describe('搜索发起埋点 —— 停顿后报一次，不带查询词原文',
     const { input } = mount()
     fireEvent.change(input, { target: { value: '瓢虫' } })
     act(() => vi.advanceTimersByTime(500))
-    expect(trackMock).toHaveBeenCalledWith(EVENTS.SEARCH, { has_results: true })
+    expect(trackMock).toHaveBeenCalledWith(EVENTS.SEARCH, { has_results: true, tier: 'name' })
   })
 
-  it('没有结果时 has_results 为 false', () => {
+  it('没有结果时 has_results 为 false，tier 为 none', () => {
     const { input } = mount()
     fireEvent.change(input, { target: { value: '霸王龙' } })
     act(() => vi.advanceTimersByTime(500))
-    expect(trackMock).toHaveBeenCalledWith(EVENTS.SEARCH, { has_results: false })
+    expect(trackMock).toHaveBeenCalledWith(EVENTS.SEARCH, { has_results: false, tier: 'none' })
+  })
+
+  /**
+   * tier 是补了俗名之后加的：它要回答「那批俗名到底有没有人用」。
+   * 报的是命中级别这个封闭枚举，不是用户打的字 —— 下面那条隐私断言仍然管着。
+   */
+  it('俗名命中时 tier 报 alias/exact，能与正式名命中区分开', () => {
+    const { input } = mount()
+    // 「独角仙」不是图鉴里的正式名（那只叫双叉犀金龟），只可能经俗名命中
+    fireEvent.change(input, { target: { value: '独角仙' } })
+    act(() => vi.advanceTimersByTime(500))
+    expect(trackMock).toHaveBeenCalledWith(EVENTS.SEARCH, { has_results: true, tier: 'exact' })
   })
 
   it('连续敲键、还没停顿够 500ms 时不报', () => {

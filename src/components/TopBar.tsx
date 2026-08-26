@@ -5,7 +5,7 @@ import { rememberLocaleChoice } from '../i18n/rememberLocale'
 import { useLabels, useLocale, useT } from '../i18n/useT'
 import { hrefForLocale } from '../i18n/hrefForLocale'
 import { LOCALE_AUTONYM } from '../i18n/locales'
-import { matchesPinyin } from '../data/pinyin'
+import { searchInsects } from './searchInsects'
 import {
   IconBook,
   IconChevronDown,
@@ -115,42 +115,26 @@ export function TopBar({
 
   const q = query.trim().toLowerCase()
   /**
-   * 两档匹配：名称/学名/目/雅称是第一档；第二档在总述与冷知识全文里找。
-   * 只有第一档时，搜「萤火虫」「甲虫」这类俗名会一无所获 ——
-   * 图鉴用的是「山窗萤」这样的正式名，俗名只出现在正文里（实测撞到过）。
-   * 第二档排在后面并整体截断到 12 条，避免常见字把列表撑爆。
-   *
-   * 拼音也算第一档（仅中文版）：「棒䗛、水黾、海滨蠼螋」这些字多数
-   * 成年人打不出来，全拼（shuimin）或首字母（hbqs）是唯一能敲进
-   * 搜索框的形态。英文版不接 —— 英文读者面对的本来就是英文名。
+   * 匹配与排序全在 `searchInsects.ts`（五级：正式名/俗名精确 → 名字含 →
+   * 俗名含或拼音 → 学名/目/雅称 → 正文）。抽出去是因为它是这里分支最多、
+   * 又最该被单测直接盯住的一段，理由与五级的来历写在那个文件里。
    */
-  const primary = q
-    ? insects.filter(
-        (i) =>
-          i.name.toLowerCase().includes(q) ||
-          i.latin.toLowerCase().includes(q) ||
-          labels.order[i.order].toLowerCase().includes(q) ||
-          i.epithet.includes(q) ||
-          (locale === 'zh' && matchesPinyin(i.id, q)),
-      )
-    : []
-  const seen = new Set(primary.map((i) => i.id))
-  const secondary =
-    q.length >= 2
-      ? insects.filter((i) => !seen.has(i.id) && (i.summary.includes(q) || i.trivia.includes(q)))
-      : []
-  const hits = [...primary, ...secondary].slice(0, 12)
+  const hits = searchInsects(insects, q, locale, (i) => labels.order[i.order])
 
   /**
    * 搜索埋点：等输入停顿再报一次「发起了一次搜索」，不追每个按键 ——
    * 按键就报的话，敲「瓢虫」两个字会在 Umami 里炸出两条，且这批用不上
-   * 那种密度。只报「有没有结果」这一个布尔，绝不上报 query 本身：
-   * 搜索词是用户主动打的自由文本，最接近个人输入痕迹，隐私上不能报。
+   * 那种密度。
+   *
+   * ⚠️ **绝不上报 query 本身**：搜索词是用户主动打的自由文本，最接近个人
+   * 输入痕迹，隐私上不能报。`tier` 报的是「命中的是哪一级」这个枚举值
+   * （exact/name/alias/meta/text/none），来自我们自己的封闭词表，不含
+   * 任何用户输入 —— 它要回答的是「补的那批俗名到底有没有人用」。
    */
   useEffect(() => {
     if (!q) return
     const timer = window.setTimeout(() => {
-      track(EVENTS.SEARCH, { has_results: hits.length > 0 })
+      track(EVENTS.SEARCH, { has_results: hits.length > 0, tier: hits[0]?.tier ?? 'none' })
     }, 500)
     return () => window.clearTimeout(timer)
     // hits 由 q 与 insects 派生，随 q 变化必然重新求值，不需要单独进依赖
@@ -280,7 +264,7 @@ export function TopBar({
               {hits.length === 0 ? (
                 <div className={s.empty}>{t('search.noResults', { query })}</div>
               ) : (
-                hits.map((i) => (
+                hits.map(({ insect: i }) => (
                   <button
                     key={i.id}
                     className={s.result}
