@@ -259,6 +259,21 @@ button {
   align-items: start;
 }
 
+/*
+  展台（以及与它等高的左右两栏）的高度。
+
+  ⚠️ **这条必须排在下面所有媒体查询之前。** 媒体查询不加特异性，`.stage-height`
+  在窄屏分支里还是 0-1-0，与这条打平 —— 谁写在后面谁赢。它原先排在 900px 分支
+  之后，于是手机分支整条是死的：2026-08-26 无头 iPhone 13 实测展台算出来是
+  520px（本条的下限）而不是设计的 56vh≈372px，加上 135px 的页头正好铺满 664px
+  的视口，名录、物种名、正文全被顶到第二屏。**没有任何检查会红** —— 规则语法
+  合法、构建正常、4000 个测试全绿，只有量一次计算样式才看得见。
+  下面 stage-height-cascade.test.ts 就是为这个装的闸门。
+*/
+.stage-height {
+  height: clamp(520px, calc(100vh - 210px), 720px);
+}
+
 @media (max-width: 1240px) {
   .workbench {
     grid-template-columns: 200px minmax(0, 1fr);
@@ -289,14 +304,21 @@ button {
     order: 3;
     height: auto;
   }
+  /*
+    手机展台压到半屏出头：页头 135px + 展台 372px ≈ 507px，664px 的视口还剩
+    150px 留给下面的名录横滑条露头 —— 「下面还有东西」这件事得让人看见。
+
+    两行 height 是渐进增强，不是笔误：iOS Safari 的 `vh` 按**收起地址栏后**的
+    大视口算（iPhone 13 上 100vh≈812 而实际可见只有 664），56vh 会膨胀到 455px，
+    首屏又只剩 74px。`svh` 量的是小视口，两边算出来一致。不认识 svh 的旧浏览器
+    读不懂第二行、原样保留第一行，正是想要的兜底。
+  */
   .stage-height {
     height: clamp(340px, 56vh, 560px);
+    height: clamp(340px, 56svh, 560px);
   }
 }
 
-.stage-height {
-  height: clamp(520px, calc(100vh - 210px), 720px);
-}
 
 /* 页面右缘的悬浮快捷键 */
 .rail-float {
