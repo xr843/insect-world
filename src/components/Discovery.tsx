@@ -48,6 +48,7 @@ export function Discovery({
   onFocusAnchor,
   onLifeStage,
   source,
+  onSwitchKind,
 }: {
   kind: DiscoveryKind
   insect: Insect
@@ -65,6 +66,13 @@ export function Discovery({
   onLifeStage: (stage: LifeStage | null) => void
   /** 从哪个入口打开的 —— 只用于埋点，见 analytics.ts 的 DISCOVERY_SOURCES */
   source: DiscoverySource
+  /**
+   * 换成弹窗的另一种 kind（目前只有讲解读完接小测这一处在用）。
+   *
+   * 可选是因为不是每个调用方都需要提供这条切换通路；不传时讲解结尾
+   * 就不出现「做个小测」入口（见下方 lesson 分支）。
+   */
+  onSwitchKind?: (kind: DiscoveryKind, source: DiscoverySource) => void
 }) {
   const t = useT()
   const labels = useLabels()
@@ -240,6 +248,11 @@ export function Discovery({
           <button className={s.secondary} onClick={() => goTo(step - 1)} disabled={step === 0}>
             {t('discovery.back')}
           </button>
+          {last && (guide?.quiz.length ?? 0) > 0 && onSwitchKind && (
+            <button className={s.secondary} onClick={() => onSwitchKind('quiz', 'lesson')}>
+              {t('discovery.toQuiz')}
+            </button>
+          )}
           <button
             className={s.primary}
             onClick={() => {

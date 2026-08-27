@@ -111,9 +111,9 @@ export type SpeciesSwitchSource = (typeof SPECIES_SWITCH_SOURCES)[number]
  * 还是那几天流量本来就高。
  *
  * 值的含义：`stage` 展台右上角、`card` 展台下方的卡片、`panel` 右栏标本卡、
- * `topbar` 顶栏「课程」。
+ * `topbar` 顶栏「课程」、`lesson` 分步讲解读完最后一步后自带的「做个小测」入口。
  */
-export const DISCOVERY_SOURCES = ['stage', 'card', 'panel', 'topbar'] as const
+export const DISCOVERY_SOURCES = ['stage', 'card', 'panel', 'topbar', 'lesson'] as const
 export type DiscoverySource = (typeof DISCOVERY_SOURCES)[number]
 
 /** 展台工具条六个按钮；「对比」不在这里 —— 它换的是物种，走 species_switch(source:'compare') */

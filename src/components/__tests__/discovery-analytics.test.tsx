@@ -6,11 +6,12 @@
  * 造假数据 —— 步数/题数从数据本身取，不写死数字，这样内容改了
  * 测试不用跟着改。
  */
+import { useState } from 'react'
 import { cleanup, fireEvent, screen } from '@testing-library/react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { renderZh } from '../../i18n/testing'
 import { INSECTS } from '../../data/insects.zh'
-import { getGuide } from '../../data/guides.zh'
+import { GUIDES, getGuide } from '../../data/guides.zh'
 import { Discovery, type DiscoveryKind } from '../Discovery'
 
 vi.mock('../../analytics', async (importOriginal) => {
@@ -29,18 +30,35 @@ afterEach(() => {
   trackMock.mockClear()
 })
 
-function mount(kind: DiscoveryKind, source: DiscoverySource = 'card') {
-  renderZh(
+/**
+ * 讲解结尾切小测走的是 `onSwitchKind`，不经过关闭再打开 —— 和 App.tsx 的
+ * `openDiscovery` 同一个形状（见那边 `setDiscovery({kind, source})`）。
+ * 这里补一层小状态照实模拟同一条通路，否则 onSwitchKind 传不进去，
+ * 按钮压根不会出现（组件里 `onSwitchKind &&` 挡着）。
+ *
+ * key=kind 也照抄 App.tsx 那份：原地换 kind 不经过关闭再打开时 props
+ * 更新不会自动重新挂载，Discovery 内部「kind 在实例生命周期内不会变」
+ * 的假设（打开埋点的 effect、以及 step 这个状态本身）就不成立了。
+ */
+function DiscoveryHost({ kind, source }: { kind: DiscoveryKind; source: DiscoverySource }) {
+  const [state, setState] = useState({ kind, source })
+  return (
     <Discovery
-      kind={kind}
+      key={state.kind}
+      kind={state.kind}
       insect={ladybird}
       guide={guide}
       onClose={vi.fn()}
       onFocusAnchor={vi.fn()}
-      source={source}
+      source={state.source}
       onLifeStage={vi.fn()}
-    />,
+      onSwitchKind={(k, s) => setState({ kind: k, source: s })}
+    />
   )
+}
+
+function mount(kind: DiscoveryKind, source: DiscoverySource = 'card') {
+  renderZh(<DiscoveryHost kind={kind} source={source} />)
 }
 
 describe('打开 —— discovery_open(kind, source)', () => {
@@ -133,5 +151,55 @@ describe('小测最终得分 —— quiz_score', () => {
     if (guide.quiz.length > 1) {
       expect(trackMock).not.toHaveBeenCalledWith(EVENTS.QUIZ_SCORE, expect.anything())
     }
+  })
+})
+
+describe('讲解走完之后接小测', () => {
+  it('最后一步给出「做个小测」的入口', () => {
+    mount('lesson')
+    const steps = GUIDES['rhinoceros-beetle'].lesson.length
+    for (let i = 0; i < steps - 1; i++) fireEvent.click(screen.getByText(/下一步/))
+    expect(screen.getByText(/小测/), '讲解结尾没有小测入口').toBeTruthy()
+  })
+
+  it('点它换到小测，且 discovery_open 只报一次 —— 别手动再报一遍', () => {
+    mount('lesson')
+    const steps = GUIDES['rhinoceros-beetle'].lesson.length
+    for (let i = 0; i < steps - 1; i++) fireEvent.click(screen.getByText('下一步'))
+    trackMock.mockClear()
+    fireEvent.click(screen.getByText('做个小测'))
+    const opens = trackMock.mock.calls.filter(
+      (c) => c[0] === EVENTS.DISCOVERY_OPEN && (c[1] as { kind: string }).kind === 'quiz',
+    )
+    expect(opens, 'discovery_open(quiz) 报了不止一次 —— Discovery 自己已经报过了').toHaveLength(1)
+    expect(opens[0][1]).toEqual({ kind: 'quiz', source: 'lesson' })
+  })
+
+  /**
+   * 补的第五条，不在简报给的四条里：讲解与小测共用同一个 `step` 状态
+   * （讲解翻页与小测翻题都是它），原地换 kind 若不强制重新挂载，
+   * step 会带着讲解最后一步的下标（本例是 3）直接冲进小测的题目数组
+   * （常常只有 2 题），越界取到 undefined，页面上出来的是「题目还在
+   * 整理中」的空状态兜底，而不是第一题 —— 展开来的空测试挖出来的，
+   * 埋点断言本身不会碰到 DOM，测不出这一层。
+   */
+  it('切到小测显示的是真正的第一题，不是空状态兜底', () => {
+    mount('lesson')
+    for (let i = 0; i < guide.lesson.length - 1; i++) fireEvent.click(screen.getByText('下一步'))
+    fireEvent.click(screen.getByText('做个小测'))
+    expect(screen.getByText(guide.quiz[0].question), '越界摔进了空状态兜底').toBeTruthy()
+  })
+
+  it('「看完了」照旧上报 lesson_complete —— 小测是可选的，不是必经的', () => {
+    mount('lesson')
+    const steps = GUIDES['rhinoceros-beetle'].lesson.length
+    for (let i = 0; i < steps - 1; i++) fireEvent.click(screen.getByText('下一步'))
+    fireEvent.click(screen.getByText('看完了'))
+    expect(trackMock).toHaveBeenCalledWith(EVENTS.LESSON_COMPLETE, { total: steps })
+  })
+
+  it('中间步骤不出现小测入口 —— 它属于「读完了」这个时刻', () => {
+    mount('lesson')
+    expect(screen.queryByText('做个小测'), '第一步就冒出小测入口').toBeNull()
   })
 })

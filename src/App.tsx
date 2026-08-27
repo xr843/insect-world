@@ -423,6 +423,13 @@ export default function App() {
 
       {discovery && (
         <Discovery
+          // key=kind：讲解读完接小测（onSwitchKind）是原地换 kind、不经过
+          // 关闭再打开，props 更新不会自动重新挂载。Discovery 内部有两处
+          // 认定「kind 在实例生命周期内不会变」（打开埋点的 effect 与
+          // step 这个状态本身——讲解 4 步、小测常常只有 2 题，不强制重挂
+          // 会让 step 带着讲解最后一步的下标冲进小测，越界成空状态）。
+          // 用 key 强制换 kind 时整体重新挂载，让这两处假设继续成立。
+          key={discovery.kind}
           kind={discovery.kind}
           source={discovery.source}
           insect={insect}
@@ -430,6 +437,7 @@ export default function App() {
           onClose={() => setDiscovery(null)}
           onFocusAnchor={setFocusAnchor}
           onLifeStage={setLifeStage}
+          onSwitchKind={openDiscovery}
         />
       )}
     </div>
