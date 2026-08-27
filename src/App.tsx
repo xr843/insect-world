@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import type { Order } from './data/types'
+import { nextPeerWithPart, partOfAnchor } from './data/parts'
 import { EVENTS, track, type DiscoverySource } from './analytics'
 import { useLabels, useLocale, useSpecies, useT } from './i18n/useT'
 import { notesToMarkdown, useFieldNotes } from './hooks/useFieldNotes'
@@ -192,6 +193,52 @@ export default function App() {
   }, [SPECIES])
 
   /**
+   * 部位跳转：换到同一部位组的下一只虫，并把镜头对到它的那个部位上。
+   *
+   * 走的是 focusAnchor 这条现成通路（此前只有讲解弹窗在用）—— 展台不知道
+   * 跳转的存在，它只知道「镜头该对着哪个 anchor」。跳转不自动展开新物种的
+   * 标注卡片：到了就把镜头摆好，读不读由人决定，弹卡片是打扰。
+   *
+   * ⚠️ **`setFocusAnchor` 必须排在 `select` 之后**：`select` 自己会
+   * `setFocusAnchor(null)`（换虫时清掉上一只的聚焦目标，见它的定义）。
+   * 顺序写反的话镜头永远不会跟着走，而且不报错、测试只有断言镜头目标那条会红。
+   *
+   * 埋点在这里报：`select` 自己不上报（各调用方按来源自己报，见 LibraryPanel
+   * 与 TopBar 的写法），所以这里报一次、且只报一次。
+   */
+  const jumpToPart = useCallback(
+    (anchor: string) => {
+      const group = partOfAnchor(anchor)
+      if (!group) return
+      const peer = nextPeerWithPart(SPECIES, activeId, group)
+      if (!peer) return
+      const target = SPECIES.find((i) => i.id === peer.id)
+      if (!target) return
+      track(EVENTS.SPECIES_SWITCH, { source: 'part', species_id: peer.id, order: target.order })
+      select(peer.id)
+      setFocusAnchor(peer.anchor)
+    },
+    [SPECIES, activeId, select],
+  )
+
+  /**
+   * 当前物种每个标注点要不要显示跳转链接、那个部位叫什么。
+   * 在这里算是因为只有 App 手里有物种全表 —— 视图层不该 import 数据表。
+   */
+  const partJumps = useMemo(() => {
+    const out: Record<string, string> = {}
+    for (const h of insect.hotspots) {
+      const group = partOfAnchor(h.anchor)
+      if (!group) continue
+      if (!nextPeerWithPart(SPECIES, insect.id, group)) continue
+      out[h.anchor] = t(`stage.part.${group}`)
+    }
+    return out
+    // t 是每次渲染新建的闭包，不进依赖 —— 它实际只随 locale 变（同本文件其它 effect 的处理）
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [insect, SPECIES, locale])
+
+  /**
    * 方向键在**可见列表**里走，不在全量列表里走 —— 筛到蜚蠊目还按全量翻，
    * 一按 ↓ 就跳到鞘翅目去了，筛选等于白设（实测撞到过）。
    * 当前物种被筛掉时，从列表第一/最后一项进入。
@@ -322,6 +369,8 @@ export default function App() {
           onCompareToggle={toggleCompare}
           onCompareCycle={cycleCompare}
           focusAnchor={focusAnchor}
+          onPartJump={jumpToPart}
+          partJumps={partJumps}
           lifeStage={lifeStage}
           onLifecycle={() => openDiscovery('lifecycle', 'stage')}
           theme={theme}

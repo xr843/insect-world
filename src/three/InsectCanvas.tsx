@@ -12,6 +12,7 @@ import { Environment, Html, Lightformer, OrbitControls } from '@react-three/drei
 import * as THREE from 'three'
 import type { OrbitControls as OrbitControlsImpl } from 'three-stdlib'
 import type { Insect } from '../data/types'
+import { useT } from '../i18n/useT'
 import type { InsectModel } from './builders/kit'
 import { loadInsectModel } from './registry'
 import { loadStageModel, type LifeStage } from './stages'
@@ -301,6 +302,9 @@ function Hotspot({
   open,
   onToggle,
   groupRef,
+  anchor,
+  partLabel,
+  onPartJump,
 }: {
   position: THREE.Vector3
   label: string
@@ -309,7 +313,12 @@ function Hotspot({
   open: boolean
   onToggle: () => void
   groupRef: React.MutableRefObject<THREE.Group | null>
+  anchor: string
+  /** 这个部位的显示名；null = 没有同类可跳，不显示链接 */
+  partLabel: string | null
+  onPartJump?: (anchor: string) => void
 }) {
+  const t = useT()
   const color = TONE_VAR[tone] ?? TONE_VAR.coral
   const wrap = useRef<HTMLDivElement>(null)
   const fade = useRef(1)
@@ -366,6 +375,17 @@ function Hotspot({
               {label}
             </div>
             <div className="hotspot-note">{note}</div>
+            {onPartJump && partLabel && (
+              <button
+                className="hotspot-jump"
+                onClick={(e) => {
+                  e.stopPropagation()
+                  onPartJump(anchor)
+                }}
+              >
+                {t('stage.partJump', { part: partLabel })}
+              </button>
+            )}
           </div>
         )}
       </div>
@@ -640,6 +660,8 @@ function Scene({
   zoomNonce,
   resetNonce,
   focusAnchor,
+  onPartJump,
+  partJumps,
   lifeStage,
   onLoaded,
   onError,
@@ -654,6 +676,9 @@ function Scene({
   zoomNonce: number
   resetNonce: number
   focusAnchor: string | null
+  onPartJump?: (anchor: string) => void
+  /** anchor → 部位显示名；只含真的有下一只可跳的 anchor。由 App 算好，见 Stage 那边的注释 */
+  partJumps?: Record<string, string>
   /** 生活史阶段；null = 成虫（照旧走物种注册表） */
   lifeStage: LifeStage | null
   dark: boolean
@@ -830,6 +855,9 @@ function Scene({
                     tone={h.tone}
                     open={openHotspot === h.id}
                     onToggle={() => onToggleHotspot(openHotspot === h.id ? null : h.id)}
+                    anchor={h.anchor}
+                    partLabel={partJumps?.[h.anchor] ?? null}
+                    onPartJump={onPartJump}
                   />
                 )
               })}
@@ -873,6 +901,8 @@ export const InsectCanvas = memo(function InsectCanvas({
   zoomNonce,
   resetNonce,
   focusAnchor = null,
+  onPartJump,
+  partJumps,
   lifeStage = null,
   active = true,
   theme = 'dark',
@@ -888,6 +918,9 @@ export const InsectCanvas = memo(function InsectCanvas({
   resetNonce: number
   /** 由讲解弹窗下发的镜头指令，优先于工具条的聚焦模式 */
   focusAnchor?: string | null
+  onPartJump?: (anchor: string) => void
+  /** anchor → 部位显示名；只含真的有下一只可跳的 anchor。由 App 算好，见 Stage 那边的注释 */
+  partJumps?: Record<string, string>
   /**
    * 生活史阶段：非 null 时展台展示的是该阶段的模型（卵/幼虫/蛹/若虫）而不是成虫。
    * 同样由讲解弹窗下发 —— 与 focusAnchor 是同一条通路、同一个形状：
@@ -970,6 +1003,8 @@ export const InsectCanvas = memo(function InsectCanvas({
           zoomNonce={zoomNonce}
           resetNonce={resetNonce}
           focusAnchor={focusAnchor}
+          onPartJump={onPartJump}
+          partJumps={partJumps}
           lifeStage={lifeStage}
           dark={theme !== 'light'}
           onLoaded={() => onStatus({ loading: false, error: null })}

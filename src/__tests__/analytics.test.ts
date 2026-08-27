@@ -69,7 +69,7 @@ describe('事件名常量', () => {
 describe('来源枚举齐全', () => {
   it('species_switch 的来源覆盖需求里明确列出的六个，一个不多一个不少', () => {
     expect([...SPECIES_SWITCH_SOURCES].sort()).toEqual(
-      ['list', 'search', 'gallery', 'keyboard', 'deeplink', 'compare'].sort(),
+      ['list', 'search', 'gallery', 'keyboard', 'deeplink', 'compare', 'part'].sort(),
     )
   })
 

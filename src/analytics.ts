@@ -95,6 +95,7 @@ export const SPECIES_SWITCH_SOURCES = [
   'keyboard',
   'deeplink',
   'compare',
+  'part',
 ] as const
 export type SpeciesSwitchSource = (typeof SPECIES_SWITCH_SOURCES)[number]
 

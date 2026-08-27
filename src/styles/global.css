@@ -489,6 +489,16 @@ button {
   color: var(--muted);
 }
 
+.hotspot-jump {
+  margin-top: 8px;
+  font-size: 11.5px;
+  color: var(--brass);
+  letter-spacing: 0.02em;
+}
+.hotspot-jump:hover {
+  color: var(--active-fg);
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,

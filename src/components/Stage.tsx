@@ -48,6 +48,8 @@ export function Stage({
   onCompareToggle,
   onCompareCycle,
   focusAnchor = null,
+  onPartJump,
+  partJumps,
   lifeStage = null,
   onLifecycle,
   theme = 'dark',
@@ -67,6 +69,9 @@ export function Stage({
   onLifecycle?: () => void
   /** 讲解弹窗下发的镜头指令 */
   focusAnchor?: string | null
+  onPartJump?: (anchor: string) => void
+  /** anchor → 部位显示名；只含真的有下一只可跳的 anchor。由 App 算好，见那边的注释 */
+  partJumps?: Record<string, string>
   /** 生活史阶段；非 null 时展台展示阶段模型而不是成虫。由讲解弹窗下发，与 focusAnchor 同一条通路 */
   lifeStage?: LifeStage | null
   /** 明暗主题：透传给 3D 场景定轮廓光档位与落影颜色 */
@@ -224,6 +229,8 @@ export function Stage({
               zoomNonce={zoomNonce}
               resetNonce={resetNonce}
               focusAnchor={focusAnchor}
+              onPartJump={onPartJump}
+              partJumps={partJumps}
               lifeStage={lifeStage}
               theme={theme}
               onStatus={onStatus}
