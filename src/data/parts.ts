@@ -30,6 +30,13 @@
  * 组必须**至少覆盖 4 个物种**才设：只有一两只的组，那条链接点过去就到头了，
  * 不如不给。一次性的招牌构造（尾铗、发光器、弹跳腹突……）一律显式写 null。
  *
+ * `sound`（发声与听器）是「只按同源分」这条规矩本身的例外，留在这里记一笔：
+ * `tymbal`（鸣器）、`stridulator`（音锉）是发声构造，`tympanum`（鼓膜听器）
+ * 只管接收，三者并不同源。按同源拆开的话，发声一组只有蝉、蟋蟀两种，
+ * 听器一组只有蝗虫、螽斯两种，两组都够不到上面「至少 4 个物种」的门槛。
+ * 四者说的其实是同一件事 —— 昆虫怎么用声音彼此交流，组名也老实写成
+ * 「发声与听器」，没有假装成一个同源结构。
+ *
  * ⚠️ **null 是一个决定，不是遗漏。** 词表对数据里出现的每个 anchor 都必须
  * 有条目 —— 加物种时新引入的 anchor 会让 parts.test.ts 当场红掉，逼作者表态。
  */
@@ -174,9 +181,10 @@ export function nextPeerWithPart(
   const n = insects.length
   if (n === 0) return null
   const at = insects.findIndex((i) => i.id === currentId)
-  // 当前物种不在列表里（被筛掉了）时从头找起
-  const start = at < 0 ? -1 : at
+  const start = at
   for (let step = 1; step <= n; step++) {
+    // start 是 -1 时（当前物种不在列表里，比如被筛掉了），
+    // step = 1 这一步 (start + step + n) % n 正好等于 0 —— 从头找起。
     const cand = insects[(start + step + n) % n]
     if (cand.id === currentId) continue
     const hs = hotspotInGroup(cand, group)

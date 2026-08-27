@@ -115,15 +115,20 @@ describe('nextPeerWithPart —— 环形找下一只', () => {
     expect(ZH.findIndex((i) => i.id === peer!.id)).toBeLessThan(ZH.findIndex((i) => i.id === last.id))
   })
 
-  it('捕捉足只有三只，转一圈回到自己之前会走遍另外两只', () => {
+  it('捕捉足那三只：在它们之间转一圈会走遍另外两只', () => {
+    // raptorialLeg 不是独立组，会被并进 leg（覆盖近 50 个物种）—— 必须先
+    // 把这三只单独挑出来，在这个子集里转圈，测的才是 raptorialLeg 这三只
+    // 本身的环形遍历，而不是 leg 这个大组随便走几步都凑得出 3 个不同 id。
+    const raptorial = ZH.filter((i) => i.hotspots.some((h) => h.anchor === 'raptorialLeg'))
+    expect(raptorial.map((i) => i.id)).toEqual(['mantis', 'orchid-mantis', 'mantidfly'])
     const seen: string[] = []
     let cur = 'mantis'
     for (let n = 0; n < 3; n++) {
-      const peer = nextPeerWithPart(ZH, cur, 'leg')!
+      const peer = nextPeerWithPart(raptorial, cur, 'leg')!
       cur = peer.id
       seen.push(cur)
     }
-    expect(new Set(seen).size).toBe(3)
+    expect(new Set(seen).size, '没有走遍三只 —— 环形遍历坏了').toBe(3)
   })
 
   it('当前物种是这一组里唯一一只时返回 null', () => {
@@ -134,7 +139,9 @@ describe('nextPeerWithPart —— 环形找下一只', () => {
   })
 
   it('当前物种不在列表里时返回列表中的第一只', () => {
+    const first = ZH.find((i) => i.hotspots.some((h) => partOfAnchor(h.anchor) === 'antenna'))!
     const peer = nextPeerWithPart(ZH, 'not-a-species', 'antenna')
     expect(peer).not.toBeNull()
+    expect(peer!.id).toBe(first.id)
   })
 })
