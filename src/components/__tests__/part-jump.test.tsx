@@ -8,7 +8,7 @@
  * 这里测的是**接线**：点了之后换的是不是同一部位的下一只、镜头有没有跟着走。
  * 「下一只是谁」的逻辑归 data/__tests__/parts.test.ts 管，不在这里重复。
  */
-import { act, cleanup, render, screen } from '@testing-library/react'
+import { act, cleanup, fireEvent, render, screen } from '@testing-library/react'
 import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest'
 import { renderZh } from '../../i18n/testing'
 import { LocaleProvider } from '../../i18n/LocaleProvider'
@@ -17,6 +17,18 @@ import { getGuide } from '../../data/guides.zh'
 import { INSECTS } from '../../data/insects.zh'
 import { nextPeerWithPart, partOfAnchor } from '../../data/parts'
 import App from '../../App'
+
+// 讲解开着时点部位跳转会不会顺手补报埋点（X2），得看得见 track() 实际被叫了几次 ——
+// 真实 track() 在 jsdom 里因为没有 window.umami 是静默空操作，看不出调用记录，
+// 这里和 discovery-analytics.test.tsx 一样换成打桩版本。
+vi.mock('../../analytics', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('../../analytics')>()
+  return { ...actual, track: vi.fn() }
+})
+
+import { EVENTS, track } from '../../analytics'
+
+const trackMock = vi.mocked(track)
 
 const h = vi.hoisted(() => ({
   jump: undefined as ((anchor: string) => void) | undefined,
@@ -55,7 +67,10 @@ vi.mock('../../three/webgl', () => ({
   bindContextLoss: () => () => {},
 }))
 
-afterEach(cleanup)
+afterEach(() => {
+  cleanup()
+  trackMock.mockClear()
+})
 
 beforeAll(() => {
   Element.prototype.scrollIntoView = function () {}
@@ -111,5 +126,37 @@ describe('部位跳转的接线', () => {
       </LocaleProvider>,
     )
     expect(h.partJumps).toEqual({})
+  })
+})
+
+/**
+ * 讲解弹窗的 backdrop 故意 pointer-events:none、靠左停靠（见
+ * Discovery.module.css 的注释），讲解开着时台面依然点得到 —— 这正是
+ * X1/X2 会撞车的前提：点「看别的虫的 X →」时讲解还挂在那儿。
+ *
+ * X1（镜头被讲解的翻页 effect 悄悄抢回去）已经没法从这一层直接断言：
+ * jumpToPart 里 setDiscovery(null) 关掉讲解之后，那个 effect 根本不会
+ * 再跑。这里改成钉住关闭本身，以及 X2 的症状 —— 讲解不重新挂载会让
+ * 旧物种的进度冲进新物种，补报出这次操作里从未真正发生过的
+ * lesson_complete / discovery_open。
+ */
+describe('讲解开着时点部位跳转 —— 与「做个小测」相撞的那条路径', () => {
+  it('讲解被关掉，且不会把 lesson_complete / discovery_open 也搭进去', () => {
+    renderZh(<App />)
+
+    fireEvent.click(screen.getByText('课程'))
+    expect(screen.getByText('跟着看'), '讲解没打开').toBeTruthy()
+    trackMock.mockClear() // 清掉打开讲解本身那一次 discovery_open，只看接下来这一步
+
+    const first = INSECTS[0]
+    const anchor = first.hotspots.find((x) => partOfAnchor(x.anchor))!.anchor
+    act(() => h.jump!(anchor))
+
+    // 讲解被真正关掉了，不是留在原地、被新物种的进度顶替
+    expect(screen.queryByText('跟着看'), '讲解还开着').toBeNull()
+    const leaked = trackMock.mock.calls.filter(
+      (c) => c[0] === EVENTS.LESSON_COMPLETE || c[0] === EVENTS.DISCOVERY_OPEN,
+    )
+    expect(leaked, '部位跳转顺手关讲解这一步，不该补报这两类事件').toEqual([])
   })
 })

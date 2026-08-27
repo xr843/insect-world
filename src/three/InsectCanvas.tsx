@@ -547,7 +547,8 @@ function Framing({
     const g = goal.current
     if (!c || !g) return
     invalidate()
-    const k = 1 - Math.pow(0.0015, dt) // 与帧率无关的指数趋近
+    // 与帧率无关的指数趋近
+    const k = 1 - Math.pow(0.0015, dt)
     c.target.lerp(g.target, k)
     const dir = new THREE.Vector3().subVectors(camera.position, c.target)
     const len = dir.length()

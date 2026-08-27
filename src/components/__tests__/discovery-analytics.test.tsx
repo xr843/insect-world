@@ -230,6 +230,10 @@ describe('讲解走完之后接小测', () => {
     trackMock.mockClear()
     fireEvent.click(screen.getByText('做个小测'))
     expect(trackMock).toHaveBeenCalledWith(EVENTS.LESSON_COMPLETE, { total: steps })
+    // toHaveBeenCalledWith 不挑次数 —— 换到小测这一次操作只应该报一次 lesson_complete，
+    // 不是两次（防御性断言：今天不会双报，但要是以后哪次改动让它双报了，这里得先红）
+    const completes = trackMock.mock.calls.filter((c) => c[0] === EVENTS.LESSON_COMPLETE)
+    expect(completes, 'lesson_complete 报了不止一次').toHaveLength(1)
   })
 
   /**

@@ -217,6 +217,17 @@ export default function App() {
       track(EVENTS.SPECIES_SWITCH, { source: 'part', species_id: peer.id, order: target.order })
       select(peer.id)
       setFocusAnchor(peer.anchor)
+      /**
+       * 讲解弹窗开着时台面本来就没被挡住（backdrop 故意 pointer-events:none、
+       * 靠左停靠，见 Discovery.module.css 的注释），这个按钮因此够得到、点得下去。
+       * 但讲解自己也在用 focusAnchor 这条通路：它翻页那个 effect 依赖当前讲解步骤，
+       * 换物种后会在这次提交**之后**重新触发，把上面刚摆好的 peer.anchor 悄悄冲掉，
+       * 镜头看着像没反应。讲解也没有随物种换而重新挂载（key 只挂在 kind 上），
+       * step/picked 会带着旧物种的进度冲进新物种的讲解与小测，报表跟着一起错位。
+       * 读者点这个按钮是要去看别的虫的这个部位，不是要继续这节课 —— 直接关掉讲解，
+       * 两个问题一起消掉，也不会少报任何埋点。
+       */
+      setDiscovery(null)
     },
     [SPECIES, activeId, select],
   )
