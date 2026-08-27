@@ -225,6 +225,12 @@ export function Discovery({
       track(EVENTS.LESSON_STEP, { step: nextStep + 1, total: steps.length })
       setStep(nextStep)
     }
+    /**
+     * 走到最后一步，两个出口都算「讲完了这节课」—— 直接点看完了，或者
+     * 看完了顺手去做小测。两处都要报 lesson_complete，否则选小测的人会
+     * 从分母里消失，实验会读反：看着像这条路径拉低了完课率。
+     */
+    const completeLesson = () => track(EVENTS.LESSON_COMPLETE, { total: steps.length })
     return shell(
       <>
         <h2 className={s.title}>{current?.title ?? insect.name}</h2>
@@ -249,7 +255,16 @@ export function Discovery({
             {t('discovery.back')}
           </button>
           {last && (guide?.quiz.length ?? 0) > 0 && onSwitchKind && (
-            <button className={s.secondary} onClick={() => onSwitchKind('quiz', 'lesson')}>
+            <button
+              className={s.secondary}
+              onClick={() => {
+                completeLesson()
+                // 换到小测前把镜头收回全身取景 —— 最后一步若锁着某个部位，
+                // 新挂载的小测不会自己把镜头摆正，会一直停在那个部位上
+                onFocusAnchor(null)
+                onSwitchKind('quiz', 'lesson')
+              }}
+            >
               {t('discovery.toQuiz')}
             </button>
           )}
@@ -257,7 +272,7 @@ export function Discovery({
             className={s.primary}
             onClick={() => {
               if (last) {
-                track(EVENTS.LESSON_COMPLETE, { total: steps.length })
+                completeLesson()
                 close()
               } else {
                 goTo(step + 1)

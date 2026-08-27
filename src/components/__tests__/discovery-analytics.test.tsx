@@ -6,12 +6,12 @@
  * 造假数据 —— 步数/题数从数据本身取，不写死数字，这样内容改了
  * 测试不用跟着改。
  */
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { cleanup, fireEvent, screen } from '@testing-library/react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { renderZh } from '../../i18n/testing'
 import { INSECTS } from '../../data/insects.zh'
-import { GUIDES, getGuide } from '../../data/guides.zh'
+import { getGuide } from '../../data/guides.zh'
 import { Discovery, type DiscoveryKind } from '../Discovery'
 
 vi.mock('../../analytics', async (importOriginal) => {
@@ -40,8 +40,24 @@ afterEach(() => {
  * 更新不会自动重新挂载，Discovery 内部「kind 在实例生命周期内不会变」
  * 的假设（打开埋点的 effect、以及 step 这个状态本身）就不成立了。
  */
-function DiscoveryHost({ kind, source }: { kind: DiscoveryKind; source: DiscoverySource }) {
+function DiscoveryHost({
+  kind,
+  source,
+  onFocusAnchor,
+}: {
+  kind: DiscoveryKind
+  source: DiscoverySource
+  /**
+   * 不传时内部兜底一个，但要用 useRef 固定住 —— 直接在 JSX 里写
+   * `onFocusAnchor={vi.fn()}` 的话，每次 DiscoveryHost 重渲染都会拿到
+   * 一个新 mock，换 kind 前后的调用记录接不上，就测不出「切小测那一刻
+   * 有没有调用它」这种跨渲染的断言（对应 App.tsx 里 setFocusAnchor 本来
+   * 就是同一个引用贯穿整个组件生命周期，不会因为换 kind 重新挂载而变）。
+   */
+  onFocusAnchor?: (anchor: string | null) => void
+}) {
   const [state, setState] = useState({ kind, source })
+  const focusAnchorRef = useRef(onFocusAnchor ?? vi.fn())
   return (
     <Discovery
       key={state.kind}
@@ -49,7 +65,7 @@ function DiscoveryHost({ kind, source }: { kind: DiscoveryKind; source: Discover
       insect={ladybird}
       guide={guide}
       onClose={vi.fn()}
-      onFocusAnchor={vi.fn()}
+      onFocusAnchor={focusAnchorRef.current}
       source={state.source}
       onLifeStage={vi.fn()}
       onSwitchKind={(k, s) => setState({ kind: k, source: s })}
@@ -57,8 +73,12 @@ function DiscoveryHost({ kind, source }: { kind: DiscoveryKind; source: Discover
   )
 }
 
-function mount(kind: DiscoveryKind, source: DiscoverySource = 'card') {
-  renderZh(<DiscoveryHost kind={kind} source={source} />)
+function mount(
+  kind: DiscoveryKind,
+  source: DiscoverySource = 'card',
+  onFocusAnchor?: (anchor: string | null) => void,
+) {
+  renderZh(<DiscoveryHost kind={kind} source={source} onFocusAnchor={onFocusAnchor} />)
 }
 
 describe('打开 —— discovery_open(kind, source)', () => {
@@ -157,14 +177,14 @@ describe('小测最终得分 —— quiz_score', () => {
 describe('讲解走完之后接小测', () => {
   it('最后一步给出「做个小测」的入口', () => {
     mount('lesson')
-    const steps = GUIDES['rhinoceros-beetle'].lesson.length
+    const steps = guide.lesson.length
     for (let i = 0; i < steps - 1; i++) fireEvent.click(screen.getByText(/下一步/))
     expect(screen.getByText(/小测/), '讲解结尾没有小测入口').toBeTruthy()
   })
 
   it('点它换到小测，且 discovery_open 只报一次 —— 别手动再报一遍', () => {
     mount('lesson')
-    const steps = GUIDES['rhinoceros-beetle'].lesson.length
+    const steps = guide.lesson.length
     for (let i = 0; i < steps - 1; i++) fireEvent.click(screen.getByText('下一步'))
     trackMock.mockClear()
     fireEvent.click(screen.getByText('做个小测'))
@@ -192,10 +212,40 @@ describe('讲解走完之后接小测', () => {
 
   it('「看完了」照旧上报 lesson_complete —— 小测是可选的，不是必经的', () => {
     mount('lesson')
-    const steps = GUIDES['rhinoceros-beetle'].lesson.length
+    const steps = guide.lesson.length
     for (let i = 0; i < steps - 1; i++) fireEvent.click(screen.getByText('下一步'))
     fireEvent.click(screen.getByText('看完了'))
     expect(trackMock).toHaveBeenCalledWith(EVENTS.LESSON_COMPLETE, { total: steps })
+  })
+
+  /**
+   * lesson_complete 是这次实验的分母。选小测的人如果不算讲完，这条路径
+   * 会平白丢掉分母里的人，看起来像「做了这个功能、完课率反而降了」——
+   * 实验会读反。两个出口都要报，且总步数要对得上。
+   */
+  it('走到最后一步选「做个小测」，同样算讲完了，也报 lesson_complete', () => {
+    mount('lesson')
+    const steps = guide.lesson.length
+    for (let i = 0; i < steps - 1; i++) fireEvent.click(screen.getByText('下一步'))
+    trackMock.mockClear()
+    fireEvent.click(screen.getByText('做个小测'))
+    expect(trackMock).toHaveBeenCalledWith(EVENTS.LESSON_COMPLETE, { total: steps })
+  })
+
+  /**
+   * 讲解结尾若停在带 anchor 的一步，镜头就锁在那个部位上；换 kind 只是
+   * 重新挂载，没人会主动把镜头收回去。不借助某个物种最后一步恰好带
+   * anchor 才能测出来 —— 点击前先清空调用记录，只要点击本身触发了一次
+   * `onFocusAnchor(null)`，就说明这次切换确实收了镜头，不依赖数据巧合。
+   */
+  it('切到小测前，先把镜头收回全身取景', () => {
+    const onFocusAnchor = vi.fn()
+    mount('lesson', 'card', onFocusAnchor)
+    const steps = guide.lesson.length
+    for (let i = 0; i < steps - 1; i++) fireEvent.click(screen.getByText('下一步'))
+    onFocusAnchor.mockClear()
+    fireEvent.click(screen.getByText('做个小测'))
+    expect(onFocusAnchor).toHaveBeenCalledWith(null)
   })
 
   it('中间步骤不出现小测入口 —— 它属于「读完了」这个时刻', () => {
