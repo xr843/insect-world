@@ -455,7 +455,16 @@ button {
   position: absolute;
   left: 20px;
   top: -9px;
-  width: 172px;
+  /*
+    宽度上限跟着视口收缩：min(172px, 50vw - 20px)。
+    172px 是常规宽度，宽视口下 50vw-20px 远大于它，min() 取 172px，
+    与原来完全一样；只有视口窄到「贴一侧最多也就 50vw-20px 空间」时才收窄。
+    这个界线不是拍脑袋定的——见下面 data-side 规则旁的推导：卡宽超过
+    视口一半减去间距，就会在正中央出现「翻哪边都装不下」的死区，
+    InsectCanvas.tsx 里 Hotspot 的翻面判断用的是同一个公式（window.innerWidth
+    换算），两边分开写只是因为一个要喂 CSS 一个要喂 JS，数得对不上就白翻。
+  */
+  width: min(172px, calc(50vw - 20px));
   padding: 10px 13px 11px;
   border-radius: var(--radius-sm);
   background: var(--hotspot-card);
@@ -464,6 +473,18 @@ button {
   backdrop-filter: blur(8px);
   pointer-events: auto;
   animation: fade-up 0.18s ease both;
+}
+
+/*
+  卡片默认贴标注点右侧（上面的 left: 20px）；InsectCanvas.tsx 的 Hotspot
+  在 useFrame 里量出卡片往右放不下时，会把 data-side="left" 写到 .hotspot
+  包装层上（跟下面 data-behind 同一个挂法），这条负责把卡片翻到左边。
+  没有同时清掉 left，靠 left:auto 交回浏览器计算，避免 left/right 一起写
+  在不支持某个值时打架。
+*/
+.hotspot[data-side='left'] .hotspot-card {
+  left: auto;
+  right: 20px;
 }
 
 .hotspot-title {
