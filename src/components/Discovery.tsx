@@ -48,6 +48,7 @@ export function Discovery({
   onFocusAnchor,
   onLifeStage,
   source,
+  onSwitchKind,
 }: {
   kind: DiscoveryKind
   insect: Insect
@@ -65,6 +66,13 @@ export function Discovery({
   onLifeStage: (stage: LifeStage | null) => void
   /** 从哪个入口打开的 —— 只用于埋点，见 analytics.ts 的 DISCOVERY_SOURCES */
   source: DiscoverySource
+  /**
+   * 换成弹窗的另一种 kind（目前只有讲解读完接小测这一处在用）。
+   *
+   * 可选是因为不是每个调用方都需要提供这条切换通路；不传时讲解结尾
+   * 就不出现「做个小测」入口（见下方 lesson 分支）。
+   */
+  onSwitchKind?: (kind: DiscoveryKind, source: DiscoverySource) => void
 }) {
   const t = useT()
   const labels = useLabels()
@@ -217,6 +225,12 @@ export function Discovery({
       track(EVENTS.LESSON_STEP, { step: nextStep + 1, total: steps.length })
       setStep(nextStep)
     }
+    /**
+     * 走到最后一步，两个出口都算「讲完了这节课」—— 直接点看完了，或者
+     * 看完了顺手去做小测。两处都要报 lesson_complete，否则选小测的人会
+     * 从分母里消失，实验会读反：看着像这条路径拉低了完课率。
+     */
+    const completeLesson = () => track(EVENTS.LESSON_COMPLETE, { total: steps.length })
     return shell(
       <>
         <h2 className={s.title}>{current?.title ?? insect.name}</h2>
@@ -240,11 +254,25 @@ export function Discovery({
           <button className={s.secondary} onClick={() => goTo(step - 1)} disabled={step === 0}>
             {t('discovery.back')}
           </button>
+          {last && (guide?.quiz.length ?? 0) > 0 && onSwitchKind && (
+            <button
+              className={s.secondary}
+              onClick={() => {
+                completeLesson()
+                // 换到小测前把镜头收回全身取景 —— 最后一步若锁着某个部位，
+                // 新挂载的小测不会自己把镜头摆正，会一直停在那个部位上
+                onFocusAnchor(null)
+                onSwitchKind('quiz', 'lesson')
+              }}
+            >
+              {t('discovery.toQuiz')}
+            </button>
+          )}
           <button
             className={s.primary}
             onClick={() => {
               if (last) {
-                track(EVENTS.LESSON_COMPLETE, { total: steps.length })
+                completeLesson()
                 close()
               } else {
                 goTo(step + 1)

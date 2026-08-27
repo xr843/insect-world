@@ -21,6 +21,9 @@ const FILES = [
   ...readdirSync('src/components')
     .filter((f) => f.endsWith('.tsx'))
     .map((f) => join('src/components', f)),
+  ...readdirSync('src/three')
+    .filter((f) => f.endsWith('.tsx'))
+    .map((f) => join('src/three', f)),
   'src/App.tsx',
   'src/i18n/en.ts',
 ]

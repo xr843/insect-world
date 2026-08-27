@@ -81,11 +81,12 @@ export const EVENTS = {
 /**
  * species_switch 事件的来源枚举。
  *
- * 六个值对应六处真实会切换「当前看的虫」的入口：左栏列表、顶栏搜索结果、
- * 图鉴库总览、↑↓ 键翻页、落地页地址栏自带物种、展台底部对比条换对照。
+ * 七个值对应七处真实会切换「当前看的虫」的入口：左栏列表、顶栏搜索结果、
+ * 图鉴库总览、↑↓ 键翻页、落地页地址栏自带物种、展台底部对比条换对照、
+ * 标注卡片「看别的虫的 X →」跳到同一部位的下一只。
  *
  * 故意不含的两处：顶栏「惊喜」骰子按钮与笔记面板里点笔记跳转 ——
- * 第一批只覆盖需求里明确列出的这六个来源，不擅自替边缘入口发明分类；
+ * 第一批只覆盖需求里明确列出的这七个来源，不擅自替边缘入口发明分类；
  * 将来要补，加一个新值、在对应组件里传一处，不用动这份契约。
  */
 export const SPECIES_SWITCH_SOURCES = [
@@ -95,6 +96,7 @@ export const SPECIES_SWITCH_SOURCES = [
   'keyboard',
   'deeplink',
   'compare',
+  'part',
 ] as const
 export type SpeciesSwitchSource = (typeof SPECIES_SWITCH_SOURCES)[number]
 
@@ -110,9 +112,9 @@ export type SpeciesSwitchSource = (typeof SPECIES_SWITCH_SOURCES)[number]
  * 还是那几天流量本来就高。
  *
  * 值的含义：`stage` 展台右上角、`card` 展台下方的卡片、`panel` 右栏标本卡、
- * `topbar` 顶栏「课程」。
+ * `topbar` 顶栏「课程」、`lesson` 分步讲解读完最后一步后自带的「做个小测」入口。
  */
-export const DISCOVERY_SOURCES = ['stage', 'card', 'panel', 'topbar'] as const
+export const DISCOVERY_SOURCES = ['stage', 'card', 'panel', 'topbar', 'lesson'] as const
 export type DiscoverySource = (typeof DISCOVERY_SOURCES)[number]
 
 /** 展台工具条六个按钮；「对比」不在这里 —— 它换的是物种，走 species_switch(source:'compare') */

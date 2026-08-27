@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import type { Order } from './data/types'
+import { nextPeerWithPart, partOfAnchor } from './data/parts'
 import { EVENTS, track, type DiscoverySource } from './analytics'
 import { useLabels, useLocale, useSpecies, useT } from './i18n/useT'
 import { notesToMarkdown, useFieldNotes } from './hooks/useFieldNotes'
@@ -192,6 +193,63 @@ export default function App() {
   }, [SPECIES])
 
   /**
+   * 部位跳转：换到同一部位组的下一只虫，并把镜头对到它的那个部位上。
+   *
+   * 走的是 focusAnchor 这条现成通路（此前只有讲解弹窗在用）—— 展台不知道
+   * 跳转的存在，它只知道「镜头该对着哪个 anchor」。跳转不自动展开新物种的
+   * 标注卡片：到了就把镜头摆好，读不读由人决定，弹卡片是打扰。
+   *
+   * ⚠️ **`setFocusAnchor` 必须排在 `select` 之后**：`select` 自己会
+   * `setFocusAnchor(null)`（换虫时清掉上一只的聚焦目标，见它的定义）。
+   * 顺序写反的话镜头永远不会跟着走，而且不报错、测试只有断言镜头目标那条会红。
+   *
+   * 埋点在这里报：`select` 自己不上报（各调用方按来源自己报，见 LibraryPanel
+   * 与 TopBar 的写法），所以这里报一次、且只报一次。
+   */
+  const jumpToPart = useCallback(
+    (anchor: string) => {
+      const group = partOfAnchor(anchor)
+      if (!group) return
+      const peer = nextPeerWithPart(SPECIES, activeId, group)
+      if (!peer) return
+      const target = SPECIES.find((i) => i.id === peer.id)
+      if (!target) return
+      track(EVENTS.SPECIES_SWITCH, { source: 'part', species_id: peer.id, order: target.order })
+      select(peer.id)
+      setFocusAnchor(peer.anchor)
+      /**
+       * 讲解弹窗开着时台面本来就没被挡住（backdrop 故意 pointer-events:none、
+       * 靠左停靠，见 Discovery.module.css 的注释），这个按钮因此够得到、点得下去。
+       * 但讲解自己也在用 focusAnchor 这条通路：它翻页那个 effect 依赖当前讲解步骤，
+       * 换物种后会在这次提交**之后**重新触发，把上面刚摆好的 peer.anchor 悄悄冲掉，
+       * 镜头看着像没反应。讲解也没有随物种换而重新挂载（key 只挂在 kind 上），
+       * step/picked 会带着旧物种的进度冲进新物种的讲解与小测，报表跟着一起错位。
+       * 读者点这个按钮是要去看别的虫的这个部位，不是要继续这节课 —— 直接关掉讲解，
+       * 两个问题一起消掉，也不会少报任何埋点。
+       */
+      setDiscovery(null)
+    },
+    [SPECIES, activeId, select],
+  )
+
+  /**
+   * 当前物种每个标注点要不要显示跳转链接、那个部位叫什么。
+   * 在这里算是因为只有 App 手里有物种全表 —— 视图层不该 import 数据表。
+   */
+  const partJumps = useMemo(() => {
+    const out: Record<string, string> = {}
+    for (const h of insect.hotspots) {
+      const group = partOfAnchor(h.anchor)
+      if (!group) continue
+      if (!nextPeerWithPart(SPECIES, insect.id, group)) continue
+      out[h.anchor] = t(`stage.part.${group}`)
+    }
+    return out
+    // t 是每次渲染新建的闭包，不进依赖 —— 它实际只随 locale 变（同本文件其它 effect 的处理）
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [insect, SPECIES, locale])
+
+  /**
    * 方向键在**可见列表**里走，不在全量列表里走 —— 筛到蜚蠊目还按全量翻，
    * 一按 ↓ 就跳到鞘翅目去了，筛选等于白设（实测撞到过）。
    * 当前物种被筛掉时，从列表第一/最后一项进入。
@@ -322,6 +380,8 @@ export default function App() {
           onCompareToggle={toggleCompare}
           onCompareCycle={cycleCompare}
           focusAnchor={focusAnchor}
+          onPartJump={jumpToPart}
+          partJumps={partJumps}
           lifeStage={lifeStage}
           onLifecycle={() => openDiscovery('lifecycle', 'stage')}
           theme={theme}
@@ -374,6 +434,13 @@ export default function App() {
 
       {discovery && (
         <Discovery
+          // key=kind：讲解读完接小测（onSwitchKind）是原地换 kind、不经过
+          // 关闭再打开，props 更新不会自动重新挂载。Discovery 内部有两处
+          // 认定「kind 在实例生命周期内不会变」（打开埋点的 effect 与
+          // step 这个状态本身——讲解 4 步、小测常常只有 2 题，不强制重挂
+          // 会让 step 带着讲解最后一步的下标冲进小测，越界成空状态）。
+          // 用 key 强制换 kind 时整体重新挂载，让这两处假设继续成立。
+          key={discovery.kind}
           kind={discovery.kind}
           source={discovery.source}
           insect={insect}
@@ -381,6 +448,7 @@ export default function App() {
           onClose={() => setDiscovery(null)}
           onFocusAnchor={setFocusAnchor}
           onLifeStage={setLifeStage}
+          onSwitchKind={openDiscovery}
         />
       )}
     </div>

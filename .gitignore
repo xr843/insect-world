@@ -17,3 +17,6 @@ scripts/_*.mjs
 
 # 并行 agent 的 git worktree 挂载点
 .claude/worktrees/
+
+# subagent-driven-development 的任务简报与台账，不进仓库
+.superpowers/

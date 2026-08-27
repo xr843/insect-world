@@ -12,6 +12,7 @@ import { Environment, Html, Lightformer, OrbitControls } from '@react-three/drei
 import * as THREE from 'three'
 import type { OrbitControls as OrbitControlsImpl } from 'three-stdlib'
 import type { Insect } from '../data/types'
+import { useT } from '../i18n/useT'
 import type { InsectModel } from './builders/kit'
 import { loadInsectModel } from './registry'
 import { loadStageModel, type LifeStage } from './stages'
@@ -293,6 +294,18 @@ function InsectMesh({
 
 // ---------------------------------------------------------------- 热点
 
+/** 标注卡片相对标注点的水平间距，呼应 global.css 里 .hotspot-card 的 left/right: 20px */
+const HOTSPOT_CARD_GAP = 20
+/**
+ * 标注卡片的名义宽度，呼应 .hotspot-card 的 width: 172px。
+ * 窄视口下 CSS 会把它按 min(172px, 50vw - 20px) 收窄——这里镜像同一个公式，
+ * 不然翻面判断按桌面宽度去量手机屏幕，算出来的「够不够放」跟卡片实际
+ * 渲染的宽度对不上（推导见 global.css 里 .hotspot-card 旁的注释）。
+ */
+const HOTSPOT_CARD_WIDTH = 172
+/** 翻面判定的迟滞带（px）：转台开着卡片也不会停，卡在临界角度不加缓冲会每帧左右横跳 */
+const HOTSPOT_SIDE_HYSTERESIS = 24
+
 function Hotspot({
   position,
   label,
@@ -301,6 +314,9 @@ function Hotspot({
   open,
   onToggle,
   groupRef,
+  anchor,
+  partLabel,
+  onPartJump,
 }: {
   position: THREE.Vector3
   label: string
@@ -309,11 +325,23 @@ function Hotspot({
   open: boolean
   onToggle: () => void
   groupRef: React.MutableRefObject<THREE.Group | null>
+  anchor: string
+  /** 这个部位的显示名；null = 没有同类可跳，不显示链接 */
+  partLabel: string | null
+  onPartJump?: (anchor: string) => void
 }) {
+  const t = useT()
   const color = TONE_VAR[tone] ?? TONE_VAR.coral
   const wrap = useRef<HTMLDivElement>(null)
   const fade = useRef(1)
-  const scratch = useRef({ world: new THREE.Vector3(), center: new THREE.Vector3(), toCam: new THREE.Vector3() })
+  /** 卡片当前贴哪一边；默认跟 CSS 的默认值一致，翻左之前不用碰 DOM */
+  const side = useRef<'right' | 'left'>('right')
+  const scratch = useRef({
+    world: new THREE.Vector3(),
+    center: new THREE.Vector3(),
+    toCam: new THREE.Vector3(),
+    ndc: new THREE.Vector3(),
+  })
 
   /**
    * 转到背面的标注点要淡出（参考实现的 facing 测试，搬到 DOM 上）。
@@ -322,15 +350,44 @@ function Hotspot({
    * 看起来像贴在玻璃罩外面。按「锚点相对虫心的朝向 · 视线方向」的点积
    * 平滑淡出，指数趋近避免闪烁；展开着的那颗压到最低 0.85，
    * 正在读的说明不能因为一点余转就消失。淡出后同时收掉点击。
+   *
+   * 同一个 useFrame 顺带算卡片该贴标注点哪一边——两件事用的是同一份
+   * 「标注点这一帧在哪」，拆成两个 useFrame 等于每帧多算一遍矩阵乘法。
    */
-  useFrame(({ camera, invalidate }, dt) => {
+  useFrame(({ camera, invalidate, size }, dt) => {
     const el = wrap.current
     const g = groupRef.current
     if (!el || !g) return
-    const { world, center, toCam } = scratch.current
+    const { world, center, toCam, ndc } = scratch.current
     world.copy(position).applyMatrix4(g.matrixWorld)
     g.getWorldPosition(center)
     toCam.copy(camera.position).sub(world).normalize()
+
+    /**
+     * 卡片会不会出屏：world 这时还是标注点的世界坐标（下一行就要被
+     * 复用成朝向向量），趁现在投影到屏幕换算成视口 x。
+     *
+     * size.left/size.width 是 r3f 内部 useMeasure 量出的画布位置——
+     * <Html> 定位就是拿它算的（见 drei Html.js 的 defaultCalculatePosition），
+     * resize/scroll 会自动刷新，直接用现成值；自己再调一次
+     * getBoundingClientRect 等于给这条「全部标注点每帧都跑」的热路径
+     * 添一次强制同步布局，能省就省。
+     *
+     * 卡片宽度按视口收缩到 min(172, 视口一半 - 间距)，与 global.css 里
+     * .hotspot-card 的 width 公式对齐（推导见那边注释），保证窄屏正中央
+     * 不会出现「翻哪边都装不下」的死区。
+     */
+    ndc.copy(world).project(camera)
+    const viewportX = size.left + (ndc.x * size.width) / 2 + size.width / 2
+    const cardWidth = Math.min(HOTSPOT_CARD_WIDTH, window.innerWidth / 2 - HOTSPOT_CARD_GAP)
+    const roomOnRight = window.innerWidth - viewportX - HOTSPOT_CARD_GAP - cardWidth
+    const wasLeft = side.current === 'left'
+    // 迟滞：转台开着卡片也在转，卡在临界角度不加缓冲带会每帧左右横跳
+    if (wasLeft ? roomOnRight > HOTSPOT_SIDE_HYSTERESIS : roomOnRight < 0) {
+      side.current = wasLeft ? 'right' : 'left'
+      el.dataset.side = side.current
+    }
+
     world.sub(center)
     const r = world.length()
     const facing = r > 1e-4 ? world.divideScalar(r).dot(toCam) : 1
@@ -366,6 +423,17 @@ function Hotspot({
               {label}
             </div>
             <div className="hotspot-note">{note}</div>
+            {onPartJump && partLabel && (
+              <button
+                className="hotspot-jump"
+                onClick={(e) => {
+                  e.stopPropagation()
+                  onPartJump(anchor)
+                }}
+              >
+                {t('stage.partJump', { part: partLabel })}
+              </button>
+            )}
           </div>
         )}
       </div>
@@ -479,7 +547,8 @@ function Framing({
     const g = goal.current
     if (!c || !g) return
     invalidate()
-    const k = 1 - Math.pow(0.0015, dt) // 与帧率无关的指数趋近
+    // 与帧率无关的指数趋近
+    const k = 1 - Math.pow(0.0015, dt)
     c.target.lerp(g.target, k)
     const dir = new THREE.Vector3().subVectors(camera.position, c.target)
     const len = dir.length()
@@ -640,6 +709,8 @@ function Scene({
   zoomNonce,
   resetNonce,
   focusAnchor,
+  onPartJump,
+  partJumps,
   lifeStage,
   onLoaded,
   onError,
@@ -654,6 +725,9 @@ function Scene({
   zoomNonce: number
   resetNonce: number
   focusAnchor: string | null
+  onPartJump?: (anchor: string) => void
+  /** anchor → 部位显示名；只含真的有下一只可跳的 anchor。由 App 算好，见 Stage 那边的注释 */
+  partJumps?: Record<string, string>
   /** 生活史阶段；null = 成虫（照旧走物种注册表） */
   lifeStage: LifeStage | null
   dark: boolean
@@ -830,6 +904,9 @@ function Scene({
                     tone={h.tone}
                     open={openHotspot === h.id}
                     onToggle={() => onToggleHotspot(openHotspot === h.id ? null : h.id)}
+                    anchor={h.anchor}
+                    partLabel={partJumps?.[h.anchor] ?? null}
+                    onPartJump={onPartJump}
                   />
                 )
               })}
@@ -873,6 +950,8 @@ export const InsectCanvas = memo(function InsectCanvas({
   zoomNonce,
   resetNonce,
   focusAnchor = null,
+  onPartJump,
+  partJumps,
   lifeStage = null,
   active = true,
   theme = 'dark',
@@ -888,6 +967,9 @@ export const InsectCanvas = memo(function InsectCanvas({
   resetNonce: number
   /** 由讲解弹窗下发的镜头指令，优先于工具条的聚焦模式 */
   focusAnchor?: string | null
+  onPartJump?: (anchor: string) => void
+  /** anchor → 部位显示名；只含真的有下一只可跳的 anchor。由 App 算好，见 Stage 那边的注释 */
+  partJumps?: Record<string, string>
   /**
    * 生活史阶段：非 null 时展台展示的是该阶段的模型（卵/幼虫/蛹/若虫）而不是成虫。
    * 同样由讲解弹窗下发 —— 与 focusAnchor 是同一条通路、同一个形状：
@@ -970,6 +1052,8 @@ export const InsectCanvas = memo(function InsectCanvas({
           zoomNonce={zoomNonce}
           resetNonce={resetNonce}
           focusAnchor={focusAnchor}
+          onPartJump={onPartJump}
+          partJumps={partJumps}
           lifeStage={lifeStage}
           dark={theme !== 'light'}
           onLoaded={() => onStatus({ loading: false, error: null })}
