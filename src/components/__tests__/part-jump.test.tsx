@@ -159,4 +159,18 @@ describe('讲解开着时点部位跳转 —— 与「做个小测」相撞的�
     )
     expect(leaked, '部位跳转顺手关讲解这一步，不该补报这两类事件').toEqual([])
   })
+
+  it('讲解开着时在名录中选择新物种，讲解同样被关掉，防止旧物种进度污染新物种', () => {
+    renderZh(<App />)
+
+    fireEvent.click(screen.getByText('课程'))
+    expect(screen.getByText('跟着看'), '讲解没打开').toBeTruthy()
+
+    // 点击名录里的第二个物种
+    const second = INSECTS[1]
+    fireEvent.click(screen.getByText(second.name))
+
+    // 讲解被正确关掉
+    expect(screen.queryByText('跟着看'), '切换物种后讲解应被关掉').toBeNull()
+  })
 })

@@ -17,5 +17,6 @@ export default defineConfig({
     // 几份测试套件一起吞进来（实测 236 文件），相对 cwd 读文件的测试
     // （no-hardcoded-cjk 等）随即大面积串扰误报。
     include: ['src/**/*.{test,spec}.{ts,tsx}'],
+    setupFiles: ['./src/test-setup.ts'],
   },
 })
