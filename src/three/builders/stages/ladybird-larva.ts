@@ -37,9 +37,9 @@
  *   测试里逐项钉住色相在蓝区、饱和度 > 0.18：压成 `#111` 这条当场红。
  * - **第 1、4 腹节两侧各一对显眼橙斑**（另有前胸两侧一对较小的）。真实分布正是
  *   这样：A1 与 A4 的背侧疣突连同周围一小片体壁是橙黄的，其余体节全是蓝黑。
- *   橙斑不是画上去的贴纸，而是**沿体壁法线压扁、紧贴曲面**的斑块
- *   （做法与 `ladybird.ts` 的七个黑点同一招 `spotPatch`），
- *   斑上那对疣突也一并换成橙色 —— 真实幼虫的橙就是以疣突为中心铺开的。
+ *   **橙斑是体壁本身的一块颜色，不是加上去的一个件** —— 这一条是目视验收
+ *   打回来重做的，详见 `surfaceSpot()` 的注释。斑上那对疣突也一并换成橙色：
+ *   真实幼虫的橙就是以疣突为中心铺开的，疣突是从这块颜色里长出来的一个小瘤。
  * - **橙必须真的亮得起来**（`#f4941f`，hue 33°、S 0.91、L 0.54）。
  *   ⚠️ 本仓库栽过的那个大跟头：ACES 色调映射会提亮去饱和，于是有了「颜色压深
  *   一档」的经验，但它被误解成「越深越保险」，结果 10 只里 7 只的招牌图案在
@@ -141,10 +141,21 @@ function girth(u: number): number {
 
 /**
  * 体壁曲面上某点的位置与外法线。
- * `theta` 自背中线（+Y）量起，向 +Z 侧为正；90° 即体侧最宽处。
+ * `theta` 自背中线量起，向 +Z 侧为正；90° 即体侧最宽处。
  *
- * 法线按椭圆截面的半径倒数加权（与 `kit.loft()` 内部同一条公式）——
- * 直接用 (0, cosθ, sinθ) 在扁截面上会偏，疣突就会斜插进体壁里。
+ * ## 截面必须垂直于**体轴切线**，不是垂直于 X 轴
+ *
+ * 这是补橙斑时量出来的一个真 bug。`kit.loft()` 把每个截面放在垂直于路径切线的
+ * 平面里（平行传输标架）；而第一版这里直接写成 `(a.x, a.y + ry·cosθ, rz·sinθ)`，
+ * 即垂直于 X 轴的平面。体轴不是水平的 —— 胸部那一段背线在爬升，切线偏离 X 轴
+ * 8.5°，于是两套截面错开了 r·sin8.5° ≈ 0.010 的轴向距离；而那一段体径正以
+ * 0.28/单位长的斜率在变粗，0.010 的错位就换算成 **0.003 的半径差**。
+ * 结果：按这个函数采样出来的橙斑，在胸部整片探出体壁 3 毫米的百分之三 ——
+ * 测量「斑离体壁多远」时怎么加密网格都降不下去，就是这个原因。
+ *
+ * 现在按 `loft()` 的同一套标架构造：切线 t 数值求出，Z 轴给周向的 v，
+ * 平面内垂直于 t 的方向给 u。法线同样按椭圆截面的半径倒数加权
+ * （与 `kit.loft()` 内部同一条公式），于是斑与体壁的着色也是连续的。
  */
 function surfaceAt(u: number, thetaDeg: number): { pos: THREE.Vector3; normal: THREE.Vector3 } {
   const a = axis(u)
@@ -152,8 +163,23 @@ function surfaceAt(u: number, thetaDeg: number): { pos: THREE.Vector3; normal: T
   const ry = r * RY
   const rz = r * RZ
   const th = THREE.MathUtils.degToRad(thetaDeg)
-  const pos = new THREE.Vector3(a.x, a.y + ry * Math.cos(th), rz * Math.sin(th))
-  const normal = new THREE.Vector3(0, (Math.cos(th) / ry) * rz, (Math.sin(th) / rz) * ry).normalize()
+  // 体轴切线（数值中心差分）。路径整个落在 XY 平面里，所以标架恒为
+  // { 平面内垂直于切线的 up, ±Z }，与 loft() 的平行传输结果逐点相同
+  const h = 1e-4
+  const t = axis(Math.min(u + h, 1)).sub(axis(Math.max(u - h, 0)))
+  if (t.lengthSq() < 1e-12) t.set(-1, 0, 0)
+  t.normalize()
+  const up = new THREE.Vector3(t.y, -t.x, 0).normalize()
+  const side = new THREE.Vector3(0, 0, 1)
+  const pos = a
+    .clone()
+    .addScaledVector(up, ry * Math.cos(th))
+    .addScaledVector(side, rz * Math.sin(th))
+  const normal = up
+    .clone()
+    .multiplyScalar((Math.cos(th) / ry) * rz)
+    .addScaledVector(side, (Math.sin(th) / rz) * ry)
+    .normalize()
   return { pos, normal }
 }
 
@@ -176,6 +202,13 @@ const HEAD_COLOR = '#161d28'
 const MANDIBLE_COLOR = '#7d6a4e'
 /** 胸足：略比体壁深，关节处的球体才不会糊成一段 */
 const LEG_COLOR = '#1d2735'
+
+/**
+ * 橙斑离体壁的法向外移量。只为避开 z-fighting，不是为了「凸出来」——
+ * 0.001 是体径的 1%，且大于体壁放样多边形的弦高（0.0003），
+ * 于是斑既不陷进体壁、也不构成任何可见的隆起（实测最外顶点离面 0.0015）。
+ */
+const SPOT_LIFT = 0.001
 
 // ---------------------------------------------------------------- 部件
 
@@ -239,32 +272,78 @@ function basisOf(normal: THREE.Vector3): { t1: THREE.Vector3; t2: THREE.Vector3 
 }
 
 /**
- * 贴合曲面的橙斑：把小球沿法线压扁后紧贴在体壁上（做法与 `ladybird.ts`
- * 的七个黑点同一招）。**不是悬浮的球** —— 悬浮的球在侧光下会自己投影，
- * 一眼读成粘在身上的豆子。
+ * 体壁上的一块橙斑。
+ *
+ * ## 为什么不是「压扁的小球贴在曲面上」
+ *
+ * 第一版用的就是那一招（`ladybird.ts` 给成虫那七个黑点用的 `spotPatch`，
+ * 在又大又光滑的半球鞘翅上没问题）。这只虫身上目视验收当场打回：
+ * 压扁的球是一个**独立的实体** —— 它有自己的厚度、自己的轮廓边、自己的投影，
+ * 还有一圈朝内的背面。渲出来是「一个凸出体壁的橙色圆盘、中间还有个深色的洞」，
+ * 最显眼那两枚活像套在身上的救生圈。**斑是色，不是件。**
+ *
+ * ## 正确的办法仓库里已经有
+ *
+ * `monarch-butterfly-larva.ts` 的 `bandRing()`：把体躯切成 52 段分别上色，
+ * 相邻两段共用同一个 u 边界，于是半径与轴心完全对齐、表面连续，换来的是
+ * **边界锐利、色块真分得开**的横带（本仓库零贴图资产，斑纹只能靠几何）。
+ *
+ * 这里要的是斑块不是横带，但办法是同一个：这一小片曲面用**与体壁完全同一个
+ * 参数方程** `surfaceAt(u, θ)` 采样出来，边界是 (u, θ) 参数域里的一个椭圆
+ * （所以斑的轮廓是随体形走的卵圆，不是一块长方形贴纸）。
+ *
+ * 唯一与体壁的差别是沿法线外移 `SPOT_LIFT` —— 0.001，体径的 1%，
+ * 只为让两层共面的三角形不互相闪烁（z-fighting）。这个量大于体壁放样多边形
+ * 的弦高（周向 40 段 0.0003、轴向每节 8 段 0.0003），所以斑既不会陷进体壁、
+ * 也不构成任何可见的隆起：实测斑上最外的顶点离体壁曲面 0.0015
+ * （压扁小球那一版是 0.024，差 16 倍）。测试里有一条专门量它，改回球会当场红。
  */
-function spotPatch(
-  pos: THREE.Vector3,
-  normal: THREE.Vector3,
-  radius: number,
-  thinness: number,
-  material: THREE.Material,
-): THREE.Mesh {
-  const m = new THREE.Mesh(new THREE.SphereGeometry(radius, 16, 12), material)
-  m.position.copy(pos).addScaledVector(normal, radius * thinness * 0.5 + 0.002)
-  m.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), normal)
-  m.scale.set(1, 1, thinness)
-  m.name = 'orange-spot'
-  return m
+function surfaceSpot(uc: number, thetaC: number, uHalf: number, thHalf: number, material: THREE.Material): THREE.Mesh {
+  const NU = 18
+  const NT = 20
+  const position: number[] = []
+  const normal: number[] = []
+  const index: number[] = []
+  for (let i = 0; i <= NU; i++) {
+    const s = -1 + (2 * i) / NU
+    // 半宽随 s 按 √(1−s²) 收 —— (u, θ) 参数域里的一个正椭圆，斑因此是卵圆的
+    const halfW = thHalf * Math.sqrt(Math.max(0, 1 - s * s))
+    const u = THREE.MathUtils.clamp(uc + uHalf * s, 0, 1)
+    for (let j = 0; j <= NT; j++) {
+      const t = -1 + (2 * j) / NT
+      const { pos, normal: n } = surfaceAt(u, thetaC + halfW * t)
+      pos.addScaledVector(n, SPOT_LIFT)
+      position.push(pos.x, pos.y, pos.z)
+      normal.push(n.x, n.y, n.z)
+    }
+  }
+  const row = NT + 1
+  for (let i = 0; i < NU; i++) {
+    for (let j = 0; j < NT; j++) {
+      const a = i * row + j
+      index.push(a, a + row, a + 1, a + row, a + row + 1, a + 1)
+    }
+  }
+  const geo = new THREE.BufferGeometry()
+  geo.setAttribute('position', new THREE.Float32BufferAttribute(position, 3))
+  geo.setAttribute('normal', new THREE.Float32BufferAttribute(normal, 3))
+  geo.setIndex(index)
+  const mesh = new THREE.Mesh(geo, material)
+  mesh.name = 'orange-spot'
+  return mesh
 }
 
 // ---------------------------------------------------------------- 建模主体
 
-/** 长橙斑的体节（0=T1，3=A1，6=A4）与各自的斑半径、所在方位角 */
-const SPOT_SITES: readonly { seg: number; theta: number; radius: number }[] = [
-  { seg: 0, theta: 58, radius: 0.03 }, // 前胸两侧的小橙斑
-  { seg: 3, theta: 40, radius: 0.048 }, // A1：最显眼的一对
-  { seg: 6, theta: 40, radius: 0.044 }, // A4：第二对
+/**
+ * 长橙斑的体节（0=T1，3=A1，6=A4）：斑心的方位角，以及斑在 (u, θ) 参数域里的
+ * 两个半轴。三处的 θ 都取 40°，与该节**背侧那对疣突同一个方位** ——
+ * 真实幼虫的橙就是以疣突为中心铺开的，疣突从这块颜色里长出来。
+ */
+const SPOT_SITES: readonly { seg: number; theta: number; uHalf: number; thHalf: number }[] = [
+  { seg: 0, theta: 40, uHalf: 0.034, thHalf: 26 }, // 前胸两侧的小橙斑
+  { seg: 3, theta: 40, uHalf: 0.055, thHalf: 32 }, // A1：最显眼的一对
+  { seg: 6, theta: 40, uHalf: 0.05, thHalf: 32 }, // A4：第二对
 ]
 
 /** 长疣突的体节：0~10（末节 A9 已收得太细，再插疣突会读成一撮杂毛） */
@@ -287,28 +366,32 @@ export function buildLadybirdLarva(): InsectModel {
   // ---- 体躯：一整根放样管，每节 4 个截面，节间缢缩烘在包络里
   {
     const sections: Section[] = []
-    const steps = SEGMENTS * 4
+    // 每节 8 个截面（原 4）。轴向细分不只是为了光滑：橙斑是按**解析曲面**采样的，
+    // 而放样面是截面之间的直纹，两者的偏差 = 直纹割弦的矢高。每节 4 段时节间缢缩
+    // 那道正弦让矢高到 0.0011，加上防闪烁的 0.001 外移，斑最外的点离体壁有
+    // 0.0033；加密到 8 段后矢高降到 0.0003，斑基本就贴在面上了。
+    const steps = SEGMENTS * 8
     for (let i = 0; i <= steps; i++) {
       const u = i / steps
       const a = axis(u)
       const r = girth(u)
       sections.push({ at: a, ry: Math.max(r * RY, 1e-4), rz: Math.max(r * RZ, 1e-4) })
     }
-    const body = new THREE.Mesh(loft(sections, 26), bodyMat)
+    // 周向 40 段（原 26）：目视验收说背脊上看得出棱。40 段下多边形弦高只剩
+    // 0.0003，既抹掉了面片感，也让橙斑那 0.001 的外移稳稳落在体壁之外
+    const body = new THREE.Mesh(loft(sections, 40), bodyMat)
     body.name = 'larva-body'
     g.add(body)
   }
 
-  // ---- 橙斑：A1 / A4 的显眼一对 + 前胸的小一对。先摆斑，疣突再压在斑上面
+  // ---- 橙斑：A1 / A4 的显眼一对 + 前胸的小一对。斑是体壁的一块颜色，疣突从里面长出来
   const spotSet = new Set<string>()
   for (const site of SPOT_SITES) {
     const u = (site.seg + 0.5) / SEGMENTS
     for (const side of [1, -1] as const) {
-      const { pos, normal } = surfaceAt(u, site.theta * side)
-      g.add(spotPatch(pos, normal, site.radius, 0.3, spotMat))
+      g.add(surfaceSpot(u, site.theta * side, site.uHalf, site.thHalf, spotMat))
     }
-    // 记下「这一节的背侧疣突要跟着橙」：真实幼虫的橙就是以疣突为中心铺开的
-    if (site.theta < 60) spotSet.add(`${site.seg}`)
+    spotSet.add(`${site.seg}`)
   }
 
   // ---- 疣突 + 刚毛：11 节 × (背侧一对 + 体侧一对) = 44 枚
@@ -423,7 +506,7 @@ export function buildLadybirdLarva(): InsectModel {
     head: headCenter.clone().add(new THREE.Vector3(0.01, headR * 0.85, 0)),
     // 疣突锥顶：`tubercleMesh` 的最外一段就落在 pos + normal*height
     tubercle: tub.pos.clone().addScaledVector(tub.normal, 0.032 * tubScale),
-    spot: a1.pos.clone().addScaledVector(a1.normal, 0.006),
+    spot: a1.pos.clone().addScaledVector(a1.normal, SPOT_LIFT),
     tail: axis(0.97).clone().add(new THREE.Vector3(0, girth(0.97) * RY, 0)),
   }
 

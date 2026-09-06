@@ -39,8 +39,14 @@
  *   招牌图案在画面上直接消失。这里的橙黄对齐 `ladybird.ts` 那枚目视验收过的
  *   朱红 `#e2382a`（L 0.53）的明度档，与黑斑的明度差 0.45。
  * - **黑斑 14 枚**：前胸一对大的、腹部四对侧斑、背中线两对小的，左右严格成对。
- *   一律用「沿曲面法线压扁、紧贴壳面」的斑块（做法与 `ladybird.ts` 的七个黑点
- *   同一招 `spotPatch`），不是悬浮的球 —— 悬浮的球会自己投影，一眼读成粘上去的豆子。
+ *   **黑斑是壳面本身的一块颜色，不是贴上去的件** —— 这一条是目视验收打回来
+ *   重做的（第一版用压扁的小球贴曲面，渲出来读成粘在背上的一串黑珠子），
+ *   详见 `surfaceSpot()` 的注释。
+ * - **背腹压扁**：截面高 0.24 / 宽 0.32（比 0.74）。第一版给 0.92，接近正圆，
+ *   前端那个又大又光滑的橙色圆顶被读成「一只气球」。真实的瓢虫蛹背面明显扁。
+ * - **看得出前胸背板的轮廓**：u=0.66 处一道浅缢，缢里再压一圈比腹部横脊更粗的
+ *   环。缢之前是腹部、之后隆起成盖住头的前胸背板盾片。少了这道界，整只蛹就是
+ *   一个从头滑到尾的光包络 —— 那正是「气球」的由来。
  * - **背面的横向分节**：腹部 5 道横脊，各是一圈**贴着壳面凸出来的细环**。
  *   ⚠️ 分节必须靠形，不靠色。第一批阶段模型的教训写得很明白：
  *   **深色贴浅色读成斑纹，不是结构**（黑蚱蝉的翅芽比胸背暗一档，四个机位全读成
@@ -63,23 +69,29 @@ import { chitin, finalize, loft, type InsectModel, type Section } from '../kit'
 const PUPA_LEN = 0.44
 /** 最宽处半径：体宽 3.0 毫米 */
 const R_MAX = 0.152
-/** 背腹 / 左右的截面比。略宽于高，是「饱满卵圆」而不是「一根香肠」 */
-const RY = 0.97
-const RZ = 1.05
+/**
+ * 背腹 / 左右的截面比：高 0.78 / 宽 1.06，即截面高宽比 0.74 —— **明显扁**。
+ *
+ * 第一版给的是 0.97 / 1.05（比值 0.92，几乎是正圆），目视验收打回：
+ * 前端那个又大又光滑的橙色圆顶读成「一只气球」。真实的瓢虫蛹背面是扁的，
+ * 压扁之后侧影里才有蛹该有的那道低平的背线。
+ */
+const RY = 0.78
+const RZ = 1.06
 /**
  * 体轴自叶面抬起的角度。前端上翘是这一阶段的招牌姿态。
  *
  * 36° 不是挑好看挑出来的，是算出来的**下限**：蛹体最粗处半径 0.152，
  * 腹末黏在叶面上时，体轴抬得不够整个腹面就会陷进叶片里
  * （第一版给 26°，腹部第 3 节的腹面扎进叶面 0.054 深，侧视读成
- * 「半只蛹埋在叶子里」）。逐点解 `y(u) = 0.44u·sinθ − 0.97cosθ·r(u) ≥ 0`
+ * 「半只蛹埋在叶子里」）。逐点解 `y(u) = 0.44u·sinθ − RY·cosθ·r(u) ≥ 0`
  * 之后，θ ≥ 35° 才能让**腹末那一点**成为全身最低处 —— 也就是「只有腹末着地」
  * 这句话在几何上真的成立。36° 下腹部前几节离叶面 0.002~0.007，
  * 正好贴着叶面掠过去，那道窄缝里的接触阴影就是真实照片里的样子。
  */
 const TILT_DEG = 36
 /** 腹末黏着点（叶面上）。整只蛹只有这一点接触叶面 */
-const ATTACH = new THREE.Vector3(-0.16, 0.012, 0)
+const ATTACH = new THREE.Vector3(-0.16, 0.01, 0)
 
 /** 基座叶片的半长与半宽 */
 const LEAF_HALF_LEN = 0.34
@@ -101,6 +113,13 @@ const SKIN_TUBERCLE_COLOR = '#1a2333'
 const SKIN_SPOT_COLOR = '#d9832a'
 /** 叶片 */
 const LEAF_COLOR = '#4e7d38'
+
+/**
+ * 黑斑离壳面的法向外移量。只为避开 z-fighting，不是为了「凸出来」——
+ * 0.001 大于壳面放样多边形的弦高（0.0004），
+ * 于是斑既不陷进壳里、也不构成任何可见的隆起（实测最外顶点离面 0.0018）。
+ */
+const SPOT_LIFT = 0.001
 
 // ---------------------------------------------------------------- 随机数
 
@@ -138,7 +157,7 @@ function keyframe(keys: readonly (readonly [number, number])[], t: number): numb
 /**
  * 体半径包络（占 R_MAX 的比例），u=0 在腹末黏着点、u=1 在头端。
  *
- * 最宽处在 u=0.72（前胸那一段），向腹末一路收细到 0.10 —— 前胖后细正是瓢虫蛹
+ * 最宽处在 u=0.78（前胸背板），向腹末一路收细到 0.10 —— 前胖后细正是瓢虫蛹
  * 的侧影。**腹末收得这么细是有原因的**：末几个腹节是真正的细颈，蛹就靠它
  * 从旧皮里探出来黏在叶上；粗腹末在 36° 的仰角下会直接杵进叶面（见 TILT_DEG）。
  * 两端都以密集关键帧圆钝地收口：只做包络的话放样封口会封出一个正圆平面，
@@ -148,15 +167,19 @@ const GIRTH_KEYS: readonly (readonly [number, number])[] = [
   [0.0, 0.1],
   [0.08, 0.24],
   [0.18, 0.44],
-  [0.3, 0.68],
-  [0.44, 0.86],
-  [0.6, 0.98],
-  [0.72, 1.0],
-  [0.84, 0.92],
-  [0.93, 0.66],
-  [0.97, 0.44],
+  [0.3, 0.66],
+  [0.44, 0.84],
+  [0.58, 0.94],
+  [0.66, 0.88], // 前胸背板后缘：一道浅缢，把腹部与盾片分开
+  [0.78, 1.0], // 前胸背板最宽处
+  [0.88, 0.88],
+  [0.95, 0.6],
+  [0.98, 0.4],
   [1.0, 0.12],
 ]
+
+/** 前胸背板后缘那道缢的位置。缢 + 一圈略粗的环 = 看得出盾片的轮廓 */
+const PRONOTUM_U = 0.66
 
 function girth(u: number): number {
   return Math.max(R_MAX * keyframe(GIRTH_KEYS, u), 1e-4)
@@ -197,11 +220,10 @@ function toModel(v: THREE.Vector3): THREE.Vector3 {
  * 管心落在壳面上，于是外侧一半凸出、内侧一半埋进去，边下有净空，
  * 侧光下才有那道读得出「分节」的阴影缝。
  */
-function segmentRidge(u: number, material: THREE.Material): THREE.Mesh {
+function segmentRidge(u: number, material: THREE.Material, tube = 0.0085, name = 'segment-ridge'): THREE.Mesh {
   const r = girth(u)
   const ry = r * RY
   const rz = r * RZ
-  const tube = 0.0085
   const sections: Section[] = []
   const N = 26
   for (let i = 0; i <= N; i++) {
@@ -213,25 +235,67 @@ function segmentRidge(u: number, material: THREE.Material): THREE.Mesh {
     })
   }
   const mesh = new THREE.Mesh(loft(sections, 8), material)
-  mesh.name = 'segment-ridge'
+  mesh.name = name
   return mesh
 }
 
-/** 贴合曲面的斑块：小球沿法线压扁后紧贴壳面，不是悬浮的球 */
-function spotPatch(
-  pos: THREE.Vector3,
-  normal: THREE.Vector3,
-  radius: number,
-  thinness: number,
-  material: THREE.Material,
-  name: string,
-): THREE.Mesh {
-  const m = new THREE.Mesh(new THREE.SphereGeometry(radius, 16, 12), material)
-  m.position.copy(pos).addScaledVector(normal, radius * thinness * 0.5 + 0.002)
-  m.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), normal)
-  m.scale.set(1, 1, thinness)
-  m.name = name
-  return m
+/**
+ * 壳面上的一块黑斑。
+ *
+ * ## 为什么不是「压扁的小球贴在曲面上」
+ *
+ * 第一版用的就是那一招（`ladybird.ts` 给成虫那七个黑点用的 `spotPatch`）。
+ * 目视验收当场打回：压扁的球是一个**独立的实体** —— 有自己的厚度、轮廓边、
+ * 投影和一圈朝内的背面，渲出来读成**粘在背上的一串黑珠子**。**斑是色，不是件。**
+ *
+ * ## 正确的办法仓库里已经有
+ *
+ * `monarch-butterfly-larva.ts` 的 `bandRing()`：把体躯切成 52 段分别上色，
+ * 相邻两段共用同一个 u 边界，半径与轴心完全对齐、表面连续，于是色块边界锐利
+ * 而两色真分得开（本仓库零贴图资产，斑纹只能靠几何）。
+ *
+ * 这里要的是斑块不是横带，办法是同一个：这一小片曲面用**与壳面完全同一个
+ * 参数方程** `surfaceAt(u, θ)` 采样出来，边界是 (u, θ) 参数域里的一个椭圆
+ * （所以斑的轮廓是随体形走的卵圆，不是一块长方形贴纸）。
+ *
+ * 与壳面唯一的差别是沿法线外移 `SPOT_LIFT` = 0.001，只为避开 z-fighting；
+ * 它大于壳面放样多边形的弦高（周向 44 段 0.0004、轴向 72 段 0.0004），
+ * 所以斑既不陷进壳里、也不构成任何可见的隆起：实测斑上最外的顶点离壳面
+ * 0.0018（压扁小球那一版是 0.019）。测试里有一条专门量它，改回球会当场红。
+ */
+function surfaceSpot(uc: number, thetaC: number, uHalf: number, thHalf: number, material: THREE.Material): THREE.Mesh {
+  const NU = 18
+  const NT = 20
+  const position: number[] = []
+  const normal: number[] = []
+  const index: number[] = []
+  for (let i = 0; i <= NU; i++) {
+    const s = -1 + (2 * i) / NU
+    // 半宽随 s 按 √(1−s²) 收 —— (u, θ) 参数域里的一个正椭圆，斑因此是卵圆的
+    const halfW = thHalf * Math.sqrt(Math.max(0, 1 - s * s))
+    const u = THREE.MathUtils.clamp(uc + uHalf * s, 0, 1)
+    for (let j = 0; j <= NT; j++) {
+      const t = -1 + (2 * j) / NT
+      const { pos, normal: n } = surfaceAt(u, thetaC + halfW * t)
+      pos.addScaledVector(n, SPOT_LIFT)
+      position.push(pos.x, pos.y, pos.z)
+      normal.push(n.x, n.y, n.z)
+    }
+  }
+  const row = NT + 1
+  for (let i = 0; i < NU; i++) {
+    for (let j = 0; j < NT; j++) {
+      const a = i * row + j
+      index.push(a, a + row, a + 1, a + row, a + row + 1, a + 1)
+    }
+  }
+  const geo = new THREE.BufferGeometry()
+  geo.setAttribute('position', new THREE.Float32BufferAttribute(position, 3))
+  geo.setAttribute('normal', new THREE.Float32BufferAttribute(normal, 3))
+  geo.setIndex(index)
+  const mesh = new THREE.Mesh(geo, material)
+  mesh.name = 'pupa-spot'
+  return mesh
 }
 
 /**
@@ -317,14 +381,14 @@ function leafPatch(material: THREE.Material): THREE.Mesh {
  * 黑斑分布（左右各一，theta 取 ± 号）。
  * 前胸一对大的 + 腹部四对侧斑 + 背中线两对小的 = 14 枚。
  */
-const SPOT_SITES: readonly { u: number; theta: number; radius: number }[] = [
-  { u: 0.82, theta: 42, radius: 0.055 }, // 前胸的一对大黑斑
-  { u: 0.22, theta: 72, radius: 0.026 }, // 腹部四对侧斑，随体径一起收
-  { u: 0.32, theta: 72, radius: 0.031 },
-  { u: 0.42, theta: 72, radius: 0.034 },
-  { u: 0.52, theta: 72, radius: 0.034 },
-  { u: 0.36, theta: 22, radius: 0.026 }, // 背中线两侧的小点
-  { u: 0.5, theta: 22, radius: 0.026 },
+const SPOT_SITES: readonly { u: number; theta: number; uHalf: number; thHalf: number }[] = [
+  { u: 0.8, theta: 42, uHalf: 0.11, thHalf: 26 }, // 前胸背板的一对大黑斑
+  { u: 0.22, theta: 72, uHalf: 0.06, thHalf: 22 }, // 腹部四对侧斑，随体径一起收
+  { u: 0.32, theta: 72, uHalf: 0.07, thHalf: 19 },
+  { u: 0.42, theta: 72, uHalf: 0.075, thHalf: 17 },
+  { u: 0.52, theta: 72, uHalf: 0.075, thHalf: 16 },
+  { u: 0.36, theta: 20, uHalf: 0.055, thHalf: 15 }, // 背中线两侧的小点
+  { u: 0.5, theta: 20, uHalf: 0.055, thHalf: 14 },
 ]
 
 /** 腹部的五道横脊 */
@@ -352,7 +416,9 @@ export function buildLadybirdPupa(): InsectModel {
 
   {
     const sections: Section[] = []
-    const steps = 40
+    // 轴向 72 段（原 40）：理由同幼虫体壁 —— 黑斑按解析曲面采样，轴向段数不够时
+    // 前胸背板那道缢附近的割弦矢高有 0.002，斑会从面里探出来
+    const steps = 72
     for (let i = 0; i <= steps; i++) {
       const u = i / steps
       const r = girth(u)
@@ -362,17 +428,20 @@ export function buildLadybirdPupa(): InsectModel {
         rz: Math.max(r * RZ, 1e-4),
       })
     }
-    const shell = new THREE.Mesh(loft(sections, 30), shellMat)
+    // 周向 44 段（原 30）：多边形弦高降到 0.0004，黑斑那 0.001 的外移才稳稳
+    // 落在壳面之外，不会在某些面片中央陷进去闪烁
+    const shell = new THREE.Mesh(loft(sections, 44), shellMat)
     shell.name = 'pupa-shell'
     pupa.add(shell)
   }
 
   for (const u of RIDGE_US) pupa.add(segmentRidge(u, ridgeMat))
+  // 前胸背板后缘：那道浅缢里再压一圈略粗的环，盾片的轮廓才读得出来
+  pupa.add(segmentRidge(PRONOTUM_U, ridgeMat, 0.011, 'pronotum-margin'))
 
   for (const site of SPOT_SITES) {
     for (const side of [1, -1] as const) {
-      const { pos, normal } = surfaceAt(site.u, site.theta * side)
-      pupa.add(spotPatch(pos, normal, site.radius, 0.3, spotMat, 'pupa-spot'))
+      pupa.add(surfaceSpot(site.u, site.theta * side, site.uHalf, site.thHalf, spotMat))
     }
   }
 
@@ -442,7 +511,7 @@ export function buildLadybirdPupa(): InsectModel {
   const anchors: Record<string, THREE.Vector3> = {
     head: headEnd,
     tail: tailTip,
-    spot: toModel(bigSpot.pos.clone().addScaledVector(bigSpot.normal, 0.006)),
+    spot: toModel(bigSpot.pos.clone().addScaledVector(bigSpot.normal, SPOT_LIFT)),
     larvalSkin: new THREE.Vector3(tailTip.x - 0.078, 0.056, 0),
     leaf: new THREE.Vector3(LEAF_HALF_LEN * 0.72, 0, 0),
   }
