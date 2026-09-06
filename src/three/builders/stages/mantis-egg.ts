@@ -28,9 +28,11 @@
  * - **招牌二：两侧横向层叠的弧形纹。** 雌虫后退时分泌是**一阵一阵**的，
  *   于是壳壁由十几层前后叠压的泡沫层堆成，每层的前缘压在前一层的后缘上，
  *   在体侧形成一道道横向的弧棱。因为她后退时腹端还在左右摆动，
- *   层界不是笔直的横环，而是**从背脊向腹面向后偏斜**的弧（见 `LAYER_SKEW`）。
- *   本文件把这件事做成了**壳体本身的叠瓦包络**（`shingle()`），而不是贴在
- *   光管子上的几条纹 —— 叠瓦的那道坎是真的坎，会自己投影。
+ *   层界不是笔直的横环，而是**从背脊向腹面向后偏斜**的弧（见 `LAYER_SKEW`）；
+ *   每一阵分泌的量也不一样，所以层宽不等距（见 `layerWobble()`）。
+ *   本文件把这件事做成了**壳体本身的层理起伏**（`shingle()`），而不是贴在
+ *   光管子上的几条纹。起伏是**圆过去的**，不是一道道锐棱 —— 这一条是目视验收
+ *   打回来才改对的，理由见 `LAYERS` 上方那段。
  * - **表面**：泡沫硬化后是海绵质的，不是光壳。零贴图资产的仓库里只能靠
  *   材质参数表达：`surface: 'punctate'`（随机圆坑法线）+ 极低 gloss，
  *   读出来就是「多孔、哑光」。
@@ -44,7 +46,7 @@
  * 但它一度被误解成「越深越保险」，结果招牌图案在画面上直接消失（10 只里 7 只返工）。
  * 卵鞘全身都是褐色系，最容易糊成一团泥，所以这里把**明度排成四档**：
  *
- *   孵化带 0.87（近白的暖米色） > 盖片 0.79 > 壳体 0.59（米黄褐） > 层界 0.34 > 树皮 0.22（近黑褐）
+ *   孵化带 0.87（近白的暖米色） > 盖片 0.79 > 壳体 0.59（米黄褐） > 层界 0.46 > 树皮 0.22（近黑褐）
  *
  * 也就是说：招牌那条带是全画面最亮的东西，层界是壳上最暗的线，
  * 两者夹着中间调的壳面。测试逐对钉住这四档。
@@ -105,9 +107,40 @@ function profileAt(u: number): { ry: number; rz: number } {
 
 const bodyX = (u: number) => THREE.MathUtils.lerp(OOTH_FRONT_X, OOTH_REAR_X, u)
 
-// ---------------------------------------------------------------- 叠瓦层
+// ---------------------------------------------------------------- 泡沫层理
 
-/** 泡沫层数。真实卵鞘上数得出十几到二十几道层界，取 16 */
+/**
+ * 泡沫层数。真实卵鞘上数得出十几到二十几道层界，取 16。
+ *
+ * ⚠️ 这一整节被目视验收打回重做过一次，记录在此以免有人「优化」回去：
+ *
+ * 第一版把层理做成了**叠瓦**——每层缓缓收薄、到下一道层界猛地鼓起来，
+ * 于是每层前缘是一道近乎垂直的锐坎（0.072 厘米，占画面 1.5%）。离线出图台上
+ * 它「读得出层数」，看着挺成功；换到站上真实的 Environment 光下就露馅了：
+ * 十几道**等距**的锐棱 + 深色层界线，读成一叠塑料片、一只潮虫的壳、或者藤编篮
+ * —— 就是不像泡沫硬化出来的层理。
+ *
+ * 根因是三件事叠在一起，缺一不可地把「分泌物」做成了「工业制品」：
+ *
+ * 1. **边是锐的。** 泡沫一层压一层，界面是软的、圆过去的，靠明暗过渡被看见，
+ *    不靠一道棱。→ 现在的 `shingle()` 是一条光滑的周期起伏（余弦），
+ *    连一阶导数都连续，没有任何一处硬边。
+ * 2. **太深。** 0.085 的幅度配上锐边等于一圈圈瓦楞。→ 降到 0.055。
+ * 3. **太规整。** 等距是最强的「人造」信号。真实卵鞘是雌虫一阵一阵分泌出来的，
+ *    每一阵的量都不一样。→ `layerWobble()` 让层宽在 ±22% 之间慢慢变化，
+ *    `layerDepth()` 让每一道层界的深浅也不一样，`lump()` 再给整体加一层
+ *    3.5% 的低频「不圆」——四条一起才把「车床车出来的」这个印象拆干净。
+ *
+ * 判据仍是那一句：一个人看到这张图会不会说这是螳螂的卵鞘。
+ *
+ * 四条里前两条（圆边、层宽不等距）有测试盯着：`mantis-stages.test.ts` 里
+ * 「中位陡边跨几个采样」与「层界间距的 max/min」两条断言，把它们改回去会红。
+ * 后两条（`layerDepth()` 的深浅不一、`lump()` 的低频不圆）**没有断言盯着** ——
+ * 变异测试实测把它们各自关掉，22 条断言一条都不红。原因是它们造成的偏差与
+ * 层界偏斜、纵剖面包络造成的偏差混在一起，我没找到一个只量它们、
+ * 又不会恒真的判据。宁可如实记在这儿，也不写一条「看着挺严、其实靠别的原因绿着」
+ * 的断言 —— 那正是本仓库栽过的那个跟头（双叉犀金龟的头角被删掉，3034 条全绿）。
+ */
 const LAYERS = 16
 /**
  * 层界的偏斜量（单位：层）。0 = 笔直的横环，0.6 = 从背脊走到腹面时层界向后错开
@@ -116,30 +149,102 @@ const LAYERS = 16
  */
 const LAYER_SKEW = 0.6
 /**
- * 叠瓦幅度（占该处半径的比例）。每层从层界处最鼓，向后缓缓收薄，
- * 到下一道层界再猛地鼓起来 —— 于是每层的**前缘**是一道朝向 +X 的坎。
+ * 层理起伏的深度（占该处半径的比例）。层界处最凹、层中最鼓，
+ * 谷底到脊顶 0.055 × 0.85 ≈ 0.047 厘米，占画面直径约 0.9%。
  *
- * 坎朝前是有意的：默认机位在前上方（`framing.ts` 的 HOME_DIR ≈ (0.86,0.44,1.25)），
- * 坎朝后的话，第一眼看到的全是平滑的坡面，十几层叠瓦一层都看不见。
- * 0.085 × 0.85 ≈ 0.072 厘米的坎，占画面直径 1.5%，在 720 像素上约 10 像素 —— 数得出来。
+ * 这个数是**两头都会翻车**的：0.085 配上锐边读成瓦楞板（见 LAYERS 的注释），
+ * 归零则整只成了一根光管子、层理全靠贴上去的几条线撑着（测试里 E2 那个退化版）。
  */
-const SHINGLE = 0.085
-/** 每层沿轴向的细分站位数 */
-const SUB = 10
-/** 层界前那一站与层界的距离：把坎做成近乎垂直的一堵墙，而不是一段缓坡 */
-const SEAM_EPS = 0.004
+const SHINGLE = 0.055
+/**
+ * 层内起伏的相位扭曲。0 = 正弦，前后坡一样陡；0.12 让每层的前坡比后坡陡一点，
+ * 保留「一层压在前一层上」的方向感 —— 但仍然是光滑的曲面，不是一道坎。
+ */
+const LAYER_WARP = 0.12
+/** 层宽的不均匀度（单位：层）。0 = 等距（人造感的主要来源），0.22 ≈ ±22% */
+const LAYER_WOBBLE = 0.22
+/** 层宽变化的周期（层）。取非整数，免得不均匀本身又变成一种规律 */
+const WOBBLE_PERIOD = 5.3
+/** 每层沿轴向的细分站位数。起伏改成光滑曲线后要加密，否则一条弧会被折成几段直线 */
+const SUB = 14
 /** 环向分段数 */
 const RADIAL = 60
+/**
+ * 刻点贴图的平铺次数（环向 × 轴向）。
+ *
+ * 这一项不给的话（UV 直接取 0~1），`surface: 'punctate'` 的 260 个坑会被摊在
+ * 整只卵鞘 3.2 × 5 厘米的表面上，一个坑宽到 1.5 毫米、还被拉成椭圆 —— 出图上
+ * 只剩一层若有若无的脏，「海绵质」完全没做到，壳面读成一块光滑的塑料。
+ * 平铺到每格约 2 厘米之后坑径落在 0.6 毫米上下，才是泡沫该有的多孔感
+ * （再密就掉到一两个像素以下，等于又回到「一层脏」）。
+ *
+ * 贴图本身是全局共享缓存（见 surface.ts 头注释），绝不能去改它的 `repeat`；
+ * 平铺次数只能写进本模型自己的 UV 里。
+ */
+const PIT_REPEAT: readonly [number, number] = [2.5, 1.8]
 /** 腹面压扁量：卵鞘糊在枝上，贴枝的一面被压平了一点，不是一个正椭球 */
 const BELLY_FLAT = 0.12
 
-/** 层内进度 f∈[0,1) → 半径乘数。f=0（层界处）最鼓，向后收薄 */
-function shingle(f: number): number {
-  return 1 + SHINGLE * (0.5 - Math.pow(f, 0.55))
+/**
+ * 层内进度 f∈[0,1) → 半径乘数。f=0（层界）最凹，层中最鼓。
+ *
+ * 用余弦而不是第一版的 `f^0.55` 锯齿：余弦在 f=0/1 处**一阶导数也连续**，
+ * 所以层与层之间没有任何一处硬边，界面靠明暗过渡读出来 —— 那才是泡沫的层理。
+ * 相位扭曲 `fw` 保留一点前后不对称（前坡陡、后坡缓），且仍然处处光滑
+ * （dfw/df = 1 + 0.12·2π·cos ≥ 0.25 > 0，单调，不会自交）。
+ */
+function shingle(f: number, L: number): number {
+  const fw = f + LAYER_WARP * Math.sin(2 * Math.PI * f)
+  return 1 - layerDepth(L) * (0.5 + 0.5 * Math.cos(2 * Math.PI * fw))
 }
 
-/** 层界处（f=0）的乘数，孵化带与锚点都以它为基准 */
-const SHINGLE_TOP = shingle(0)
+/**
+ * 逐层的起伏深度。真实卵鞘上有的层界很深、有的几乎看不见 —— 雌虫那一阵分泌得多少
+ * 全凭当时的状态。深度全都一样是「机器压出来的」最后一个破绽（前三个是锐边、
+ * 太深、等距，见 `LAYERS` 上方那段），所以这里让它在 0.6~1.0 倍之间慢慢变。
+ *
+ * 它必须是 L 的**连续**函数：层内起伏在层界处取 (0.5+0.5cos0)=1，
+ * 深度一跳，壳面就会在层界上裂开一圈台阶。
+ */
+function layerDepth(L: number): number {
+  return SHINGLE * (0.8 + 0.2 * Math.sin((2 * Math.PI * L) / 3.7 + 0.7))
+}
+
+/**
+ * 低频的「不圆」：卵鞘是一口一口喷出来硬化的，不是车床车出来的椭球。
+ * 两个互质频率的缓变鼓包叠在一起，幅度 3.5% —— 小到不改变体量与剪影分类，
+ * 大到让每一道层界的深浅、每一段轮廓的胖瘦都各不相同。
+ * 对 φ 必须以 2π 为周期（用整数倍频），否则背中线上会裂一道缝。
+ */
+function lump(u: number, phi: number): number {
+  return (
+    1 +
+    LUMP *
+      (0.6 * Math.sin(6.1 * u + 0.4) * Math.cos(2 * phi + 1.2) +
+        0.4 * Math.sin(3.3 * u + 2.1) * Math.cos(3 * phi - 0.5))
+  )
+}
+
+/** 低频不圆的幅度（占该处半径的比例） */
+const LUMP = 0.035
+
+/** 层理的最高点乘数（层中）。孵化带与锚点都以它为基准 */
+const SHINGLE_TOP = 1
+
+/**
+ * 层宽的慢变化：把层坐标 L 映到 u 时加一点低频摆动，层就不再等距。
+ * 幅度必须小于 WOBBLE_PERIOD/2π（这里 0.22 < 0.84），否则 L→u 不再单调，
+ * 层会自己叠到一起去。
+ */
+function layerWobble(L: number): number {
+  return LAYER_WOBBLE * Math.sin((2 * Math.PI * L) / WOBBLE_PERIOD + 1.1)
+}
+
+/** 层坐标 L 与方位角 φ 处对应的体轴参数 u */
+function uAt(L: number, phi: number): number {
+  const w = (1 - Math.cos(phi)) / 2
+  return THREE.MathUtils.clamp((L + LAYER_SKEW * w + layerWobble(L)) / LAYERS, 0, 1)
+}
 
 /**
  * 壳面上的一点。
@@ -155,10 +260,9 @@ const SHINGLE_TOP = shingle(0)
 function shellPoint(L: number, phi: number): THREE.Vector3 {
   const c = Math.cos(phi)
   const s = Math.sin(phi)
-  const w = (1 - c) / 2
-  const u = THREE.MathUtils.clamp((L + LAYER_SKEW * w) / LAYERS, 0, 1)
+  const u = uAt(L, phi)
   const p = profileAt(u)
-  const k = shingle(L - Math.floor(L))
+  const k = shingle(L - Math.floor(L), L) * lump(u, phi)
   const flat = c < 0 ? 1 - BELLY_FLAT * Math.pow(-c, 1.6) : 1
   return new THREE.Vector3(bodyX(u), p.ry * c * k * flat, p.rz * s * k)
 }
@@ -166,20 +270,16 @@ function shellPoint(L: number, phi: number): THREE.Vector3 {
 /**
  * 层坐标的站位表。
  *
- * 起点取 −LAYER_SKEW 而不是 0：偏斜让腹面比背脊「晚」0.6 层才到达 u=0，
- * 从 0 起算的话第一圈会是「背脊已经收到鼻尖、腹面还在半腰」的一圈开口，
- * 卵鞘前端会破一个洞。终点取 LAYERS 同理（那一端是背脊晚到）。
+ * 起点取 −(LAYER_SKEW + LAYER_WOBBLE) 而不是 0：偏斜让腹面比背脊「晚」0.6 层
+ * 才到达 u=0，摆动还能再晚 0.22 层；从 0 起算的话第一圈会是「背脊已经收到鼻尖、
+ * 腹面还在半腰」的一圈开口，卵鞘前端会破一个洞。终点同理（那一端是背脊晚到）。
  */
 function layerStations(): number[] {
-  const start = -LAYER_SKEW
-  const n = Math.round((LAYERS - start) * SUB)
+  const start = -(LAYER_SKEW + LAYER_WOBBLE)
+  const end = LAYERS + LAYER_WOBBLE
+  const n = Math.ceil((end - start) * SUB)
   const out: number[] = []
-  for (let i = 0; i <= n; i++) {
-    const L = start + i / SUB
-    out.push(L)
-    const next = start + (i + 1) / SUB
-    if (i < n && Math.abs(next - Math.round(next)) < 1e-9) out.push(next - SEAM_EPS)
-  }
+  for (let i = 0; i <= n; i++) out.push(start + ((end - start) * i) / n)
   return out
 }
 
@@ -196,7 +296,7 @@ function oothecaShell(): THREE.BufferGeometry {
     for (let j = 0; j < cols; j++) {
       const p = shellPoint(Ls[i], (j / RADIAL) * Math.PI * 2)
       positions.push(p.x, p.y, p.z)
-      uvs.push(j / RADIAL, i / (rows - 1))
+      uvs.push((j / RADIAL) * PIT_REPEAT[0], (i / (rows - 1)) * PIT_REPEAT[1])
     }
   }
   for (let i = 0; i < rows - 1; i++) {
@@ -310,21 +410,34 @@ function hatchFlap(u: number, material: THREE.Material): THREE.Mesh {
 
 /** 层界弧棱避开孵化带的方位角（弧度）。0.28 处壳面 |z|≈0.22，正好在带缘 0.17 之外 */
 const BAND_PHI = 0.28
-/** 弧棱管半径 */
-const SEAM_R = 0.026
-/** 弧棱落在层界**之前**一点：那里是叠瓦坎的坡脚，深色的一道正该嵌在这个内凹角里 */
-const SEAM_BACKOFF = 0.03
+/**
+ * 弧棱管半径。一路从 0.026 降到 0.014。
+ *
+ * 层理改圆之后这条线反而成了新的病灶：壳面本身柔和了，十几道深色细线却还是
+ * 原来的力度，于是整只读成「光面上刻了一圈圈槽」—— 还是藤编那一侧。
+ *
+ * 试过整条删掉：正面与顶视都更好（层理靠自身的明暗与扇贝状的剪影就读得出来），
+ * **但逆光机位整只糊成一团褐色，层理一道都不剩**。所以留着，只是一路减到
+ * 「几乎只是谷底的一点暗」：管细到 0.014、几乎不探出谷底、明度差从 0.25 压到 0.13。
+ * 它现在的职责只有一个 —— 在光打不到的角度替层理兜底。
+ */
+const SEAM_R = 0.014
 
 /**
  * 一道层界弧棱：贴着壳面从背脊一侧绕到另一侧的深色细棱。
  *
- * 为什么壳体已经有叠瓦包络了还要加这一圈：叠瓦靠的是自投影，
- * 而正对光源的那几个角度里投影会被冲淡。深色的弧棱不依赖光照方向，
+ * 为什么壳体已经有层理起伏了还要加这一圈：起伏靠的是自身的明暗，
+ * 而正对光源的那几个角度里明暗会被冲淡。深色的弧棱不依赖光照方向，
  * 任何机位都读得出「一层压一层」。两者是形与色的双保险，缺一个都可能在
  * 某个机位上失效 —— 这正是本仓库反复栽的那个跟头（断言量数字、人看长相）的解法。
+ *
+ * 它必须**嵌在谷底**、只露出一点点：第一版做粗 0.026 又架在坡脚上，
+ * 十几道深色细线成了整只虫最抢眼的东西，反倒把它推向「藤编」那一侧。
+ * 现在它在顺光机位上几乎看不见 —— 那是对的，层理该靠形被读出来。
  */
 function layerSeam(k: number, material: THREE.Material): THREE.Mesh {
-  const L = k - SEAM_BACKOFF
+  // 弧棱正落在层界 L=k 上 —— 那里是层理起伏的谷底，深色的一道嵌进去才像层间的暗痕
+  const L = k
   const steps = 30
   const sections: Section[] = []
   for (let i = 0; i <= steps; i++) {
@@ -332,7 +445,7 @@ function layerSeam(k: number, material: THREE.Material): THREE.Mesh {
     const p = shellPoint(L, phi)
     // 沿 YZ 平面的径向把棱推出壳面一点点，让它成为一道凸起的棱而不是埋进去的线
     const radial = new THREE.Vector3(0, p.y, p.z)
-    if (radial.lengthSq() > 1e-9) p.addScaledVector(radial.normalize(), 0.004)
+    if (radial.lengthSq() > 1e-9) p.addScaledVector(radial.normalize(), 0.001)
     // 两端收细：弧棱钻进孵化带底下，不该在带缘留两个圆头
     const taper = 0.35 + 0.65 * Math.pow(Math.sin(Math.PI * (i / steps)), 0.4)
     sections.push({ at: p, ry: SEAM_R * taper, rz: SEAM_R * taper })
@@ -362,8 +475,11 @@ export function buildMantisEgg(): InsectModel {
 
   /*
    * 四档明度（sRGB 的 HSL 明度，见文件头「配色」）：
-   *   孵化带 0.874 > 盖片 0.794 > 壳体 0.590 > 层界 0.339 > 树皮 0.216
-   * 每一档之间 ≥ 0.08，最亮与最暗之间 0.66。全褐色系最怕糊成一团泥，
+   *   孵化带 0.874 > 盖片 0.794 > 壳体 0.590 > 层界 0.463 > 树皮 0.216
+   * 最亮与最暗之间 0.66。
+   * 层界那一档是目视验收之后一路提亮的（0.339 → 0.416 → 0.463）：深色细线一强，
+   * 整只就被拽回「光面上刻了一圈圈槽」。它现在只比壳面深 0.13，
+   * 顺光角度几乎看不见，正是要的效果 —— 层理该靠形，它只负责逆光时兜底。全褐色系最怕糊成一团泥，
    * 这里靠明度而不是色相把结构分开 —— 色相全都落在 30~45° 的黄褐区，
    * 换句话说：它看起来仍然是一整块泡沫，只是层次分得开。
    */
@@ -376,7 +492,7 @@ export function buildMantisEgg(): InsectModel {
    */
   const bandMat = chitin({ color: '#f8e9c6', gloss: 0.36, clearcoat: 0.12 })
   const flapMat = chitin({ color: '#e9d7ac', gloss: 0.3 })
-  const seamMat = chitin({ color: '#7a5a33', gloss: 0.1 })
+  const seamMat = chitin({ color: '#9e7c4e', gloss: 0.1 })
   const barkMat = chitin({ color: '#4a3624', gloss: 0.1, surface: 'striate' })
 
   // ---- 壳体
@@ -384,8 +500,8 @@ export function buildMantisEgg(): InsectModel {
   shell.name = 'ootheca-shell'
   g.add(shell)
 
-  // ---- 层界弧棱：k=1..15。k=0 落在鼻尖上、k=16 落在尾尖上，那两处壳体已收到零
-  for (let k = 1; k < LAYERS; k++) g.add(layerSeam(k, seamMat))
+  // ---- 层界弧棱：k=1..14。两端那两三道落在已经收到零的鼻尖/尾尖上，不做
+  for (let k = 1; k < LAYERS - 1; k++) g.add(layerSeam(k, seamMat))
 
   // ---- 孵化带 + 一列孵化口盖片
   g.add(hatchBand(bandMat))
@@ -427,7 +543,7 @@ export function buildMantisEgg(): InsectModel {
    * 不超过 0.12×包围半径）。这里每个点要么就在某个网格的表面上，要么埋在它体内。
    */
   const bandMidU = (BAND_U0 + BAND_U1) / 2
-  const seamProbe = shellPoint(8 - SEAM_BACKOFF, Math.PI / 2)
+  const seamProbe = shellPoint(8, Math.PI / 2)
   const anchors: Record<string, THREE.Vector3> = {
     hatchBand: new THREE.Vector3(bodyX(bandMidU), bandTopY(bandMidU, 0.5), 0),
     layerRidge: seamProbe,
