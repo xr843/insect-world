@@ -214,6 +214,34 @@
   text-align: center;
 }
 
+/* 零结果时那句「为什么没有」。比一句「没找到」有用：多数时候的答案是
+   「它根本不是昆虫」，而这本身就是科普。 */
+.emptyWhy {
+  margin: 8px 0 0;
+  font-size: 12px;
+  line-height: 1.55;
+  color: var(--muted);
+  text-align: left;
+}
+
+/* 零结果的出路。没有它，搜不到就是一条死胡同 —— 埋点显示每周有几十次
+   搜索停在这里。 */
+.emptyOut {
+  margin-top: 10px;
+  padding: 6px 14px;
+  font: inherit;
+  font-size: 12px;
+  color: var(--ink);
+  background: transparent;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  cursor: pointer;
+}
+
+.emptyOut:hover {
+  border-color: var(--ink);
+}
+
 /* ---------------------------------------------------------------- 下拉菜单 */
 
 /**

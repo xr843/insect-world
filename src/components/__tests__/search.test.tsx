@@ -197,3 +197,47 @@ describe('主题切换钮', () => {
     expect(onToggleTheme).toHaveBeenCalledTimes(1)
   })
 })
+
+/**
+ * 零结果这一格。
+ *
+ * 由来（2026-09-06 读埋点）：129 次搜索里 **82 次零结果（63.6%）**，而这一格
+ * 此前只有一句「没有找到「X」」—— 一条死胡同。多数未命中的真实答案还挺具体：
+ * **它根本不是昆虫**。把这句话说出来，比一句「没找到」有用，而且本身就是科普。
+ */
+describe('零结果：给个说法，再给条出路', () => {
+  it('不是昆虫的，说清楚它为什么不在这本图鉴里', () => {
+    const { type } = mount()
+    type('鼠妇')
+    expect(screen.getByText(/不是昆虫/), '零结果只甩了一句「没有找到」').toBeTruthy()
+  })
+
+  it('是昆虫但图鉴没收的，说的是另一句话', () => {
+    const { type } = mount()
+    type('跳蚤')
+    expect(screen.getByText(/还没有它/)).toBeTruthy()
+    expect(screen.queryByText(/不是昆虫/), '跳蚤是昆虫，不该说它不是').toBeNull()
+  })
+
+  it('认不出的词也不留死胡同 —— 出路按钮始终在', () => {
+    const { type, onPick } = mount()
+    type('zzzz 什么都不是')
+    const out = screen.getByText('随便看一只')
+    fireEvent.click(out)
+    expect(onPick, '点了出路按钮却没换虫').toHaveBeenCalledTimes(1)
+    expect(INSECTS.some((i) => i.id === onPick.mock.calls[0][0])).toBe(true)
+  })
+
+  it('推荐的那只不随重渲染乱跳 —— 同一个词永远推同一只', () => {
+    const a = mount()
+    a.type('zzzz')
+    const first = screen.getAllByText('随便看一只')[0]
+    fireEvent.click(first)
+    const pickedA = a.onPick.mock.calls[0][0]
+    cleanup()
+    const b = mount()
+    b.type('zzzz')
+    fireEvent.click(screen.getAllByText('随便看一只')[0])
+    expect(b.onPick.mock.calls[0][0]).toBe(pickedA)
+  })
+})

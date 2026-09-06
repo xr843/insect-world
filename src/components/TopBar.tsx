@@ -6,6 +6,7 @@ import { useLabels, useLocale, useT } from '../i18n/useT'
 import { hrefForLocale } from '../i18n/hrefForLocale'
 import { LOCALE_AUTONYM } from '../i18n/locales'
 import { searchInsects } from './searchInsects'
+import { MISS_UNKNOWN, classifyMiss, missLabel } from '../data/absent'
 import {
   IconBook,
   IconChevronDown,
@@ -20,6 +21,16 @@ import {
   IconSun,
 } from './icons'
 import s from './TopBar.module.css'
+
+/**
+ * 查询词 → 一个稳定的数。零结果时用它挑推荐的那只虫 —— 用 `Math.random()`
+ * 的话每次重渲染都会换一只，按钮底下的东西在手指下乱跳。
+ */
+function hash(text: string): number {
+  let h = 0
+  for (let i = 0; i < text.length; i++) h = (h * 31 + text.charCodeAt(i)) | 0
+  return h
+}
 
 const NAV = [
   { key: 'explore', labelKey: 'nav.explore', Icon: IconCompass },
@@ -120,6 +131,8 @@ export function TopBar({
    * 又最该被单测直接盯住的一段，理由与五级的来历写在那个文件里。
    */
   const hits = searchInsects(insects, q, locale, (i) => labels.order[i.order])
+  /** 零结果时，这次未命中落进封闭词表的哪一条（没落进就是 null，只上报 unknown） */
+  const miss = hits.length === 0 ? classifyMiss(q) : null
 
   /**
    * 搜索埋点：等输入停顿再报一次「发起了一次搜索」，不追每个按键 ——
@@ -130,11 +143,22 @@ export function TopBar({
    * 输入痕迹，隐私上不能报。`tier` 报的是「命中的是哪一级」这个枚举值
    * （exact/name/alias/meta/text/none），来自我们自己的封闭词表，不含
    * 任何用户输入 —— 它要回答的是「补的那批俗名到底有没有人用」。
+   *
+   * 零结果时多报一个 `miss`，同样是封闭词表里的 token（见 data/absent.ts）
+   * 或者 `unknown`。它要解开的是这个死结：**知道有六成搜索什么都搜不到，
+   * 却因为不报查询词而不知道人在搜什么**。token 全部写死在 absent.ts 里，
+   * 一个字符的用户输入都不会离开浏览器；`unknown` 的占比反过来告诉我们
+   * 那张表覆盖得够不够。
    */
   useEffect(() => {
     if (!q) return
     const timer = window.setTimeout(() => {
-      track(EVENTS.SEARCH, { has_results: hits.length > 0, tier: hits[0]?.tier ?? 'none' })
+      const empty = hits.length === 0
+      track(EVENTS.SEARCH, {
+        has_results: !empty,
+        tier: hits[0]?.tier ?? 'none',
+        ...(empty ? { miss: classifyMiss(q)?.token ?? MISS_UNKNOWN } : {}),
+      })
     }, 500)
     return () => window.clearTimeout(timer)
     // hits 由 q 与 insects 派生，随 q 变化必然重新求值，不需要单独进依赖
@@ -262,7 +286,29 @@ export function TopBar({
           {open && q.length > 0 && (
             <div className={`card ${s.results}`}>
               {hits.length === 0 ? (
-                <div className={s.empty}>{t('search.noResults', { query })}</div>
+                <div className={s.empty}>
+                  <div>{t('search.noResults', { query })}</div>
+                  {miss && (
+                    <p className={s.emptyWhy}>
+                      {t(
+                        miss.kind === 'not-insect' ? 'search.miss.notInsect' : 'search.miss.absentInsect',
+                        { name: missLabel(miss, locale) },
+                      )}
+                    </p>
+                  )}
+                  <button
+                    className={s.emptyOut}
+                    onClick={() => {
+                      const pick = insects[Math.abs(hash(q)) % insects.length]
+                      track(EVENTS.SPECIES_SWITCH, { source: 'search', species_id: pick.id, order: pick.order })
+                      onPick(pick.id)
+                      setOpen(false)
+                      setQuery('')
+                    }}
+                  >
+                    {t('search.suggest')}
+                  </button>
+                </div>
               ) : (
                 hits.map(({ insect: i }) => (
                   <button
