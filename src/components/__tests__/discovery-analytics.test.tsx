@@ -137,7 +137,7 @@ describe('小测作答 —— quiz_answer(correct)', () => {
     trackMock.mockClear()
     const q = guide.quiz[0]
     fireEvent.click(screen.getByText(q.options[q.answer]))
-    expect(trackMock).toHaveBeenCalledWith(EVENTS.QUIZ_ANSWER, { correct: true })
+    expect(trackMock).toHaveBeenCalledWith(EVENTS.QUIZ_ANSWER, { correct: true, where: 'quiz' })
   })
 
   it('选中错误选项，correct: false', () => {
@@ -146,7 +146,7 @@ describe('小测作答 —— quiz_answer(correct)', () => {
     const q = guide.quiz[0]
     const wrongIndex = q.options.findIndex((_, i) => i !== q.answer)
     fireEvent.click(screen.getByText(q.options[wrongIndex]))
-    expect(trackMock).toHaveBeenCalledWith(EVENTS.QUIZ_ANSWER, { correct: false })
+    expect(trackMock).toHaveBeenCalledWith(EVENTS.QUIZ_ANSWER, { correct: false, where: 'quiz' })
   })
 })
 
@@ -255,5 +255,59 @@ describe('讲解走完之后接小测', () => {
   it('中间步骤不出现小测入口 —— 它属于「读完了」这个时刻', () => {
     mount('lesson')
     expect(screen.queryByText('做个小测'), '第一步就冒出小测入口').toBeNull()
+  })
+})
+
+/**
+ * 讲解最后一步内嵌的那道题。
+ *
+ * 2026-08-28 把小测搬到讲解读完那一刻之后，九天读数：每百访问的打开数
+ * 1.20 → 1.23，纹丝不动；196 次读完里只有 17 次点开（8.7%）。位置已经是
+ * 全站最好的位置，那 8.7% 量的不是「想不想答题」，是「愿不愿意再开一层面板」。
+ * 于是把第一道题直接摆在读完的那一页上。
+ *
+ * `where` 这个维度是为了让两条路分得开：内嵌这道题报 `lesson`，
+ * 原来那条面板路仍报 `quiz`，否则改动前后的数根本没法比。
+ */
+describe('讲解最后一步内嵌一道题', () => {
+  const walkToEnd = () => {
+    mount('lesson')
+    for (let i = 0; i < guide.lesson.length - 1; i++) fireEvent.click(screen.getByText('下一步'))
+  }
+
+  it('走到最后一步，题目就在页面上，不用再点任何东西', () => {
+    walkToEnd()
+    expect(screen.getByText(guide.quiz[0].question), '读完了却没看到题').toBeTruthy()
+  })
+
+  it('中途的步骤上不出现题 —— 那会打断讲解', () => {
+    mount('lesson')
+    expect(screen.queryByText(guide.quiz[0].question)).toBeNull()
+  })
+
+  it('当场作答，报 where=lesson，与面板里那条路分得开', () => {
+    walkToEnd()
+    trackMock.mockClear()
+    const q = guide.quiz[0]
+    fireEvent.click(screen.getByText(q.options[q.answer]))
+    expect(trackMock).toHaveBeenCalledWith(EVENTS.QUIZ_ANSWER, { correct: true, where: 'lesson' })
+  })
+
+  it('答完给出解释 —— 答错了才有救', () => {
+    walkToEnd()
+    const q = guide.quiz[0]
+    const wrong = q.options.findIndex((_, i) => i !== q.answer)
+    fireEvent.click(screen.getByText(q.options[wrong]))
+    expect(screen.getByText(q.explain)).toBeTruthy()
+  })
+
+  it('答过之后不能改 —— 否则「答对率」这个数没有意义', () => {
+    walkToEnd()
+    trackMock.mockClear()
+    const q = guide.quiz[0]
+    fireEvent.click(screen.getByText(q.options[q.answer]))
+    const wrong = q.options.findIndex((_, i) => i !== q.answer)
+    fireEvent.click(screen.getByText(q.options[wrong]))
+    expect(trackMock.mock.calls.filter((c) => c[0] === EVENTS.QUIZ_ANSWER)).toHaveLength(1)
   })
 })

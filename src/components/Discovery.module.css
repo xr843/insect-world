@@ -171,10 +171,26 @@
 
 /* ---------------------------------------------------------------- 按钮 */
 
+/*
+ * 动作条钉在面板底边。
+ *
+ * 面板本身是可滚的（窄屏 max-height: 68vh），内容一长，「看完了」就掉到
+ * 折叠线以下 —— 讲解最后一步内嵌了一道题之后实测：390×844 上主按钮落在
+ * y=858，视口只有 844，要先滚一下才点得到，而那正是最该一步到位的时刻。
+ * 小测那一格（题干 + 四个选项 + 解释）本来也有同样的毛病。
+ *
+ * 负 margin 抵掉面板 30px 的内边距，让底色铺满整条，滚动时上面的文字
+ * 不会从按钮缝里穿过去。
+ */
 .actions {
   display: flex;
   gap: 9px;
   margin-top: 20px;
+  position: sticky;
+  bottom: -30px;
+  margin-inline: -30px;
+  padding: 10px 30px 30px;
+  background: var(--paper-solid);
 }
 
 .primary {
@@ -218,6 +234,23 @@
 }
 
 /* ---------------------------------------------------------------- 小测 */
+
+/* 讲解最后一步内嵌的那道题。与正文之间划一条线：读到这里是「课讲完了」，
+   下面是另一件事，不划线会读成课文的一部分。 */
+.inlineQuiz {
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px solid var(--line);
+}
+
+/* 「顺手一问」这行小标 —— 全站展签的字距规格 */
+.eyebrow {
+  margin-bottom: 6px;
+  font-size: 10.5px;
+  font-weight: 500;
+  letter-spacing: 0.18em;
+  color: var(--muted);
+}
 
 .question {
   text-align: left;
