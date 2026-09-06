@@ -574,7 +574,7 @@ export function buildLonghornBeetleLarva(): InsectModel {
   const g = new THREE.Group()
 
   // 体壁：哑光 + 次表面透光。**绝不是 elytra()** —— 见文件头「材质纪律」
-  const bodyMat = chitin({ color: BODY_COLOR, gloss: 0.22, clearcoat: 0.04, translucent: true })
+  const bodyMat = chitin({ color: BODY_COLOR, gloss: 0.22, clearcoat: 0.04 })
   // 盾：骨化程度明显高于体壁，所以光泽更高、挂刻点法线；但清漆仍压在 0.22
   const plateMat = chitin({ color: PLATE_COLOR, gloss: 0.5, clearcoat: 0.22, surface: 'punctate' })
   const granuleLightMat = chitin({ color: GRANULE_LIGHT, gloss: 0.55, clearcoat: 0.2 })
