@@ -23,6 +23,7 @@ import { cleanup, fireEvent, screen } from '@testing-library/react'
 import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest'
 import { renderZh } from '../../i18n/testing'
 import { INSECTS } from '../../data/insects.zh'
+import { builtStagesOf } from '../../three/stages'
 import { metamorphosisOf } from '../../three/stages'
 import { Stage } from '../Stage'
 
@@ -38,9 +39,16 @@ vi.mock('../../three/InsectCanvas', async () => {
   return { InsectCanvas: () => createElement('div', { 'data-testid': 'canvas-stub' }) }
 })
 
-/** 一只做了阶段模型的（完全变态，四阶段）与一只没做的 */
+/**
+ * 一只做了阶段模型的与一只没做的。
+ *
+ * ⚠️ **没做的那只必须查出来，不能写死物种名。** 原来这里写的是 `'ladybird'`，
+ * 2026-09-06 给七星瓢虫补上卵/幼虫/蛹之后，这两个文件里 4 条测试一起红 ——
+ * 而红的原因跟它们要测的东西（「没有阶段模型时界面怎么退让」）毫无关系。
+ * 每补一轮阶段就要来改一次的常量，本身就是个坑。
+ */
 const WITH_STAGES = 'rhinoceros-beetle'
-const WITHOUT_STAGES = 'ladybird'
+const WITHOUT_STAGES = INSECTS.find((i) => builtStagesOf(i.id).length === 0)!.id
 const insectOf = (id: string) => INSECTS.find((i) => i.id === id)!
 
 beforeAll(() => {
