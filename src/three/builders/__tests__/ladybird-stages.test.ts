@@ -191,6 +191,61 @@ function principalAxis(verts: THREE.Vector3[]): THREE.Vector3 {
   return a
 }
 
+/**
+ * 一组点到某个曲面（一批网格的三角面）的最短距离。
+ *
+ * 这是「斑是色，不是件」那条断言的量具，也是这一轮目视验收打回来之后补的。
+ * 为什么必须量到**三角面**而不是到最近顶点：体壁的网格间距有 0.015~0.02，
+ * 量到顶点的话，一个高出体壁 0.01 的凸起和一个贴在面上的点会给出同一个数，
+ * 断言就白写了。量到面之后，贴着体壁的斑给出的是它那 0.001 的外移量，
+ * 而压扁的小球给出的是它最外一点的 0.024 —— 差着 20 倍，分得干干净净。
+ *
+ * 三角面按中点丢进边长 0.06 的空间哈希里，查询只看 3×3×3 的邻域。
+ */
+function surfaceDistance(wall: THREE.Mesh[], points: THREE.Vector3[]): number[] {
+  const CELL = 0.06
+  const grid = new Map<string, THREE.Triangle[]>()
+  const mid = new THREE.Vector3()
+  const key = (x: number, y: number, z: number) =>
+    `${Math.floor(x / CELL)},${Math.floor(y / CELL)},${Math.floor(z / CELL)}`
+  for (const m of wall) {
+    const pos = m.geometry.getAttribute('position')
+    const idx = m.geometry.index
+    const n = idx ? idx.count : pos.count
+    for (let i = 0; i < n; i += 3) {
+      const tri = new THREE.Triangle()
+      const at = (k: number) =>
+        new THREE.Vector3().fromBufferAttribute(pos, idx ? idx.getX(k) : k).applyMatrix4(m.matrixWorld)
+      tri.set(at(i), at(i + 1), at(i + 2))
+      tri.getMidpoint(mid)
+      const k = key(mid.x, mid.y, mid.z)
+      const arr = grid.get(k)
+      if (arr) arr.push(tri)
+      else grid.set(k, [tri])
+    }
+  }
+  const cp = new THREE.Vector3()
+  return points.map((p) => {
+    let best = Infinity
+    const bx = Math.floor(p.x / CELL)
+    const by = Math.floor(p.y / CELL)
+    const bz = Math.floor(p.z / CELL)
+    for (let dx = -1; dx <= 1; dx++) {
+      for (let dy = -1; dy <= 1; dy++) {
+        for (let dz = -1; dz <= 1; dz++) {
+          const arr = grid.get(`${bx + dx},${by + dy},${bz + dz}`)
+          if (!arr) continue
+          for (const t of arr) {
+            t.closestPointToPoint(p, cp)
+            best = Math.min(best, cp.distanceTo(p))
+          }
+        }
+      }
+    }
+    return best
+  })
+}
+
 /** 两组网格之间的最短顶点距离 —— 「A 真的挨着 B」只能这么量 */
 function minGap(a: THREE.Mesh[], b: THREE.Mesh[]): number {
   const va = vertsOf(a)
@@ -486,6 +541,23 @@ describe('幼虫：长着成排疣突的石板蓝黑小鳄鱼', () => {
     expect(d / (2 * larva.radius)).toBeGreaterThan(0.02)
   })
 
+  it('橙斑是体壁上的一块颜色，不是贴上去的件', () => {
+    /*
+     * 目视验收打回来的那一条。第一版的橙斑是「压扁的小球贴在曲面上」
+     * （ladybird.ts 给成虫七个黑点用的那一招），渲出来是一个凸出体壁的橙色
+     * 圆盘、中间还有个深色的洞，最显眼那两枚活像套在身上的救生圈。
+     *
+     * 而当时的测试全绿 —— 因为它们只量了数量、位置、颜色和「占画面多大」，
+     * 没有一条量「它凸出来多少」。这条补上：斑的**每一个顶点**离体壁曲面
+     * 不许超过 0.005（体径的 5%）。
+     * 实测：现在的做法 0.0015（0.001 是防 z-fighting 的外移，其余是放样面
+     * 割弦的矢高）；改回压扁的小球是 0.024，差 16 倍，这条当场红。
+     */
+    const d = surfaceDistance(body, vertsOf(spots))
+    expect(d.length).toBeGreaterThan(100)
+    expect(Math.max(...d), '橙斑凸出体壁了 —— 斑是色，不是件').toBeLessThan(0.004)
+  })
+
   it('只有 3 对胸足 —— 没有腹足，这不是毛虫', () => {
     /*
      * 分两步钉：
@@ -649,6 +721,54 @@ describe('蛹：尾端连着旧皮、前端上翘的裸蛹', () => {
     }
   })
 
+  it('黑斑是壳面上的一块颜色，不是粘上去的珠子', () => {
+    /*
+     * 与幼虫橙斑同一条，同一次目视验收打回：第一版的黑斑是压扁的小球贴曲面，
+     * 渲出来读成粘在背上的一串黑珠子（右侧那颗尤其明显）。
+     * 实测：现在 0.0018；改回压扁的小球是 0.019，差 10 倍，这条当场红。
+     */
+    const d = surfaceDistance(shell, vertsOf(spots))
+    expect(d.length).toBeGreaterThan(100)
+    expect(Math.max(...d), '黑斑凸出壳面了 —— 斑是色，不是件').toBeLessThan(0.004)
+  })
+
+  it('背腹是扁的，且看得出前胸背板的轮廓', () => {
+    /*
+     * 「前端读成一只气球」是目视验收打回的另一半。截面接近正圆时它就是个气球。
+     * 蛹是斜着摆的，所以背腹向必须在**它自己的体轴系**里取：
+     * 侧向 = axis × 世界上方，背腹向 = 侧向 × axis。
+     * 拿世界包围盒的最短边冒充背腹向会量出 1.0（写这条时当场撞到）。
+     */
+    const lateral = new THREE.Vector3().crossVectors(axisDir, new THREE.Vector3(0, 1, 0)).normalize()
+    const dorsal = new THREE.Vector3().crossVectors(lateral, axisDir).normalize()
+    const spread = (dir: THREE.Vector3) => {
+      const p = shellVerts.map((v) => v.dot(dir))
+      return Math.max(...p) - Math.min(...p)
+    }
+    // 实测 0.237 / 0.322 = 0.74；第一版 RY/RZ 给 0.97/1.05 时是 0.92，这条红
+    expect(spread(dorsal) / spread(lateral), '截面必须明显扁，接近正圆就读成气球').toBeLessThan(0.85)
+    // 前胸背板后缘那道缢 + 环：少了它整只蛹是一个从头滑到尾的光包络
+    const margin = meshesByName(pupa, 'pronotum-margin')
+    expect(margin, '缺前胸背板后缘的界').toHaveLength(1)
+    const mc = centerOf(margin).dot(axisDir)
+    const rel = (mc - Math.min(...proj)) / axisLen
+    expect(rel, '盾片后缘要落在体前段（腹部与前胸之交）').toBeGreaterThan(0.5)
+    expect(rel).toBeLessThan(0.85)
+    // 缢是真的缢：环所在处的壳半径要小于它前后两侧
+    const radiusAt = (t: number) => {
+      const c = centerOf(shell)
+      let max = 0
+      for (const v of shellVerts) {
+        const d = v.clone().sub(c)
+        const along = (d.dot(axisDir) - (Math.min(...proj) - c.dot(axisDir))) / axisLen
+        if (Math.abs(along - t) > 0.03) continue
+        max = Math.max(max, d.addScaledVector(axisDir, -d.dot(axisDir)).length())
+      }
+      return max
+    }
+    expect(radiusAt(rel), '盾片后缘处必须收一道缢').toBeLessThan(radiusAt(rel + 0.12))
+  })
+
   it('橙黄底带黑斑，左右成对，且黑斑在屏幕上看得见', () => {
     const s = hslByName(pupa, 'pupa-shell')
     const k = hslByName(pupa, 'pupa-spot')
@@ -671,3 +791,4 @@ describe('蛹：尾端连着旧皮、前端上翘的裸蛹', () => {
     expect(d / (2 * pupa.radius), '最小的黑斑也得看得见').toBeGreaterThan(0.02)
   })
 })
+
