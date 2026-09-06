@@ -95,16 +95,27 @@ hovering really is stationary.
 ## A whole life
 
 The **life cycle** card at the bottom steps the stand through egg, larva and pupa
-as you page through the panel. Eight species so far, **22 stage models**. Complete metamorphosis: **Japanese
+as you page through the panel. Thirteen species so far, **35 stage models**. Complete metamorphosis: **Japanese
 rhinoceros beetle** (a creamy white grub → a pupa that already carries the
 beginnings of the horn → the glossy black adult — the sharpest contrast of the
 set), **monarch**, **Chinese oak silkmoth** (the caterpillar plus a
 longitudinally half-sectioned cocoon), **western honeybee** (everything happens
 inside hexagonal wax cells; the pupa's compound eyes darken before its body),
 **Chinese firefly** (egg, larva and pupa all glow) and **the sacred dung beetle**
-(egg and larva both inside a brood pear). Incomplete metamorphosis, as the
-contrast: **the black cicada** (fossorial forelegs plus wing pads) and **the
-emperor dragonfly** nymph (the hinged, mask-like labium plus four wing pads).
+(egg and larva both inside a brood pear), **the seven-spot ladybird** (a
+standing clutch of eggs, a slate-blue larva studded with orange-patched
+tubercles, and a naked pupa that still trails its shed larval skin), **the
+Japanese carpenter ant** (all of it inside the nest; a window in the side of the
+cocoon shows the pupa curled up within) and **the starry sky longhorn beetle**
+(the egg tucked into a chevron-shaped slit chewed through the bark; a ramrod
+straight grub under a broad shield-like pronotum; a pupa whose enormous antennae
+are already coiled along its flanks). Incomplete metamorphosis, as the
+contrast: **the black cicada** (fossorial forelegs plus wing pads), **the
+emperor dragonfly** nymph (the hinged, mask-like labium plus four wing pads),
+**the Chinese mantis** (an ootheca lashed to a twig, with the hatching band
+running along its crest) and **the migratory locust** (an egg pod standing in
+the soil under a plug of hardened foam; the hopper's wing pads are *reversed* —
+front and back swapped relative to the adult).
 
 **Those wing pads are the visible evidence that the wings are still "buds"** —
 the difference between complete and incomplete metamorphosis is the first thing

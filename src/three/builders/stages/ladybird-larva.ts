@@ -503,10 +503,18 @@ export function buildLadybirdLarva(): InsectModel {
   const tub = surfaceAt((5 + 0.5) / SEGMENTS, 84)
   const tubScale = THREE.MathUtils.clamp(girth((5 + 0.5) / SEGMENTS) / 0.098, 0.55, 1)
   const anchors: Record<string, THREE.Vector3> = {
-    head: headCenter.clone().add(new THREE.Vector3(0.01, headR * 0.85, 0)),
+    /*
+     * ⚠️ 锚点名**故意避开成虫 hotspot 用的那几个**（`spot` / `head`）。
+     * 展台的标注点是拿**当前展示的模型**的 anchors 去配成虫那张 hotspot 表的
+     * （InsectCanvas 里 `insect.hotspots.map(h => model.anchors[h.anchor])`），
+     * 重名就会把成虫的卡片贴到幼期标本上 —— 成虫「黑斑：可用于识别种类」贴在
+     * 幼虫的橙斑上、「头部：可整个缩入前胸背板下」贴在幼虫头上，两句在这个
+     * 阶段都不成立。
+     */
+    headCapsule: headCenter.clone().add(new THREE.Vector3(0.01, headR * 0.85, 0)),
     // 疣突锥顶：`tubercleMesh` 的最外一段就落在 pos + normal*height
     tubercle: tub.pos.clone().addScaledVector(tub.normal, 0.032 * tubScale),
-    spot: a1.pos.clone().addScaledVector(a1.normal, SPOT_LIFT),
+    orangePatch: a1.pos.clone().addScaledVector(a1.normal, SPOT_LIFT),
     tail: axis(0.97).clone().add(new THREE.Vector3(0, girth(0.97) * RY, 0)),
   }
 

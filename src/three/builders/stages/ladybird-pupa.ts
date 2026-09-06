@@ -509,9 +509,17 @@ export function buildLadybirdPupa(): InsectModel {
   const headEnd = toModel(new THREE.Vector3(localAxisX(0.94), 0, 0))
   const bigSpot = surfaceAt(SPOT_SITES[0].u, SPOT_SITES[0].theta)
   const anchors: Record<string, THREE.Vector3> = {
-    head: headEnd,
+    /*
+     * ⚠️ 锚点名**故意避开成虫 hotspot 用的那几个**（`spot` / `head`）。
+     * 展台的标注点是拿**当前展示的模型**的 anchors 去配成虫那张 hotspot 表的
+     * （InsectCanvas 里 `insect.hotspots.map(h => model.anchors[h.anchor])`），
+     * 重名就会把成虫的卡片贴到幼期标本上 —— 成虫「黑斑：可用于识别种类」贴在
+     * 幼虫的橙斑上、「头部：可整个缩入前胸背板下」贴在幼虫头上，两句在这个
+     * 阶段都不成立。
+     */
+    headEnd: headEnd,
     tail: tailTip,
-    spot: toModel(bigSpot.pos.clone().addScaledVector(bigSpot.normal, SPOT_LIFT)),
+    darkPatch: toModel(bigSpot.pos.clone().addScaledVector(bigSpot.normal, SPOT_LIFT)),
     larvalSkin: new THREE.Vector3(tailTip.x - 0.078, 0.056, 0),
     leaf: new THREE.Vector3(LEAF_HALF_LEN * 0.72, 0, 0),
   }
