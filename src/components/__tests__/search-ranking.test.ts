@@ -138,4 +138,14 @@ describe('英文版', () => {
   it('英文版不接拼音 —— 英文读者面对的本来就是英文名', () => {
     expect(en('shuimin')).toHaveLength(0)
   })
+
+  it('英文正文与雅称大小写不敏感 —— 地名与专有名词（如 Mexico）在小写查询下也能搜到', () => {
+    // Mexico 只出现在 Monarch Butterfly 的 summary 里，名称/学名/目都没有它
+    expect(en('mexico')).toContain('Monarch Butterfly')
+    expect(en('Mexico')).toContain('Monarch Butterfly')
+    // North America 同样在 Monarch Butterfly 的 summary 里
+    expect(en('north')).toContain('Monarch Butterfly')
+    // nocturnal 在 German Cockroach 的 epithet 里
+    expect(en('nocturnal')).toContain('German Cockroach')
+  })
 })

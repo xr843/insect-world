@@ -185,6 +185,7 @@ export default function App() {
   const select = useCallback((id: string) => {
     setActiveId(id)
     setFocusAnchor(null)
+    setDiscovery(null)
     // 顺手预热相邻物种，用户往下点时几乎无等待
     const idx = SPECIES.findIndex((i) => i.id === id)
     for (const n of [idx + 1, idx - 1]) {
@@ -434,13 +435,10 @@ export default function App() {
 
       {discovery && (
         <Discovery
-          // key=kind：讲解读完接小测（onSwitchKind）是原地换 kind、不经过
-          // 关闭再打开，props 更新不会自动重新挂载。Discovery 内部有两处
-          // 认定「kind 在实例生命周期内不会变」（打开埋点的 effect 与
-          // step 这个状态本身——讲解 4 步、小测常常只有 2 题，不强制重挂
-          // 会让 step 带着讲解最后一步的下标冲进小测，越界成空状态）。
-          // 用 key 强制换 kind 时整体重新挂载，让这两处假设继续成立。
-          key={discovery.kind}
+          // key=kind+id：讲解读完接小测（onSwitchKind）是原地换 kind、不经过
+          // 关闭再打开，props 更新不会自动重新挂载。且换物种时也必须重置，
+          // 免得旧物种的 step/picked 冲进新物种引发越界。
+          key={`${discovery.kind}-${insect.id}`}
           kind={discovery.kind}
           source={discovery.source}
           insect={insect}

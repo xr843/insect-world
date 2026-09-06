@@ -72,8 +72,11 @@ export function tierOf(
   if (locale === 'zh' && matchesPinyin(insect.id, q)) return 'alias'
   if (insect.latin.toLowerCase().includes(q)) return 'meta'
   if (orderLabel.toLowerCase().includes(q)) return 'meta'
-  if (insect.epithet.includes(q)) return 'meta'
-  if (q.length >= TEXT_TIER_MIN_LEN && (insect.summary.includes(q) || insect.trivia.includes(q))) {
+  if (insect.epithet.toLowerCase().includes(q)) return 'meta'
+  if (
+    q.length >= TEXT_TIER_MIN_LEN &&
+    (insect.summary.toLowerCase().includes(q) || insect.trivia.toLowerCase().includes(q))
+  ) {
     return 'text'
   }
   return null
