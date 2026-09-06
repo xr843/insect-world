@@ -17,6 +17,7 @@ import type { InsectModel } from './builders/kit'
 import { loadInsectModel } from './registry'
 import { loadStageModel, type LifeStage } from './stages'
 import { applyBlended, makeEmerge, motionFor, resetEmerge, stepBlend } from './motion'
+import { fitDistance, focusDistance } from './framing'
 import { bindContextLoss } from './webgl'
 import { installGLProbes, installThreeProbes, markFirstFrame, pexpose, pinfo, pmark } from '../perf'
 
@@ -449,6 +450,7 @@ function Hotspot({
  */
 function Framing({
   radius,
+  model,
   controls,
   zoomNonce,
   resetNonce,
@@ -456,6 +458,8 @@ function Framing({
   groupRef,
 }: {
   radius: number
+  /** 聚焦距离要按这只虫的实际形体反解，光有包围半径不够 —— 见 framing.ts 的开头 */
+  model: InsectModel | null
   controls: React.RefObject<OrbitControlsImpl>
   zoomNonce: number
   resetNonce: number
@@ -520,7 +524,26 @@ function Framing({
         g.updateMatrixWorld(true)
         target.applyMatrix4(g.matrixWorld)
       }
-      goal.current = { target, dist: radius * 0.62 }
+      /**
+       * 距离按「虫体该占画面多大」反解，而不是包围半径的固定倍数。
+       * 旧规则 `radius * 0.62` 对细长的虫取景很好，对紧实的圆虫会把相机怼到
+       * 一面光滑大曲面上 —— 满屏一片单色，认不出是什么虫（实拍见 framing.ts）。
+       *
+       * 方向取**当前机位**指向目标的那条：聚焦只是凑近，不该把用户转好的角度抢走。
+       * 反解在模型局部坐标里做（点云就在那套坐标里），所以先把相机换算进去；
+       * 距离本身与旋转无关，算完直接交给下面的世界坐标插值。
+       */
+      let dist = radius * 0.62
+      if (model) {
+        const localCam = camera.position.clone()
+        const localAnchor = focus.clone()
+        if (g) localCam.applyMatrix4(new THREE.Matrix4().copy(g.matrixWorld).invert())
+        const dir = localCam.sub(localAnchor)
+        if (dir.lengthSq() > 1e-12) {
+          dist = focusDistance(camera as THREE.PerspectiveCamera, model, focus, dir.normalize(), radius)
+        }
+      }
+      goal.current = { target, dist }
       /*
        * 聚焦态的最近距离 —— 2026-08-12 从 0.18 抬到 0.5。
        *
@@ -540,7 +563,7 @@ function Framing({
       }
       c.minDistance = radius * 1.15
     }
-  }, [focus, controls, radius, camera, groupRef])
+  }, [focus, controls, radius, camera, groupRef, model])
 
   useFrame(({ invalidate }, dt) => {
     const c = controls.current
@@ -623,12 +646,6 @@ function blobShadowTexture(dark: boolean): THREE.CanvasTexture | null {
  * （2026-08-09 用无头浏览器按 iPhone 13 视口验出来的，桌面宽屏永远不显形）。
  * 取水平与垂直里更紧的那个来定距离。
  */
-function fitDistance(camera: THREE.PerspectiveCamera, r: number, margin = 1.12): number {
-  const vFov = (camera.fov * Math.PI) / 180
-  const aspect = camera.aspect || 1
-  const hFov = 2 * Math.atan(Math.tan(vFov / 2) * aspect)
-  return (r / Math.sin(Math.min(vFov, hFov) / 2)) * margin
-}
 
 function BlobShadow({ floorY, radius, dark }: { floorY: number; radius: number; dark: boolean }) {
   const tex = useMemo(() => blobShadowTexture(dark), [dark])
@@ -858,6 +875,7 @@ function Scene({
       <StudioLights radius={radius} dark={dark} />
       <Framing
         radius={radius}
+        model={model}
         controls={controls}
         zoomNonce={zoomNonce}
         resetNonce={resetNonce}
