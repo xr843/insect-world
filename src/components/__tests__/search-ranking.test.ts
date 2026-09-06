@@ -149,3 +149,55 @@ describe('英文版', () => {
     expect(en('nocturnal')).toContain('German Cockroach')
   })
 })
+
+/**
+ * 2026-09-06 那一轮：离线跑 140 个常见叫法，零结果的 47 个里**有 13 个是英文词**
+ * （mosquito / bee / butterfly / beetle / roach / dragonfly / cicada …）——
+ * 中文页搜英文一律零结果。而这个站的流量大头正是 GitHub / HN / Reddit 来的
+ * 英文读者，落地页默认就是中文页。
+ *
+ * 补法是拿**物种 id 当英文索引**（id 本来就是英文俗名，中文包里已经有它），
+ * 外加查一遍另一种语言的俗名表（两张表本来就在同一个模块里）。
+ */
+describe('中文页搜英文 —— 这一组改动之前全是 0 条', () => {
+  it.each([
+    ['mosquito', '淡色库蚊'],
+    ['dragonfly', '碧伟蜓'],
+    ['cicada', '黑蚱蝉'],
+    ['cockroach', '德国小蠊'],
+    ['ladybug', '七星瓢虫'],
+    ['grasshopper', '东亚飞蝗'],
+  ])('中文页搜 %s 能搜到 %s', (q, name) => {
+    expect(zh(q)).toContain(name)
+  })
+
+  it('泛称也接得住：beetle 一次搜出一批甲虫，butterfly 搜出蝶', () => {
+    expect(zh('beetle').length).toBeGreaterThan(3)
+    expect(zh('butterfly')).toContain('帝王蝶')
+  })
+
+  /**
+   * 「ant」这三个字母同时藏在 mantis、mantidfly 里。整个 id 就是查询词时算
+   * name 一级、只是含有算 meta 一级，蚂蚁才排得到前面 —— 少了这一层分级，
+   * 搜 ant 第一条会是螳螂。
+   */
+  it('整个 id 相等的排在只是含有的前面', () => {
+    expect(zh('ant')[0]).toBe('日本弓背蚁')
+  })
+
+  it('英文页搜中文俗名同样接得住 —— 两张俗名表本来就在一个模块里', () => {
+    expect(en('独角仙')).toContain('Japanese Rhinoceros Beetle')
+  })
+})
+
+/**
+ * 反过来的一条：**图鉴真没有的东西，就该真的搜不到。**
+ * 这条不是凑数——「spider 搜不到」正是 data/absent.ts 那套解释文案与未命中
+ * 上报能成立的前提。若哪天某个物种的正文里写进了「蜘蛛」，这条会红，
+ * 提醒去看 absent.ts 里那条还成不成立。
+ */
+describe('图鉴没有的就该搜不到', () => {
+  it.each(['鼠妇', '跳蚤', '马陆', '蝎子'])('%s 一条都搜不到', (q) => {
+    expect(zh(q)).toHaveLength(0)
+  })
+})

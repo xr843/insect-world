@@ -82,11 +82,39 @@ describe('搜索发起埋点 —— 停顿后报一次，不带查询词原文',
     expect(trackMock).toHaveBeenCalledWith(EVENTS.SEARCH, { has_results: true, tier: 'name' })
   })
 
-  it('没有结果时 has_results 为 false，tier 为 none', () => {
+  it('没有结果时 has_results 为 false，tier 为 none，并带上未命中分类', () => {
     const { input } = mount()
     fireEvent.change(input, { target: { value: '霸王龙' } })
     act(() => vi.advanceTimersByTime(500))
-    expect(trackMock).toHaveBeenCalledWith(EVENTS.SEARCH, { has_results: false, tier: 'none' })
+    expect(trackMock).toHaveBeenCalledWith(EVENTS.SEARCH, {
+      has_results: false,
+      tier: 'none',
+      miss: 'unknown',
+    })
+  })
+
+  /**
+   * `miss` 是 2026-09-06 加的：零结果占到 63.6%，而埋点故意不报查询词，
+   * 于是「知道六成搜不到，却不知道人在搜什么」。报的是 data/absent.ts 那张
+   * **封闭词表**里的 token，一个字符的用户输入都不出去。
+   */
+  it('未命中落进封闭词表时报那个 token，而不是用户打的字', () => {
+    const { input } = mount()
+    fireEvent.change(input, { target: { value: '鼠妇' } })
+    act(() => vi.advanceTimersByTime(500))
+    expect(trackMock).toHaveBeenCalledWith(EVENTS.SEARCH, {
+      has_results: false,
+      tier: 'none',
+      miss: 'woodlouse',
+    })
+  })
+
+  it('有结果时不带 miss —— 它只描述未命中', () => {
+    const { input } = mount()
+    fireEvent.change(input, { target: { value: '瓢虫' } })
+    act(() => vi.advanceTimersByTime(500))
+    const call = trackMock.mock.calls.find((c) => c[0] === EVENTS.SEARCH)
+    expect(call?.[1]).not.toHaveProperty('miss')
   })
 
   /**

@@ -20,6 +20,9 @@ export const PART = definePart(
 
     'search.placeholder': '搜索昆虫、目、特征…',
     'search.noResults': '没有找到「{query}」',
+    'search.miss.notInsect': '{name}不是昆虫 —— 昆虫是六足、身体分头胸腹三段。这本图鉴只收昆虫。',
+    'search.miss.absentInsect': '{name}是昆虫，但图鉴里还没有它。',
+    'search.suggest': '随便看一只',
 
     'account.observationLog': '观察记录',
 
@@ -50,6 +53,9 @@ export const PART = definePart(
 
     'search.placeholder': 'Search species, orders, features…',
     'search.noResults': 'No results for "{query}"',
+    'search.miss.notInsect': '{name} is not an insect — insects have six legs and a body in three parts. This guide covers insects only.',
+    'search.miss.absentInsect': '{name} is an insect, but it is not in the guide yet.',
+    'search.suggest': 'Show me one anyway',
 
     'account.observationLog': 'Observation log',
 

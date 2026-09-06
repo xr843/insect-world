@@ -49,9 +49,9 @@ const ZH: Record<string, readonly string[]> = {
   'monarch-butterfly': ['君主斑蝶', '黑脉金斑蝶', '大桦斑蝶', '蝴蝶'],
   'dragonfly': ['蜻蜓'], // 正式名「碧伟蜓」只有「蜓」字
   'mantis': ['螳螂', '刀螂'], // 「中华大刀螳」缺「螂」字，搜螳螂反而先撞上兰花螳螂
-  'ladybird': ['花大姐'],
+  'ladybird': ['花大姐', '瓢甲'], // 瓢甲是瓢虫科的正式称呼
   'ant': ['蚂蚁', '大黑蚁'],
-  'cicada': ['知了', '知了猴', '金蝉'], // 后两个是若虫的叫法，找的仍是这只虫
+  'cicada': ['知了', '知了猴', '金蝉', '蝉蜕'], // 后两个是若虫的叫法，找的仍是这只虫
   'locust': ['蝗虫', '蚱蜢', '蚂蚱'],
   'firefly': ['萤火虫', '流萤'], // 正式名「山窗萤」
   'longhorn-beetle': ['锯树郎'],
@@ -99,8 +99,8 @@ const ZH: Record<string, readonly string[]> = {
   'robber-fly': ['盗虻'],
   'crane-fly': ['长脚蚊'],
   'caddisfly': ['石蚕'], // 幼虫的叫法（拿沙粒盖房子的那个）
-  'house-fly': ['苍蝇'],
-  'mosquito': ['蚊子', '家蚊'],
+  'house-fly': ['苍蝇', '蛆'], // 蛆是幼虫的叫法，找的仍是这只虫
+  'mosquito': ['蚊子', '家蚊', '孑孓'], // 孑孓是幼虫的叫法
   'cockroach': ['蟑螂', '小强', '蜚蠊'],
 }
 
