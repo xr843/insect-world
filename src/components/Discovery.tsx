@@ -314,8 +314,16 @@ export function Discovery({
       insect.lifecycle.length === route.length
         ? insect.lifecycle
         : route.map((st) => t(STAGE_KEY[st]))
-    const cur = route[Math.min(step, route.length - 1)]
-    const last = step >= route.length - 1
+    /**
+     * 下标钳一次，正文/步点/当前阶段**共用同一个** —— 三处各自用 `step` 是这个
+     * 组件栽过的跟头：`cur` 钳了、`stageLabels[step]` 与步点没钳，越界时正文是
+     * `undefined`（一片空白）、没有一颗点亮着，而且不抛错、悄悄地烂着。
+     * 越界从哪来是另一回事（key 少挂一样就会带着旧进度冲进来），
+     * 但渲染这一侧不该指望上游永远不出错。
+     */
+    const i = Math.min(step, route.length - 1)
+    const cur = route[i]
+    const last = i >= route.length - 1
     /**
      * 成虫也算「台上有标本」—— 它走的是常规物种注册表，不在 `built` 里，
      * 但展台上确确实实摆着它。第一版写成 `cur !== 'adult' && built.has(cur)`，
@@ -335,12 +343,12 @@ export function Discovery({
         <h2 className={s.title}>{t('discovery.lifecycle.title', { name: insect.name })}</h2>
         <div className={s.stepMeta}>
           {t('discovery.lifecycle.stepOf', {
-            cur: step + 1,
+            cur: i + 1,
             total: route.length,
             type: labels.metamorphosis[insect.metamorphosis],
           })}
         </div>
-        <p className={s.stepBody}>{stageLabels[step]}</p>
+        <p className={s.stepBody}>{stageLabels[i]}</p>
         <p className={s.stepBody}>
           {t(
             insect.metamorphosis === 'complete'
@@ -352,12 +360,12 @@ export function Discovery({
           {t(hasModel ? 'discovery.lifecycle.onStage' : 'discovery.lifecycle.noModel')}
         </span>
         <div className={s.steps}>
-          {route.map((st, i) => (
-            <span key={st} className={s.stepDot} data-on={i === step} />
+          {route.map((st, n) => (
+            <span key={st} className={s.stepDot} data-on={n === i} />
           ))}
         </div>
         <div className={s.actions}>
-          <button className={s.secondary} onClick={() => goTo(step - 1)} disabled={step === 0}>
+          <button className={s.secondary} onClick={() => goTo(i - 1)} disabled={i === 0}>
             {t('discovery.back')}
           </button>
           <button
@@ -367,7 +375,7 @@ export function Discovery({
                 track(EVENTS.LESSON_COMPLETE, { total: route.length })
                 close()
               } else {
-                goTo(step + 1)
+                goTo(i + 1)
               }
             }}
           >
