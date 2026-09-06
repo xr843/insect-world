@@ -363,35 +363,91 @@ describe('卵鞘：糊在枝上的泡沫面包', () => {
       expect(gp).toBeGreaterThan(mean * 0.6)
       expect(gp).toBeLessThan(mean * 1.6)
     }
+    /*
+     * **不能等距。** 这一条是目视验收打回来才补的：等距是「工业制品」最强的
+     * 一个信号，而卵鞘是雌虫一阵一阵分泌出来的，每一阵的量都不一样。
+     * 实测 max/min = 1.64；把 LAYER_WOBBLE 归零（严格等距）这个数变成 1.00，
+     * 而此前那一版测试对这种退化**一条都不红**。
+     */
+    const spread = Math.max(...gaps) / Math.min(...gaps)
+    expect(spread, '层界严格等距 —— 读起来是机器压出来的，不是一阵阵分泌出来的').toBeGreaterThan(1.15)
+    expect(spread, '层宽乱到没有节奏，那也不是层理了').toBeLessThan(2.5)
     expect(mean / frame, '层界挤成一团，屏幕上数不出层数').toBeGreaterThan(0.03)
   })
 
-  it('招牌二之三：壳面本身是叠瓦的 —— 层界是真的坎，不是画在光管子上的线', () => {
+  it('招牌二之三：壳面本身是一层层起伏的，而且起伏是圆过去的（泡沫层理，不是瓦楞板）', () => {
     /*
-     * 这条是「把层叠弧纹压平」这种改法的唯一克星：删掉叠瓦包络（SHINGLE=0）之后，
-     * 弧棱还在、数量还对、横向也还对，上面那条照样全绿 —— 出图却是一根光滑的
-     * 管子上箍了十几根橡皮筋。
+     * 这条盯两种改法，缺一不可：
      *
-     * 量的是**背脊线上的锯齿**：沿 x 从前向后取壳面 z=0 那条棱上的顶点，
-     * 每道层界处 y 会在极短的 Δx 内跳升一截（叠瓦的坎近乎垂直）。
-     * Δx < 0.005 这个条件是必须的 —— 卵鞘前段本来就在鼓起来，
-     * 光看「y 涨了」会把包络的爬升也数进去（实测那样能数出 42 段，虚高两倍）。
+     * a. **把层叠弧纹压平。** 删掉起伏（SHINGLE=0）之后，弧棱还在、数量还对、
+     *    横向也还对，上面那条照样全绿 —— 出图却是一根光滑的管子上箍了十几根橡皮筋。
+     * b. **把层界做成锐棱。** 第一版正是这样（叠瓦：每层缓缓收薄、到层界猛地鼓起来，
+     *    一道近乎垂直的坎）。离线出图台上「读得出层数」，换到站上真实的 Environment
+     *    光下读成一叠塑料片 / 潮虫壳 / 藤编篮 —— 就是不像泡沫硬化出来的层理。
+     *    目视验收打回重做。
+     *
+     * 量的是背脊线（壳面 z=0 那条棱）上的起伏：
+     * - 起伏的**道数**用局部极大值数，压平了就只剩包络那一个峰 → 抓 a。
+     * - 起伏的**陡峭程度**用「从谷爬到峰用了几个采样」，锐坎那一版恒等于 1，
+     *   圆过去的现在中位数是 6 → 抓 b。单看「相邻落差有多大」不够：
+     *   卵鞘前段的包络本来就在陡升，那里的落差比任何一道层界都大（实测 0.064）。
      */
-    const crest = vertsOf(shell).filter((v) => Math.abs(v.z) < 1e-4 && v.y > 0)
-    crest.sort((a, b) => b.x - a.x)
+    /*
+     * 取背脊线：按**方位角**挑，不按 |z|<ε 挑。
+     * `lump()` 让壳体左右不再严格对称，`finalize()` 的居中于是把整只沿 z 挪了
+     * 一丁点（实测 9.7e-5），原来的 |z|<1e-4 一下只剩 1 个点、这条断言自己先废了。
+     * 方位角 0.05 弧度（≈2.9°）比相邻那一列（≈5.3°）窄，只会收到背脊那一列。
+     */
+    const crest = vertsOf(shell)
+      .filter((v) => v.y > 0 && Math.abs(Math.atan2(v.z, v.y)) < 0.05)
+      .sort((a, b) => b.x - a.x)
     const line: THREE.Vector3[] = []
     for (const v of crest) if (!line.length || Math.abs(line[line.length - 1].x - v.x) > 1e-6) line.push(v)
+    expect(line.length, '背脊线采样太少，下面的判据没有意义').toBeGreaterThan(120)
 
-    const steps: number[] = []
-    for (let i = 1; i < line.length; i++) {
-      const dy = line[i].y - line[i - 1].y
-      const dx = line[i - 1].x - line[i].x
-      if (dy > 0.02 && dx < 0.005) steps.push(dy)
+    const maxima: number[] = []
+    const minima: number[] = []
+    for (let i = 1; i < line.length - 1; i++) {
+      if (line[i].y > line[i - 1].y && line[i].y >= line[i + 1].y) maxima.push(i)
+      if (line[i].y < line[i - 1].y && line[i].y <= line[i + 1].y) minima.push(i)
     }
-    expect(steps.length, '背脊上一道叠瓦的坎都没有 —— 壳面被压成了光管子').toBeGreaterThanOrEqual(12)
-    // 坎要够高才看得见：0.045 厘米 ≈ 画面直径的 0.9%，720 像素上约 6 像素的明暗转折
-    expect(Math.max(...steps), '坎太浅，出图上读不出层叠').toBeGreaterThan(0.045)
-    expect(Math.max(...steps), '坎太深，成了一串套在一起的碗').toBeLessThan(0.2)
+    expect(maxima.length, '背脊上一道层理起伏都没有 —— 壳面被压成了光管子').toBeGreaterThanOrEqual(12)
+
+    const amps: number[] = []
+    const flanks: number[] = []
+    for (const mi of maxima) {
+      const prev = [...minima].reverse().find((k) => k < mi)
+      const next = minima.find((k) => k > mi)
+      if (prev === undefined || next === undefined) continue
+      amps.push(Math.min(line[mi].y - line[prev].y, line[mi].y - line[next].y))
+      // 取**较陡**的那一侧：锯齿状的叠瓦只有一侧是坎，另一侧是缓坡，
+      // 只量升边或只量降边都会被它蒙混过去（坎朝前朝后是两版实现的差别而已）
+      flanks.push(Math.min(mi - prev, next - mi))
+    }
+    const median = (xs: number[]) => [...xs].sort((a, b) => a - b)[Math.floor(xs.length / 2)]
+    expect(amps.length).toBeGreaterThanOrEqual(10)
+
+    // 深度：0.033 厘米 ≈ 画面直径的 0.7%。浅了看不见，深了就成了一串套在一起的碗
+    expect(median(amps), '层理太浅，出图上读不出层叠').toBeGreaterThan(0.018)
+    expect(median(amps), '层理太深，成了一串套在一起的碗').toBeLessThan(0.09)
+
+    // 圆过去：峰的两侧**都**要爬好几个采样。锐坎那一版陡的那一侧恒等于 1
+    expect(median(flanks), '层界是一道锐棱而不是圆过去的起伏 —— 出图会读成瓦楞板').toBeGreaterThanOrEqual(3)
+    /*
+     * 深浅不一。真实卵鞘上有的层界很深、有的几乎看不见 —— 雌虫那一阵分泌多少
+     * 全凭当时的状态。深度整齐划一是「机器压出来的」四个破绽之一
+     * （另三个：锐边、太深、等距）。只取中段那些峰来比：两端的峰骑在包络的
+     * 陡坡上，深浅本来就受包络支配，掺进来会让这条断言恒真。
+     */
+    const mid = maxima
+      .map((mi, i) => ({ x: line[mi].x, a: amps[i] }))
+      .filter((o) => Math.abs(o.x) < 0.9 && Number.isFinite(o.a))
+      .map((o) => o.a)
+    expect(mid.length, '中段的层理峰太少，深浅这条没法判').toBeGreaterThanOrEqual(5)
+    expect(Math.max(...mid) / Math.min(...mid), '每一道层界都一样深 —— 读起来是机器压的，不是分泌物').toBeGreaterThan(1.3)
+
+    console.log('[mantis-egg] 层理：峰 %d 个，中位深度 %s，中位陡边跨 %d 个采样，中段深浅比 %s',
+      maxima.length, median(amps).toFixed(4), median(flanks), (Math.max(...mid) / Math.min(...mid)).toFixed(2))
   })
 
   it('挂在枝上：枝条穿过卵鞘、两端伸出，且比卵鞘细得多', () => {
@@ -417,7 +473,14 @@ describe('卵鞘：糊在枝上的泡沫面包', () => {
     expect(bandHsl.l, '孵化带要真的接近白').toBeGreaterThan(0.85)
     expect(barkHsl.l, '树皮要真的接近黑').toBeLessThan(0.3)
     expect(bandHsl.l - shellHsl.l, '孵化带必须明显浅于壳面，否则那道门就没了').toBeGreaterThan(0.2)
-    expect(shellHsl.l - seamHsl.l, '层界必须明显深于壳面，否则层叠只剩几何').toBeGreaterThan(0.15)
+    /*
+     * 层界只比壳面深一点点。上下限都要给，而且这一条的**上限**才是主角：
+     * 目视验收打回的那一版层界深了 0.25，十几道深色细线把整只读成藤编篮 /
+     * 潮虫壳。层理本来就该靠形（见上面那条起伏断言），这条深色只在逆光机位
+     * 替它兜底 —— 深过 0.2 就又变成画上去的线了。
+     */
+    expect(shellHsl.l - seamHsl.l, '层界连一点暗都没有，逆光机位层理会整片消失').toBeGreaterThan(0.06)
+    expect(shellHsl.l - seamHsl.l, '层界太深，十几道深色细线会把卵鞘读成藤编篮').toBeLessThan(0.2)
     expect(flapHsl.l - shellHsl.l, '盖片也得浅于壳面（它属于孵化带那一套）').toBeGreaterThan(0.1)
     expect(bandHsl.l - barkHsl.l, '最亮与最暗之间的总跨度').toBeGreaterThan(0.55)
 
