@@ -139,28 +139,6 @@ function maxSectionRadius(mesh: THREE.Mesh, ring: number): number {
   return Math.max(...rings(mesh, ring).map((r) => r.maxR))
 }
 
-/** 一组点绕给定中心的方位角排序后，相邻两点之间的最大角间隙（度）。判「剖没剖开」 */
-function maxAzimuthGap(points: THREE.Vector3[], cx: number, cz: number): { deg: number; dir: THREE.Vector3 } {
-  const BINS = 72
-  const bins = new Array(BINS).fill(false)
-  for (const p of points) {
-    const a = Math.atan2(p.z - cz, p.x - cx)
-    bins[Math.floor((((a + Math.PI * 2) % (Math.PI * 2)) / (Math.PI * 2)) * BINS) % BINS] = true
-  }
-  let best = 0
-  let bestStart = 0
-  for (let s = 0; s < BINS; s++) {
-    let run = 0
-    while (run < BINS && !bins[(s + run) % BINS]) run++
-    if (run > best) {
-      best = run
-      bestStart = s
-    }
-  }
-  const mid = ((bestStart + best / 2) / BINS) * Math.PI * 2
-  return { deg: (best * 360) / BINS, dir: new THREE.Vector3(Math.cos(mid), 0, Math.sin(mid)) }
-}
-
 /**
  * 锚点离实体有多远，取 min(到最近顶点, 到最近网格包围盒) / 包围半径。
  * 与全站闸门 `src/three/__tests__/anchors-have-geometry.test.ts` 同一套判据 ——
@@ -229,22 +207,93 @@ describe('卵：土里的一整个卵囊', () => {
   const cavity = meshesByName(egg, 'pod-cavity')
   const cuts = meshesByName(egg, 'pod-cut')
   const eggs = meshesByName(egg, 'egg')
+  const matrix = meshesByName(egg, 'egg-matrix')
   const bubbles = meshesByName(egg, 'foam-bubble')
   const foam = meshesByName(egg, 'foam-bubble', 'foam-core')
   const soil = meshesByName(egg, 'soil', 'soil-cut')
   const shift = centerShift(egg.anchors)
-  /** 建模帧的高度 y → 模型坐标里的轴线点 */
-  const axis = (y: number) => axisAt(y).add(shift)
-  /** 模型坐标里的高度 → 建模帧的高度 */
-  const modelY = (y: number) => y - shift.y
+  /** 取景直径：卵在屏幕上占多少，一律拿它换算 */
+  const frameD = 2 * (egg.frameRadius ?? egg.radius)
+
+  /*
+   * 卵囊是**斜置**的（绕 Z 倾 30°、再绕 Y 偏 34°），而且轴线本身还是弯的。
+   * 所以任何「切一薄层」「量到轴线多远」的判断都不能按世界 Y 分层——
+   * 那样切出来的是一片斜面，量出来的半径里混着沿轴的分量。
+   * 下面这两个工具把顶点换算进**卵囊自己的柱坐标**：沿轴位置 h、
+   * 到轴线的垂距 r、绕轴的方位角 az。
+   */
+  const AXIS_SAMPLES = 240
+  const axisPts = Array.from({ length: AXIS_SAMPLES + 1 }, (_, i) =>
+    axisAt((POD_H * i) / AXIS_SAMPLES).add(shift),
+  )
+  /** 顶点最近的轴线采样点：返回沿轴高度 h（建模帧的 y）与到轴线的垂距 */
+  function onAxis(v: THREE.Vector3): { h: number; r: number } {
+    let bi = 0
+    let bd = Infinity
+    for (let i = 0; i <= AXIS_SAMPLES; i++) {
+      const d = v.distanceToSquared(axisPts[i])
+      if (d < bd) {
+        bd = d
+        bi = i
+      }
+    }
+    return { h: (POD_H * bi) / AXIS_SAMPLES, r: Math.sqrt(bd) }
+  }
+  /** 高度 h 处的局部标架：轴心、轴向、以及截面内的两根轴 */
+  function podFrame(h: number) {
+    const c = axisAt(h).add(shift)
+    const d = axisAt(Math.min(h + 0.05, POD_H))
+      .sub(axisAt(Math.max(h - 0.05, 0)))
+      .normalize()
+    const e1 = new THREE.Vector3().crossVectors(d, new THREE.Vector3(0, 1, 0)).normalize()
+    const e2 = new THREE.Vector3().crossVectors(d, e1).normalize()
+    return { c, d, e1, e2 }
+  }
+  type Frame = ReturnType<typeof podFrame>
+  function local(v: THREE.Vector3, f: Frame): { along: number; r: number; az: number } {
+    const p = v.clone().sub(f.c)
+    const a = p.dot(f.e1)
+    const b = p.dot(f.e2)
+    return { along: p.dot(f.d), r: Math.hypot(a, b), az: Math.atan2(b, a) }
+  }
+
+  /**
+   * 一枚卵自己的形状：沿囊轴的长度、垂直于囊轴的最大宽度、以及它的位置。
+   *
+   * 粗细必须相对**卵自己的中心**量。第一版拿 `local().r`（到囊轴的垂距）当粗细，
+   * 量出来是 0.66 —— 那是「卵列所在半径的直径」，跟一枚卵有多粗毫无关系，
+   * 于是「长径比」那条断言等于在量另一件事。
+   */
+  function eggShape(e: THREE.Mesh) {
+    const verts = vertsOf([e])
+    const c = new THREE.Vector3()
+    for (const v of verts) c.add(v)
+    c.divideScalar(verts.length)
+    const onA = onAxis(c)
+    const f = podFrame(onA.h)
+    const rel = verts.map((v) => v.clone().sub(c))
+    const along = rel.map((p) => p.dot(f.d))
+    const a = rel.map((p) => p.dot(f.e1))
+    const b = rel.map((p) => p.dot(f.e2))
+    const spread = (xs: number[]) => Math.max(...xs) - Math.min(...xs)
+    return {
+      h: onA.h,
+      az: local(c, f).az,
+      long: spread(along),
+      across: Math.max(spread(a), spread(b)),
+    }
+  }
 
   it('卵囊是一根 4~7 厘米、上粗下细的棒（不是球也不是块）', () => {
-    const s = sizeOf(wall)
+    const v = vertsOf(wall).map(onAxis)
+    const len = Math.max(...v.map((p) => p.h)) - Math.min(...v.map((p) => p.h))
     // 上下限齐给：真实卵囊 4~7 厘米，为「好看」缩小是 stages.ts 明令禁止的
-    expect(s.y).toBeGreaterThan(4)
-    expect(s.y).toBeLessThan(7)
-    expect(s.y).toBeCloseTo(POD_H, 1)
-    const slender = s.y / Math.max(s.x, s.z)
+    expect(len).toBeGreaterThan(4)
+    expect(len).toBeLessThan(7)
+    expect(len).toBeCloseTo(POD_H, 0)
+    // 粗细按「到轴线的垂距」量，不按包围盒——整根是斜的，包围盒把倾角也算进宽度
+    const maxR = Math.max(...v.map((p) => p.r))
+    const slender = len / (2 * maxR)
     expect(slender, '细长比 < 4 就不是「一根棒」了').toBeGreaterThan(4)
     expect(slender, '细长比 > 12 会细成一根线，卵在画面上看不清').toBeLessThan(12)
   })
@@ -253,48 +302,132 @@ describe('卵：土里的一整个卵囊', () => {
     expect(eggs.length).toBeGreaterThanOrEqual(50)
     expect(eggs.length).toBeLessThanOrEqual(80)
     for (const e of eggs) {
-      const s = spanOf(vertsOf([e]))
-      const long = s.y
-      const across = Math.max(s.x, s.z)
+      const { long, across } = eggShape(e)
       // 上下限齐给：把卵放大到「好看」是这一档最常见的错法
       expect(long, `卵长 ${long.toFixed(3)} 越界（真实 6~7 毫米）`).toBeGreaterThan(0.58)
       expect(long).toBeLessThan(0.78)
-      expect(across).toBeGreaterThan(0.08)
-      expect(across).toBeLessThan(0.17)
-      expect(long / across, '长径比 4~8 才是米粒形（球是 1）').toBeGreaterThan(4)
-      expect(long / across).toBeLessThan(8)
+      expect(across, `卵径 ${across.toFixed(3)} 越界（真实 1.4~1.6 毫米）`).toBeGreaterThan(0.11)
+      expect(across).toBeLessThan(0.2)
+      expect(long / across, '长径比 3.5~7 才是米粒形（球是 1）').toBeGreaterThan(3.5)
+      expect(long / across).toBeLessThan(7)
     }
   })
 
   it('卵是**竖排**的：每一枚的长轴都近乎与囊轴平行', () => {
-    // 腔内径只有 4.8 毫米、卵长 6.6 毫米，横过来根本塞不进去——
+    // 腔内径只有 6.9 毫米、卵长 6.6 毫米，横过来根本塞不进去——
     // 「竖排」是被腔径逼出来的事实，不是画法选择。把卵转 90° 这条立刻红
     for (const e of eggs) {
-      const s = spanOf(vertsOf([e]))
-      expect(s.y / Math.max(s.x, s.z), '卵横躺了').toBeGreaterThan(3)
+      const { long, across } = eggShape(e)
+      expect(long / across, '卵横躺了').toBeGreaterThan(3)
     }
   })
 
   it('每一枚卵都待在囊腔里，没有捅穿囊壁', () => {
-    // 只量水平距离：卵是竖的，捅穿只可能是横向捅出去
-    let worst = 0
-    for (const v of vertsOf(eggs)) {
-      const c = axis(modelY(v.y))
-      worst = Math.max(worst, Math.hypot(v.x - c.x, v.z - c.z))
+    // 量的是「到弯曲轴线的垂距」，不是到某个固定轴——整根卵囊是弯的也是斜的
+    const worst = Math.max(...vertsOf(eggs).map((v) => onAxis(v).r))
+    // 该高度段的腔半径约 0.34~0.35；0.36 是「卵尖刚好还在腔里」的线
+    expect(worst, `有卵探到离轴线 ${worst.toFixed(3)} 处，已经戳出囊壁`).toBeLessThan(0.36)
+  })
+
+  /*
+   * ============ 这一条是第二版目视验收打回来后补的，也是这一组里最要紧的一条 ============
+   *
+   * 第一版在真实展台上「读成一块竖着的巧克力威化」：56 枚卵糊成一片均匀的
+   * 奶油色，一枚都数不出来。当时全部形态断言都是绿的——数量对、尺寸对、
+   * 竖排也对，**唯独没有一条量「它们在画面上分不分得开」**。
+   * 这正是本仓库那句老话的又一次现形：断言量的是数字，人看的是长相。
+   *
+   * 「分得开」拆成两个方向，两条都得有，缺一条就是那两次返工的样子：
+   *   横向不分 → 玉米棒（第一版）
+   *   纵向不分 → 芦笋（第二版，列间有缝但每列自己糊成一根长条）
+   */
+  it('卵与卵在画面上**横向**分得开：绕轴一圈数得出 ≥6 段亮暗交替', () => {
+    // 在卵堆中段横切一薄层（沿轴 ±0.05），按方位角分 120 格看哪些格里有卵。
+    // 列与列之间留着缝，于是「有卵 → 没卵」的转折数 = 列数；
+    // 把缝填平（卵变粗、或列心距缩小）时所有格都被占满，转折数掉到 0，这条当场红。
+    const eggVerts = vertsOf(eggs)
+    const hs = eggVerts.map((v) => onAxis(v).h)
+    const mid = (Math.min(...hs) + Math.max(...hs)) / 2
+    const f = podFrame(mid)
+    const BINS = 120
+    const bins = new Array<boolean>(BINS).fill(false)
+    let ringR = 0
+    for (const v of eggVerts) {
+      const p = local(v, f)
+      if (Math.abs(p.along) > 0.05) continue
+      bins[Math.floor((((p.az + Math.PI * 2) % (Math.PI * 2)) / (Math.PI * 2)) * BINS) % BINS] = true
+      ringR = Math.max(ringR, p.r)
     }
-    // 该高度段的腔半径约 0.24~0.27；0.26 是「卵尖刚好还在腔里」的线
-    expect(worst, `有卵探到离轴线 ${worst.toFixed(3)} 处，已经戳出囊壁`).toBeLessThan(0.26)
+    expect(bins.filter(Boolean).length, '这一层里根本没取到卵').toBeGreaterThan(20)
+    let runs = 0
+    let widestGapBins = 0
+    for (let i = 0; i < BINS; i++) {
+      if (bins[i] && !bins[(i + 1) % BINS]) {
+        runs++
+        let g = 0
+        while (g < BINS && !bins[(i + 1 + g) % BINS]) g++
+        widestGapBins = Math.max(widestGapBins, g)
+      }
+    }
+    expect(runs, `绕轴一圈只数出 ${runs} 段卵 —— 它们连成了一整圈，一枚都分不出来`).toBeGreaterThanOrEqual(6)
+    // 「看得见」类断言换算成占画面的比例：缝在卵所在半径上的弧长 / 画面直径
+    const gapArc = ((widestGapBins / BINS) * 2 * Math.PI * ringR)
+    expect(gapArc / frameD, `最宽的一道缝只占画面 ${((gapArc / frameD) * 100).toFixed(2)}%，看不见`).toBeGreaterThan(0.004)
+  })
+
+  it('卵与卵在画面上**纵向**分得开：同一列上下相邻两枚之间有腰', () => {
+    /*
+     * 第二版就栽在这个方向上：列间缝留得很宽，但同一列里层距只有卵长的一半，
+     * 每一列自己糊成一根连续的长条，四机位一致读成「几根芦笋」。
+     * 这里量的是「上下相邻两枚的轴向间距 / 单枚的轴向长度」——
+     * 1.0 = 首尾相接，0.5 = 叠掉一半（芦笋）。0.78 是这两者之间的线。
+     */
+    const info = eggs.map((e) => {
+      const sh = eggShape(e)
+      return { h: sh.h, az: sh.az, long: sh.long }
+    })
+    // 按方位角分列（同一列的卵方位角相同，容差 5°）
+    const columns = new Map<number, typeof info>()
+    for (const e of info) {
+      const key = Math.round((e.az * 180) / Math.PI / 5)
+      const arr = columns.get(key) ?? []
+      arr.push(e)
+      columns.set(key, arr)
+    }
+    const big = [...columns.values()].filter((c) => c.length >= 3)
+    expect(big.length, '卵没有排成列 —— 分不出「同一列的上下相邻两枚」').toBeGreaterThanOrEqual(4)
+    let worst = Infinity
+    for (const col of big) {
+      col.sort((a, b) => a.h - b.h)
+      for (let i = 1; i < col.length; i++) worst = Math.min(worst, (col[i].h - col[i - 1].h) / col[i].long)
+    }
+    expect(worst, `同列相邻两枚只隔 ${worst.toFixed(2)} 个卵长 —— 叠成一根长条了`).toBeGreaterThan(0.75)
+    // 每一枚露在外面的那一段占画面多少：0.75 卵长 ≈ 0.50，画面直径 ≈ 6.3 → 7.9%
+    const shortest = Math.min(...info.map((e) => e.long)) * 0.75
+    expect(shortest / frameD, '单枚卵露出来的一段在画面上太短').toBeGreaterThan(0.05)
+  })
+
+  it('缝里垫着深色的卵间基质 —— 没有它，浅色贴浅色的边界会被 ACES 吃掉', () => {
+    expect(matrix, '卵间基质没了：卵背后是另一枚同色的卵，所有边界都会糊掉').toHaveLength(1)
+    const e = hslOf(eggs[0])
+    const m = hslOf(matrix[0])
+    expect(e.l - m.l, `卵 ${e.l.toFixed(2)} 与基质 ${m.l.toFixed(2)} 的明度差太小`).toBeGreaterThan(0.35)
+    // 基质要真的垫在卵下面：它的半径必须比卵列的轴心距小，才会露在缝底而不是把卵埋了
+    const mr = Math.max(...vertsOf(matrix).map((v) => onAxis(v).r))
+    const er = Math.max(...vertsOf(eggs).map((v) => onAxis(v).r))
+    expect(mr, '基质柱比卵还粗 —— 卵被埋进去了').toBeLessThan(er)
+    expect(er - mr, '基质柱贴着卵面，缝底没有深度').toBeGreaterThan(0.05)
   })
 
   it('卵集中在下段、泡沫塞在上段（不是搅在一起）', () => {
-    const eggBox = boxOf(eggs)
-    const foamBox = boxOf(foam)
-    const eggMid = eggBox.getCenter(new THREE.Vector3()).y
-    const foamMid = foamBox.getCenter(new THREE.Vector3()).y
+    const eggH = vertsOf(eggs).map((v) => onAxis(v).h)
+    const foamH = vertsOf(foam).map((v) => onAxis(v).h)
+    const eggMid = (Math.min(...eggH) + Math.max(...eggH)) / 2
+    const foamMid = (Math.min(...foamH) + Math.max(...foamH)) / 2
     expect(foamMid - eggMid, '泡沫塞必须明显在卵之上').toBeGreaterThan(1.2)
-    expect(foamBox.min.y, '泡沫塞不许一路塞到卵堆底下').toBeGreaterThan(eggBox.min.y + 2)
-    // 泡沫塞占卵囊上段的多少：真实卵囊约 1/4~1/3
-    const frac = foamBox.getSize(new THREE.Vector3()).y / sizeOf(wall).y
+    expect(Math.min(...foamH), '泡沫塞不许一路塞到卵堆底下').toBeGreaterThan(Math.min(...eggH) + 2)
+    // 泡沫塞占卵囊上段的多少：真实卵囊约 1/5~1/3
+    const frac = (Math.max(...foamH) - Math.min(...foamH)) / POD_H
     expect(frac).toBeGreaterThan(0.15)
     expect(frac).toBeLessThan(0.45)
   })
@@ -307,20 +440,20 @@ describe('卵：土里的一整个卵囊', () => {
       expect(d).toBeLessThan(0.32)
     }
     /*
-     * 「凹凸」的可测形式：在泡沫塞中段切一薄层，按方位角分 24 格，
+     * 「凹凸」的可测形式：在泡沫塞中段垂直于轴切一薄层，按方位角分 24 格，
      * 每格取最外一点的半径，比最大格与最小格。
      * 一根光滑的柱子这个比值恒等于 1 —— 把气泡换成柱子，这一条立刻红。
      */
     const fv = vertsOf(foam)
-    const ys = fv.map((v) => v.y)
-    const mid = (Math.min(...ys) + Math.max(...ys)) / 2
-    const slab = fv.filter((v) => Math.abs(v.y - mid) < 0.12)
-    const c = axis(modelY(mid))
+    const hs = fv.map((v) => onAxis(v).h)
+    const mid = (Math.min(...hs) + Math.max(...hs)) / 2
+    const f = podFrame(mid)
     const bins = new Array(24).fill(0)
-    for (const v of slab) {
-      const a = Math.atan2(v.z - c.z, v.x - c.x)
-      const k = Math.floor((((a + Math.PI * 2) % (Math.PI * 2)) / (Math.PI * 2)) * 24) % 24
-      bins[k] = Math.max(bins[k], Math.hypot(v.x - c.x, v.z - c.z))
+    for (const v of fv) {
+      const p = local(v, f)
+      if (Math.abs(p.along) > 0.12) continue
+      const k = Math.floor((((p.az + Math.PI * 2) % (Math.PI * 2)) / (Math.PI * 2)) * 24) % 24
+      bins[k] = Math.max(bins[k], p.r)
     }
     const used = bins.filter((b) => b > 0)
     expect(used.length).toBeGreaterThan(12)
@@ -339,13 +472,14 @@ describe('卵：土里的一整个卵囊', () => {
     expect(e.s - f.s, '卵与泡沫塞的饱和度差').toBeGreaterThan(0.35)
   })
 
-  it('明度按档排开：卵 > 泡沫 > 腔壁 > 剖面 > 囊壁 > 土', () => {
+  it('明度按档排开：卵 > 泡沫 > 腔壁 > 剖面 > 囊壁 > 卵间基质 > 土', () => {
     const ladder = [
       ['卵', hslOf(eggs[0]).l],
       ['泡沫塞', hslByName(egg, 'foam-core').l],
       ['腔壁', hslByName(egg, 'pod-cavity').l],
       ['剖面', hslByName(egg, 'pod-cut').l],
       ['囊壁', hslByName(egg, 'pod-wall').l],
+      ['卵间基质', hslByName(egg, 'egg-matrix').l],
       ['土', hslByName(egg, 'soil').l],
     ] as const
     for (let i = 1; i < ladder.length; i++) {
@@ -359,21 +493,41 @@ describe('卵：土里的一整个卵囊', () => {
   })
 
   it('卵囊被纵向剖开：囊壁沿周向留出 ≥120° 的缺口，**而且缺口正对机位**', () => {
-    const y = modelY(2.4)
-    const c = axis(2.4)
-    const slab = vertsOf(wall).filter((v) => Math.abs(v.y - (y + shift.y)) < 0.15)
-    expect(slab.length).toBeGreaterThan(20)
-    const gap = maxAzimuthGap(slab, c.x, c.z)
-    expect(gap.deg, `最大缺口只有 ${gap.deg}° —— 没剖开，里面的卵谁也看不见`).toBeGreaterThanOrEqual(120)
+    const f = podFrame(2.4)
+    const BINS = 72
+    const bins = new Array<boolean>(BINS).fill(false)
+    let got = 0
+    for (const v of vertsOf(wall)) {
+      const p = local(v, f)
+      if (Math.abs(p.along) > 0.15) continue
+      got++
+      bins[Math.floor((((p.az + Math.PI * 2) % (Math.PI * 2)) / (Math.PI * 2)) * BINS) % BINS] = true
+    }
+    expect(got).toBeGreaterThan(20)
+    let best = 0
+    let bestStart = 0
+    for (let s = 0; s < BINS; s++) {
+      let run = 0
+      while (run < BINS && !bins[(s + run) % BINS]) run++
+      if (run > best) {
+        best = run
+        bestStart = s
+      }
+    }
+    const deg = (best * 360) / BINS
+    expect(deg, `最大缺口只有 ${deg}° —— 没剖开，里面的卵谁也看不见`).toBeGreaterThanOrEqual(120)
     // 缺口开对方向才算数：开反 180° 时缺口一样大，却背着人开
-    // （展台默认机位 (2,1,3)；侧机位 (0.12,0.28,1)）
+    const mid = ((bestStart + best / 2) / BINS) * Math.PI * 2
+    const gapDir = f.e1.clone().multiplyScalar(Math.cos(mid)).addScaledVector(f.e2, Math.sin(mid)).normalize()
     for (const [name, d] of [
       ['展台默认', [2, 1, 3]],
       ['侧', [0.12, 0.28, 1]],
       ['前斜', [1, 0.32, 0.4]],
     ] as const) {
+      // 相机方向投影到垂直于囊轴的那个平面上再比 —— 卵囊是斜的，直接点乘会混进沿轴分量
       const v = new THREE.Vector3(...d).normalize()
-      const dot = new THREE.Vector3(v.x, 0, v.z).normalize().dot(gap.dir)
+      const proj = v.clone().addScaledVector(f.d, -v.dot(f.d)).normalize()
+      const dot = proj.dot(gapDir)
       expect(dot, `${name}机位与剖口方向的夹角 ${((Math.acos(dot) * 180) / Math.PI).toFixed(0)}° —— 开反了`).toBeGreaterThan(0.3)
     }
   })
@@ -381,37 +535,60 @@ describe('卵：土里的一整个卵囊', () => {
   it('剖口露出的是有厚度的囊壁，不是一张纸的边', () => {
     expect(cuts).toHaveLength(2)
     expect(cavity).toHaveLength(1)
+    const f = podFrame(2.4)
     for (const cut of cuts) {
-      const verts = vertsOf([cut])
       /*
        * 剖面就是「外轮廓与腔轮廓之间的那一圈」，所以它在某个高度上的径向宽度
-       * 正是**囊壁厚**（该处实测 0.07）。给 0.04 的下限：低于这个数，
+       * 正是**囊壁厚**（该处实测约 0.08）。给 0.04 的下限：低于这个数，
        * 剖口上就只剩一条线，整件读成「一张卷起来的纸」而不是「一根被切开的棒」。
        */
-      const c = axis(2.4)
-      const slab = verts.filter((v) => Math.abs(v.y - c.y) < 0.2)
-      expect(slab.length, '这一片剖面在这个高度上没有顶点').toBeGreaterThan(3)
-      const rs = slab.map((v) => Math.hypot(v.x - c.x, v.z - c.z))
+      const rs = vertsOf([cut])
+        .map((v) => local(v, f))
+        .filter((p) => Math.abs(p.along) < 0.2)
+        .map((p) => p.r)
+      expect(rs.length, '这一片剖面在这个高度上没有顶点').toBeGreaterThan(3)
       expect(Math.max(...rs) - Math.min(...rs), '剖面在这个高度上没有宽度 —— 囊壁成了一张纸').toBeGreaterThan(0.04)
     }
     // 腔壁必须真的在囊壁里面：同高度的最大半径要比囊壁小一圈
-    const c = axis(2.4)
-    const radial = (ms: THREE.Mesh[]) => {
-      const s = vertsOf(ms).filter((v) => Math.abs(v.y - c.y) < 0.1)
-      return Math.max(...s.map((v) => Math.hypot(v.x - c.x, v.z - c.z)))
-    }
+    const radial = (ms: THREE.Mesh[]) =>
+      Math.max(
+        ...vertsOf(ms)
+          .map((v) => local(v, f))
+          .filter((p) => Math.abs(p.along) < 0.1)
+          .map((p) => p.r),
+      )
     const wallR = radial(wall)
     const cavR = radial(cavity)
     expect(wallR - cavR, `壁厚只有 ${(wallR - cavR).toFixed(3)}，剖口上看不出厚度`).toBeGreaterThan(0.03)
   })
 
+  it('取景半径按真实包围半径给，不按包围盒球 —— 斜棒不能白留一圈空气', () => {
+    /*
+     * 第二版目视验收的第二条：「取景被浪费掉了」。卵囊竖着站、展台是横的，
+     * 相机只能按高度退开，左右两大片全空，卵被压到几个像素。
+     * 这一版把整根倾 30° 走对角线，并把取景半径从 `boundingRadius()`
+     * （盒对角线的一半，为一根斜棒预留了一大圈空气）换成逐顶点量的真实半径。
+     */
+    expect(egg.frameRadius, '没给 frameRadius，取景又退回包围盒球了').toBeDefined()
+    const fr = egg.frameRadius as number
+    expect(fr / egg.radius, '取景半径没比包围盒球紧多少，这一改等于没做').toBeLessThan(0.95)
+    // 但绝不能紧到把模型裁掉：任何机位下都要罩得住最远的那个顶点
+    const far = Math.max(...vertsOf(meshesByName(egg, 'pod-wall', 'soil', 'soil-clod', 'soil-grain')).map((v) => v.length()))
+    expect(fr, '取景半径小过模型本身，会把两端裁掉').toBeGreaterThanOrEqual(far)
+  })
+
   it('有一小块土壤剖面托着，「土壤中越冬」读得出来', () => {
     expect(soil.length).toBeGreaterThan(0)
-    const soilBox = boxOf(soil)
-    const wallBox = boxOf(wall)
-    // 土柱要包住卵囊的绝大部分高度，只垫一小块在底下不算「埋在土里」
-    const overlap = Math.min(soilBox.max.y, wallBox.max.y) - Math.max(soilBox.min.y, wallBox.min.y)
-    expect(overlap / wallBox.getSize(new THREE.Vector3()).y).toBeGreaterThan(0.9)
+    const soilH = vertsOf(soil).map((v) => onAxis(v).h)
+    const wallH = vertsOf(wall).map((v) => onAxis(v).h)
+    // 土柱要包住卵囊的绝大部分长度，只垫一小块在底下不算「埋在土里」
+    const overlap =
+      Math.min(Math.max(...soilH), Math.max(...wallH)) - Math.max(Math.min(...soilH), Math.min(...wallH))
+    expect(overlap / (Math.max(...wallH) - Math.min(...wallH))).toBeGreaterThan(0.9)
+    // 但它是语境不是主角：土柱在垂直于轴的方向上不许比卵囊粗出一倍
+    const soilR = Math.max(...vertsOf(meshesByName(egg, 'soil')).map((v) => onAxis(v).r))
+    const podR = Math.max(...vertsOf(wall).map((v) => onAxis(v).r))
+    expect(soilR / podR, `土柱是卵囊的 ${(soilR / podR).toFixed(2)} 倍粗 —— 它成主角了`).toBeLessThan(1.9)
     // 土面上要有颗粒，否则那是个塑料底座
     expect(meshesByName(egg, 'soil-grain').length).toBeGreaterThanOrEqual(8)
   })

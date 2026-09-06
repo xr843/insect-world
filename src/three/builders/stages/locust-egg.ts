@@ -3,10 +3,10 @@
  *
  * ## 为什么做的是「一根棒」而不是「一粒卵」
  *
- * 蝗虫**不散产**。雌虫把腹部末端插进土里钻出一个 5~7 厘米深的孔，一边退一边
+ * 蝗虫**不散产**。雌虫把腹部末端插进土里钻出一个 5~7 厘米深的斜孔，一边退一边
  * 往孔里下卵，同时从附腺分泌大量泡沫；泡沫把卵粒粘成一束，又在孔口硬化成一截
  * 海绵状的塞，整团东西就这样在**土壤里越冬**（图鉴文案第一句写的正是这件事）。
- * 所以这一阶段真正要讲的对象不是那 6 毫米的一粒，而是**一整个卵囊**：
+ * 所以这一阶段真正要讲的对象不是那 7 毫米的一粒，而是**一整个卵囊**：
  * 卵集中在下段，上段是泡沫塞。
  *
  * 单做一粒卵会重蹈本目录第一批四颗卵的覆辙（教训写在
@@ -14,6 +14,32 @@
  * 表面结构，或有一个不是「一圈小球」的语境**。蝗虫卵表面是光的，
  * 所以只能走「语境」这条路——而它的语境恰好是蝗灾防治里最要紧的一件事：
  * 挖卵块。灭蝗从来不是抓虫，是在河滩地里把这种土色的棒一根根翻出来。
+ *
+ * ## 第二版目视验收打回的三条，与这一版是怎么改的
+ *
+ * 第一版在真实展台上「读成一块竖着的巧克力威化」：卵糊成一片均匀的奶油色。
+ * 三条一起改才修好——**只改其中一条都不够**，这是这个文件最贵的一条经验：
+ *
+ * 1. **卵与卵之间要有真的能投影的缝，缝里还得有更暗的东西，而且横竖两个
+ *    方向都要有。** 第一版 56 枚卵挤成 8 枚一层的六边形束（相邻只隔 0.018），
+ *    背后又是另一枚同色的卵——所有边界都是「浅色贴浅色」的一道软折，
+ *    ACES 一提亮就没了，四机位一致读成一根玉米棒。
+ *    中间还错过一版：改成 5 根纵列、列间留 0.09 的宽缝，竖缝有了，
+ *    可同一列里层距只有卵长的一半，每列自己糊成一根长条，读成几根「芦笋」。
+ *    现在两个方向一起留：**8 根纵列 × 每列 7 枚 = 56 枚**，列间隙 0.045、
+ *    层距 0.55 对卵长 0.66（只叠 17%），**两道缝的缝底都垫着一根深色的卵间
+ *    基质柱**（`egg-matrix`，33% 明度对卵的 80%）。于是整束是「亮卵 + 暗缝」
+ *    的网格，数得出来。基质不是编出来的：卵之间本来就填着泡沫分泌物，
+ *    而深在缝里的那一层本来就是背光的。
+ * 2. **单枚要做到真实尺寸的上沿**：6.6 × 1.5 毫米（文献 6~7 × 1.4~1.6），
+ *    比第一版的 1.12 毫米粗 34%。第一版把卵做到文献下沿，屏幕上只有十来像素。
+ * 3. **整根连土柱一起绕 Z 倾 30°**，并给 `frameRadius`。
+ *    展台是横的、卵囊是竖的，按包围球取景时左右两大片全空，卵被压到几像素。
+ *    倾斜后卵囊走对角线，同时把取景半径从包围盒球（3.6+，为斜棒预留了一大圈
+ *    空气）换成**逐顶点量出来的真实包围半径**——两者一起把卵放大了约三成。
+ *    倾斜也更真实：雌虫是斜插腹部产卵的，卵囊在土里本来就是斜的。
+ *
+ * 顺带把土柱收细收短（外径 0.55 对第一版的 0.66）：语境有必要，但它不该是主角。
  *
  * ## 招牌结构（三样，缺一样这个模型就白做了）
  *
@@ -25,34 +51,33 @@
  *    （`pod-cut`）——囊壁的厚度在剖口上是实打实的一圈，不是一张纸的边。
  *    腔壁另配一档更亮的材质（51% 对外壁 37%）：剖开处读到的是「深色的囊壁包着
  *    浅色的腔」，不是一个发黑的洞。
- * 2. **50~80 枚竖排的卵**：这里 56 枚（8 枚一层 × 7 层）。单枚长 6.6 毫米、
- *    粗 1.12 毫米，长径比 5.9——细长的米粒形，几乎与囊轴平行（只微微向外倒
- *    4~8°）。**为什么必须近乎竖直**：腔内径只有 4.8 毫米，而卵长 6.6 毫米，
+ * 2. **56 枚竖排的卵 + 卵间的深色基质**：8 根纵列，每列 7 枚，列与列之间
+ *    再错开 1/8 格高度（螺旋排布，各列的腰不至于连成一道整齐的横线）。
+ *    单枚 6.6 × 1.5 毫米、长径比 4.4，几乎与囊轴平行（只微微向外倒 2~5°）。
+ *    **为什么必须近乎竖直**：腔内径只有 6.9 毫米，而卵长 6.6 毫米，
  *    横过来根本塞不进去。所以「竖排」不是画法上的选择，是被腔径逼出来的事实。
- *
- *    层距（0.48）是第二版实拍逼出来的：第一版 0.40 时纵向叠了 38%，四个机位
- *    一致把整束卵读成**一根玉米棒**，单枚的轮廓全糊在一起，「50~80 枚」
- *    这句话就白讲了。
- * 3. **泡沫塞（foam plug）**：上段 1.35 厘米（占全长 24%）。它是这一件里最容易
+ * 3. **泡沫塞（foam plug）**：上段 1.2 厘米（占全长 20%）。它是这一件里最容易
  *    被做丢的东西——做成一根光滑的柱子就读成「卵囊上半截是空的」。
- *    所以泡沫是 52 枚互相咬合的气泡球叠出来的一团，轮廓凹凸；芯柱只占腔径的
+ *    所以泡沫是 48 枚互相咬合的气泡球叠出来的一团，轮廓凹凸；芯柱只占腔径的
  *    58%，气泡骑在它外面，气泡之间的缝里看得见更深的腔壁，
  *    「上段疏松、下段密实」这句话就落在这道对比上。
  *
  * ## 明度阶梯（ACES 会提亮去饱和，深叠深会糊成一团）
  *
- * 卵 80% > 泡沫塞 65% > 腔壁 51% > 土面的土块 44% > 剖面 42% > 囊壁 37% > 土壤 29%。
+ * 卵 80% > 泡沫塞 65% > 腔壁 51% > 土面的土块 44% > 剖面 42% > 囊壁 37% >
+ * 卵间基质 33% > 土壤 29%。
  *
- * 第一版把土压到 22%、囊壁压到 31%，实拍出来整根棒是一块**黑巧克力板**：
- * 土、囊壁、剖面三档在 ACES 下全糊成同一个近黑，卵和泡沫像浮在黑洞里的两团白。
- * 现在整体抬了一档半，土仍是最暗的那一档（29%），但它是**土色**，不是黑。
+ * 最初一版把土压到 22%、囊壁压到 31%，实拍出来整根棒是一块**黑巧克力板**：
+ * 土、囊壁、剖面三档在 ACES 下全糊成同一个近黑。现在整体抬了一档半，
+ * 土仍是最暗的那一档（29%），但它是**土色**，不是黑。
  * 只有**土面上**那 14 粒土块用了更亮的一档（44%）：它们躺在一张平的圆环上，
  * 不给一点色差就完全看不出来。外壁上那 9 块土疙瘩反而用土自己的材质——
  * 理由见文件末尾那段注释（用颜色去区分同一种材料，出图是「巧克力上的糖豆」）。
  *
  * 这一栏是照着榆蓝叶甲那次事故写的：「颜色压深一档」被误解成「越深越保险」，
- * 结果金属蓝绿被 ACES 压成近黑，招牌图案在画面上直接消失。这里最要紧的一对是
- * **卵与泡沫塞**：两者都是浅色，只拉明度差（0.80 / 0.65）还不够稳，
+ * 结果金属蓝绿被 ACES 压成近黑，招牌图案在画面上直接消失。这里最要紧的两对是
+ * **卵与卵间基质**（0.80 / 0.33，靠它把每一枚的轮廓切出来）与
+ * **卵与泡沫塞**：后者都是浅色，只拉明度差（0.80 / 0.65）还不够稳，
  * 所以另外拉开**饱和度**——卵是饱和的淡黄（s = 0.80），泡沫塞是几乎中性的
  * 灰米色（s = 0.15）。一亮一灰、一光滑一起泡，两条路都断不了。
  *
@@ -65,11 +90,14 @@
  *
  * ## 摆位
  *
- * 卵囊竖立（轴沿 +Y，产卵孔朝上），略弯（`bendX`，正弦弓形，中段偏 0.24）——
- * 真实卵囊是雌虫一边退一边产出来的，从来不是一根直管。
- * 整组再绕 Y 转 34°，把剖口中心从建模帧的 +Z（方位角 90°）转到 56°，
- * 也就是展台默认机位 (2, 1, 3) 的方位——不转的话机位偏在剖口边缘 34° 上，
- * 近侧那条切边会挡掉右半边的卵（蜻蜓卵第一版实拍栽过同一个跟头）。
+ * 建模帧里卵囊沿 +Y 竖立、略弯（`bendX`，正弦弓形，中段偏 0.24），
+ * 然后 `rotation.set(0, YAW, TILT)`：先绕 Z 倾 30°（顶端倒向 +X），
+ * 再绕 Y 转 34°，把剖口中心从建模帧的 +Z（方位角 90°）转到 56°，
+ * 也就是展台默认机位 (2, 1, 3) 的方位。
+ * 绕 Z 的倾斜**不改变剖口的朝向**（绕 Z 转，Z 轴本身不动），所以两件事互不干扰：
+ * 倾斜只管画面利用率，偏航只管剖口对不对着人。
+ * 不偏航的话机位偏在剖口边缘 34° 上，近侧那条切边会挡掉右半边的卵
+ * （蜻蜓卵第一版实拍栽过同一个跟头）。
  *
  * 本文件不使用任何随机数：表面起伏是三支不可通约的正弦叠加（`wobble`），
  * 气泡与土块的位置是定点哈希（`hash`），两者都是构建期常量，不会有种子漂移。
@@ -81,8 +109,8 @@ import { chitin, finalize, loft, type InsectModel, type Section } from './../kit
 
 // ---------------------------------------------------------------- 尺寸常量
 
-/** 卵囊全长 5.6 厘米（文献 4~7 厘米，取中段：泡沫塞有地方交代，取景又不至于细成一条线） */
-export const POD_H = 5.6
+/** 卵囊全长 5.98 厘米（文献 4~7 厘米） */
+export const POD_H = 5.98
 
 /** 弓形弯曲的中段偏移量。0 = 一根直管（读成塑料吸管），0.24 = 一眼看出是产出来的 */
 const BEND = 0.24
@@ -95,79 +123,110 @@ const PHI_SPAN = Math.PI * 2 - 2 * WINDOW_HALF
 const AZIMUTH = 72
 
 /** 整组绕 Y 的偏航：把剖口中心从 +Z（方位角 90°）转到展台默认机位的 56° */
-const YAW = THREE.MathUtils.degToRad(34)
+export const YAW = THREE.MathUtils.degToRad(34)
+/**
+ * 整组绕 Z 的倾斜（负 = 顶端倒向 +X）。
+ *
+ * 展台是横的、卵囊是竖的：按包围球取景时相机只能按高度退开，左右两大片全空，
+ * 卵粒被压到只有几个像素。倾 30° 之后卵囊走对角线，长边同时吃到画幅的宽和高。
+ * 也更真实——雌虫是斜插腹部产卵的，卵囊在土里本来就是斜的。
+ */
+export const TILT = THREE.MathUtils.degToRad(-30)
 
 /**
- * 卵囊外壁轮廓 [高度 y, 半径 r]。上粗（泡沫塞段 φ8 毫米）下细（卵段 φ6.5 毫米）。
+ * 卵囊外壁轮廓 [高度 y, 半径 r]。上粗（泡沫塞段 φ9.2 毫米）下细（卵段 φ8.5 毫米）。
  * 首尾两点的半径都收到 0.006：回转面在这两处自己封成一点，
  * 不留一圈开口环——那圈开口在剖开的模型上就是一个看得见的黑豁口。
  */
 const OUTER: readonly (readonly [number, number])[] = [
   [0.0, 0.006],
-  [0.04, 0.085],
-  [0.12, 0.175],
-  [0.28, 0.25],
-  [0.55, 0.285],
-  [1.2, 0.3],
-  [2.2, 0.31],
-  [3.2, 0.32],
-  [3.6, 0.335],
-  [3.95, 0.37],
-  [4.6, 0.385],
-  [5.0, 0.378],
-  [5.3, 0.325],
-  [5.48, 0.2],
-  [5.55, 0.115],
-  [5.6, 0.006],
+  [0.05, 0.11],
+  [0.16, 0.245],
+  [0.36, 0.355],
+  [0.65, 0.405],
+  [1.3, 0.418],
+  [2.4, 0.424],
+  [3.5, 0.43],
+  [4.1, 0.436],
+  [4.5, 0.452],
+  [5.1, 0.458],
+  [5.4, 0.444],
+  [5.66, 0.36],
+  [5.84, 0.22],
+  [5.94, 0.12],
+  [5.98, 0.006],
 ]
 
-/** 卵腔轮廓。壁厚 0.05~0.07 厘米——泡沫硬化的土壳本来就薄，厚了就成了一截竹筒 */
+/** 卵腔轮廓。壁厚 0.075~0.09——泡沫硬化的土壳，厚了就成了一截竹筒 */
 const CAVITY: readonly (readonly [number, number])[] = [
-  [0.24, 0.006],
-  [0.32, 0.1],
-  [0.46, 0.185],
-  [0.7, 0.232],
-  [1.2, 0.238],
-  [2.2, 0.245],
-  [3.2, 0.252],
-  [3.6, 0.268],
-  [3.95, 0.3],
-  [4.6, 0.315],
-  [5.0, 0.308],
-  [5.25, 0.225],
-  [5.4, 0.11],
-  [5.46, 0.006],
+  [0.26, 0.006],
+  [0.34, 0.125],
+  [0.5, 0.24],
+  [0.75, 0.32],
+  [1.3, 0.337],
+  [2.4, 0.343],
+  [3.5, 0.349],
+  [4.1, 0.355],
+  [4.5, 0.368],
+  [5.1, 0.374],
+  [5.38, 0.358],
+  [5.62, 0.26],
+  [5.82, 0.115],
+  [5.9, 0.006],
 ]
 
-/** 卵：长 6.6 毫米、最粗处半径 0.56 毫米（直径 1.12 毫米），长径比 5.9 */
+/** 卵：长 6.6 毫米、最粗处半径 0.75 毫米（直径 1.5 毫米），长径比 4.4 */
 const EGG_LEN = 0.66
-const EGG_R = 0.056
+const EGG_R = 0.075
 /**
- * 卵层：7 层 × 每层 8 枚 = 56 枚，落在文献的 50~80 枚区间内。
+ * 卵的排布：**8 根纵列 × 每列 7 枚 = 56 枚**，两个方向上都留缝。
  *
- * 层距 0.48 是第二版调出来的。第一版是 0.40，纵向叠了 38%，四个机位一致把整束
- * 卵读成**一根玉米棒**——单枚的轮廓全糊在一起，「50~80 枚」这句话就白讲了。
- * 0.48 只叠 26%，每枚卵的腰身都露得出来；再稀就装不下 56 枚了
- * （真实卵囊里的卵本来就是挤着的，不能为了好看排得松松垮垮）。
+ * 这一处返工了两轮，两轮各错在一个方向上：
+ *
+ * - 第一版把 56 枚挤成 8 枚一层的六边形束（相邻只隔 0.018），四机位一致
+ *   读成一根**玉米棒**——横竖都没有缝。
+ * - 第二版改成 5 根纵列、列间留 0.09 的宽缝，但同一列里层距只有卵长的一半，
+ *   于是每一列自己糊成一根连续的**长条**：竖缝有了，横缝没有，
+ *   真实展台上读成几根「芦笋」。
+ *
+ * 这一版两个方向一起留：**列间隙 0.045**（0.7% 画面直径）来自 8 列排在
+ * 半径 0.255 上（弦长 0.195 − 卵径 0.15）；**层距 0.55 对卵长 0.66**，
+ * 只叠 17%，每一枚露出八成、上下之间有一道看得见的腰。
+ * 两道缝的缝底都是深色的卵间基质（`egg-matrix`），所以是「亮卵 + 暗缝」的
+ * 网格，不是一片均匀的奶油色。
+ *
+ * 数量仍在文献的 50~80 内。窗口开 156°，正对机位的是其中 3~4 列。
  */
-const EGG_LAYERS = 7
-const EGG_Y0 = 0.8
-const EGG_PITCH = 0.48
-/** 外圈 7 枚卵的轴心距。0.15 + 卵半径 0.056 = 0.206 < 该处腔半径 0.238，塞得进去 */
-const EGG_RING_R = 0.15
-/** 外圈的卵数（加轴心一枚，每层共 8 枚） */
-const EGG_RING_N = 7
+const EGG_COLUMNS = 8
+const EGG_PER_COLUMN = 7
+/** 列所在的轴心距。0.255 + 卵半径 0.075 = 0.33 < 该处腔半径 0.345，塞得进去 */
+const EGG_RING_R = 0.255
+/** 同一列里上下相邻两枚的间距。0.55 对卵长 0.66 = 只叠 17%，腰看得见 */
+const EGG_PITCH = 0.55
+const EGG_Y0 = 0.85
+/**
+ * 每一列在纵向再错开 1/8 格（螺旋排布）。
+ * 八列的腰若都落在同一个高度，整束会读成一摞横着的圆环。
+ */
+const EGG_HELIX = EGG_PITCH / EGG_COLUMNS
 
-/** 泡沫塞占据的高度区间。1.35 厘米 = 全长的 24% */
-const FOAM_Y0 = 4.0
-const FOAM_Y1 = 5.35
+/** 卵间基质（卵与卵之间的泡沫，深在缝里那一层本来就背光）所占的高度区间与半径 */
+const MATRIX_Y0 = 0.44
+const MATRIX_Y1 = 4.62
+const MATRIX_R = 0.205
+
+/** 泡沫塞占据的高度区间。1.2 厘米 = 全长的 20% */
+const FOAM_Y0 = 4.6
+const FOAM_Y1 = 5.8
 /** 气泡数。少于 40 枚时缝太大，整团读成「一串葡萄」而不是一团泡沫 */
-const BUBBLE_COUNT = 52
+const BUBBLE_COUNT = 48
+/** `foamPlug` 锚点所在的高度。测试靠它反解 finalize 的居中平移量，故与锚点共用一个常量 */
+export const FOAM_ANCHOR_Y = 5.2
 
-/** 土柱：内壁贴着卵囊、外径 0.52、上表面 5.52（卵囊顶端露出 0.08，正是产卵孔的位置） */
-const SOIL_TOP = 5.52
-const SOIL_BOT = -0.4
-const SOIL_OUT = 0.52
+/** 土柱：内壁贴着卵囊、外径 0.55、上表面 5.92（卵囊顶端露出一点，正是产卵孔的位置） */
+const SOIL_TOP = 5.92
+const SOIL_BOT = -0.18
+const SOIL_OUT = 0.55
 /** 土壁与囊壁之间留的空隙。真实卵囊是被泥裹紧的，留太多就成了「插在管子里」 */
 const SOCKET_GAP = 0.018
 
@@ -181,19 +240,19 @@ const SOCKET_GAP = 0.018
 /**
  * 卵：淡黄褐、饱和（h 46° / s 0.80 / l 0.80）。
  *
- * 给**三档**而不是一档，是第二版实拍逼出来的：56 枚同色的卵挤在一起，
- * 相邻两枚之间只剩一条靠明暗过渡的接缝，整束读成**一根玉米棒**。
- * 三档只差 ±4% 明度——远看仍是一束淡黄，近看每一枚的边界自己就出来了。
+ * 给**三档**而不是一档：56 枚同色的卵挤在一起时，相邻两枚之间只剩一条靠明暗
+ * 过渡的接缝。三档只差 ±4% 明度——远看仍是一束淡黄，近看每一枚的边界自己就出来了。
  * 这也有依据：同一卵囊里的卵产出有先后，胚胎发育程度不同，色深浅本来就不匀。
  * 差得再大就成了「奶牛纹」（柞蚕蛾卵实撞过的坑），所以只给 4%。
  */
 const EGG_COLORS = ['#f5e2a3', '#eddb98', '#f9e9b0'] // 实测 l = 0.800 / 0.763 / 0.833，h 全在 46~48°
-const FOAM_COLOR = '#b3a898' // 灰米色、近中性（h 36° / s 0.15 / l 0.65）
+const FOAM_COLOR = '#b3a898' // 泡沫塞：灰米色、近中性（h 36° / s 0.15 / l 0.65）
 const CAVITY_COLOR = '#a08a63' // 腔壁：泡沫糊过的内衬（l 0.51）
 const CUT_COLOR = '#8b6f4a' // 剖面：切开的那一面本来就背着光（l 0.42）
 const WALL_COLOR = '#7d6140' // 囊壁：泡沫粘住的土壳（l 0.37）
+const MATRIX_COLOR = '#6b5a3e' // 卵间基质：深在缝里、常年背光的那一层（l 0.33）
 const SOIL_COLOR = '#5f4a33' // 土：全画面最暗一档（l 0.29）
-const GRAIN_COLOR = '#8a7358' // 土块：比土面亮一档半，否则土面是一片没有颗粒的塑料（l 0.44）
+const GRAIN_COLOR = '#8a7358' // 土面的土块：比土面亮一档半，否则土面是一片塑料（l 0.44）
 
 // ---------------------------------------------------------------- 确定性起伏
 
@@ -245,25 +304,30 @@ export function bendX(y: number): number {
   return BEND * Math.sin(Math.PI * THREE.MathUtils.clamp(y / POD_H, 0, 1))
 }
 
-/** 建模帧 → 最终模型坐标（只有一个绕 Y 的偏航）。测试要拿它算轴线，故导出 */
+/**
+ * 建模帧 → 最终模型坐标：先绕 Z 倾斜、再绕 Y 偏航。
+ * 与 `g.rotation.set(0, YAW, TILT)` 等价（three 的默认 XYZ 序下 v' = Ry·Rz·v）。
+ * 测试要拿它复原卵囊的轴线，故导出。
+ */
 export function toModel(x: number, y: number, z: number): THREE.Vector3 {
-  const c = Math.cos(YAW)
-  const s = Math.sin(YAW)
-  return new THREE.Vector3(x * c + z * s, y, -x * s + z * c)
+  const ct = Math.cos(TILT)
+  const st = Math.sin(TILT)
+  const tx = x * ct - y * st
+  const ty = x * st + y * ct
+  const cy = Math.cos(YAW)
+  const sy = Math.sin(YAW)
+  return new THREE.Vector3(tx * cy + z * sy, ty, -tx * sy + z * cy)
 }
 
-/** 卵囊轴线在高度 y 处的点（已含偏航，**未含** finalize 的居中平移） */
+/** 卵囊轴线在高度 y 处的点（已含倾斜与偏航，**未含** finalize 的居中平移） */
 export function axisAt(y: number): THREE.Vector3 {
   return toModel(bendX(y), y, 0)
 }
 
-/** `foamPlug` 锚点所在的高度。测试靠它反解 finalize 的居中平移量，故与锚点共用一个常量 */
-export const FOAM_ANCHOR_Y = 4.9
-
 /**
  * `finalize()` 那一次居中平移的量，由锚点反解。
  *
- * 测试要把建模帧里的轴线搬进模型坐标（量「卵有没有捅出腔外」），
+ * 测试要把建模帧里的轴线搬进模型坐标（量「卵有没有捅出腔外」「剖口开在哪一侧」），
  * 而 `finalize()` 把整个模型平移了一个只有它自己知道的量。
  * `foamPlug` 锚点恰好就落在轴线上（`axisAt(FOAM_ANCHOR_Y)`），两者一减就是那个量。
  */
@@ -415,7 +479,7 @@ function cutFace(parts: readonly CutPart[], phi: number, material: THREE.Materia
  * 一枚卵的几何：沿 +Y 建、以原点为中心的细长纺锤，下端钝、上端略尖
  * （真实蝗卵含卵黄的那一端稍粗）。
  *
- * 几何只建一次、56 个 mesh 共用——除了省面数，更要紧的是让局部包围盒恰好
+ * 几何只建一次、50 个 mesh 共用——除了省面数，更要紧的是让局部包围盒恰好
  * 等于 (直径, 卵长, 直径)，测试量长径比时不会被摆放姿态污染。
  */
 function eggGeometry(): THREE.BufferGeometry {
@@ -435,18 +499,6 @@ function eggGeometry(): THREE.BufferGeometry {
   return loft(sections, 16)
 }
 
-/**
- * 一层里的 8 个卵位：轴心一枚 + 外圈七枚。奇数层整层转半格（180/7 度），
- * 上下相邻两层因此互相错开半个卵径，读起来是「挤在一起的一束」而不是一摞栅栏。
- */
-function eggSlots(layer: number): { r: number; az: number }[] {
-  const step = (Math.PI * 2) / EGG_RING_N
-  const off = (layer % 2) * (step / 2)
-  const out = [{ r: 0, az: off }]
-  for (let k = 0; k < EGG_RING_N; k++) out.push({ r: EGG_RING_R, az: off + k * step })
-  return out
-}
-
 // ---------------------------------------------------------------- 主体
 
 export function buildLocustEgg(): InsectModel {
@@ -455,6 +507,7 @@ export function buildLocustEgg(): InsectModel {
   const wallMat = chitin({ color: WALL_COLOR, gloss: 0.12, surface: 'punctate' })
   const cavityMat = chitin({ color: CAVITY_COLOR, gloss: 0.16 })
   const cutMat = chitin({ color: CUT_COLOR, gloss: 0.14 })
+  const matrixMat = chitin({ color: MATRIX_COLOR, gloss: 0.1, surface: 'punctate' })
   const eggMats = EGG_COLORS.map((c) => chitin({ color: c, gloss: 0.58, clearcoat: 0.35, translucent: true }))
   const foamMat = chitin({ color: FOAM_COLOR, gloss: 0.2 })
   const soilMat = chitin({ color: SOIL_COLOR, gloss: 0.08, surface: 'punctate' })
@@ -463,7 +516,7 @@ export function buildLocustEgg(): InsectModel {
   // ---- 卵囊：外壁 + 腔壁 + 两片剖面
   /*
    * 采样区间必须**正好**是关键帧表自己的两端。`keyframe()` 在表外是钳位的，
-   * 采过了头会得到一串半径恒等于末值的点——第一版腔壁多采了 0.48，
+   * 采过了头会得到一串半径恒等于末值的点——早先腔壁多采了 0.48，
    * 于是卵囊顶上支出一根半径 0.006、长 0.48 的**针**，出图里是一条竖线。
    */
   const outerProf = profile(sample(OUTER, OUTER[0][0], OUTER[OUTER.length - 1][0], 64), false, 0.014, 0.44, 3.1)
@@ -474,32 +527,56 @@ export function buildLocustEgg(): InsectModel {
     g.add(cutFace([{ prof: outerProf }, { prof: cavityProf, reverse: true }], phi, cutMat, 'pod-cut'))
   }
 
-  // ---- 卵：8 层 × 7 枚
+  /*
+   * 卵间基质：一根深色的柱子，卵嵌在它上面。
+   *
+   * 这是第二版目视验收后加的那一件。没有它时 56 枚卵背后是另一枚同色的卵，
+   * 所有边界都是「浅色贴浅色」的一道软折，ACES 一提亮就没了，整束读成
+   * 一片均匀的奶油色。有了它，每一列卵的两侧都是一条 0.09 宽的**深色缝**，
+   * 一列一列数得出来。
+   *
+   * 半径 0.205 比卵列的轴心距 0.255 小 0.05：卵有三分之一埋在基质里，
+   * 不是浮在它表面的一圈珠子；缝底露出来的正是它。
+   */
+  {
+    const steps = 20
+    const sections: Section[] = []
+    for (let i = 0; i <= steps; i++) {
+      const t = i / steps
+      const y = THREE.MathUtils.lerp(MATRIX_Y0, MATRIX_Y1, t)
+      const cap = t < 0.08 ? t / 0.08 : t > 0.92 ? (1 - t) / 0.08 : 1
+      const r = MATRIX_R * (0.25 + 0.75 * Math.sin(THREE.MathUtils.clamp(cap, 0, 1) * Math.PI * 0.5))
+      sections.push({ at: new THREE.Vector3(bendX(y), y, 0), ry: r, rz: r })
+    }
+    const matrix = new THREE.Mesh(loft(sections, 22), matrixMat)
+    matrix.name = 'egg-matrix'
+    g.add(matrix)
+  }
+
+  // ---- 卵：8 根纵列 × 每列 7 枚
   const eggGeo = eggGeometry()
   const up = new THREE.Vector3(0, 1, 0)
-  for (let layer = 0; layer < EGG_LAYERS; layer++) {
-    const y = EGG_Y0 + layer * EGG_PITCH
-    for (const [i, slot] of eggSlots(layer).entries()) {
-      const id = layer * (EGG_RING_N + 1) + i
+  for (let col = 0; col < EGG_COLUMNS; col++) {
+    const az = (col * Math.PI * 2) / EGG_COLUMNS
+    const outward = new THREE.Vector3(Math.cos(az), 0, Math.sin(az))
+    const tangent = new THREE.Vector3(-Math.sin(az), 0, Math.cos(az))
+    for (let k = 0; k < EGG_PER_COLUMN; k++) {
+      const id = col * EGG_PER_COLUMN + k
       /*
-       * 每枚卵向外倒 4~8°、再沿切向歪 ±5°：真实卵囊里的卵是斜着一层层码上去的，
+       * 每枚卵向外倒 3~7°、再沿切向歪 ±4°：真实卵囊里的卵是斜着一层层码上去的，
        * 排得整整齐齐就读成「一管电池」。倒角上限被腔径卡死——卵长 0.66、
-       * 腔内径 0.48，倒过 10° 卵尖就捅穿囊壁了（见文件头招牌结构第 2 条）。
+       * 腔内径 0.69，倒过 7° 卵尖就捅穿囊壁了（见文件头招牌结构第 2 条）。
        */
-      const az = slot.r === 0 ? hash(id + 900) * Math.PI * 2 : slot.az
-      const tiltOut = THREE.MathUtils.degToRad(4 + hash(id) * 4)
-      const tiltTan = THREE.MathUtils.degToRad(-5 + hash(id + 300) * 10)
-      const outward = new THREE.Vector3(Math.cos(az), 0, Math.sin(az))
-      const tangent = new THREE.Vector3(-Math.sin(az), 0, Math.cos(az))
+      const tiltOut = THREE.MathUtils.degToRad(2 + hash(id) * 3)
+      const tiltTan = THREE.MathUtils.degToRad(-4 + hash(id + 300) * 8)
       const dir = up
         .clone()
         .addScaledVector(outward, Math.tan(tiltOut))
         .addScaledVector(tangent, Math.tan(tiltTan))
         .normalize()
 
-      // 三档卵色轮着用，但**不按位置轮**：同一层相邻的两枚必须落在不同档上，
-      // 否则会排出一圈同色的环，那比一色更显规整
-      const egg = new THREE.Mesh(eggGeo, eggMats[(layer * 2 + i) % eggMats.length])
+      // 三档卵色沿列错开，同一列上下相邻的两枚必落在不同档上（腰才看得出来）
+      const egg = new THREE.Mesh(eggGeo, eggMats[(k + col * 2) % eggMats.length])
       egg.name = 'egg'
       /*
        * 这里用 setFromUnitVectors 是安全的：卵是绕自身长轴的旋转体，绕长轴的
@@ -508,13 +585,13 @@ export function buildLocustEgg(): InsectModel {
        * 部件的全部意义——扁的东西绝不能把滚转交出去，圆的可以。
        */
       egg.quaternion.setFromUnitVectors(up, dir)
-      const yy = y + (hash(id + 600) - 0.5) * 0.07
-      egg.position.set(bendX(yy) + slot.r * Math.cos(az), yy, slot.r * Math.sin(az))
+      const yy = EGG_Y0 + k * EGG_PITCH + col * EGG_HELIX + (hash(id + 600) - 0.5) * 0.03
+      egg.position.set(bendX(yy) + EGG_RING_R * Math.cos(az), yy, EGG_RING_R * Math.sin(az))
       g.add(egg)
     }
   }
 
-  // ---- 泡沫塞：芯柱 + 52 枚互相咬合的气泡
+  // ---- 泡沫塞：芯柱 + 48 枚互相咬合的气泡
   {
     const steps = 16
     const sections: Section[] = []
@@ -533,7 +610,7 @@ export function buildLocustEgg(): InsectModel {
     for (let i = 0; i < BUBBLE_COUNT; i++) {
       const t = (i + 0.5) / BUBBLE_COUNT
       const y = THREE.MathUtils.lerp(FOAM_Y0, FOAM_Y1, t) + (hash(i + 40) - 0.5) * 0.1
-      const rad = 0.055 + hash(i + 80) * 0.075
+      const rad = 0.058 + hash(i + 80) * 0.078
       // 黄金角铺开方位，气泡不会在某一侧扎堆；半径上限保证气泡不捅穿囊壁
       const az = i * 2.399963 + hash(i + 120) * 0.6
       const cavR = keyframe(CAVITY, y)
@@ -580,7 +657,7 @@ export function buildLocustEgg(): InsectModel {
      */
     for (let i = 0; i < 14; i++) {
       const az = PHI_START + PHI_SPAN * ((i + 0.5) / 14 + (hash(i + 700) - 0.5) * 0.05)
-      const r = THREE.MathUtils.lerp(0.24, SOIL_OUT - 0.06, hash(i + 740))
+      const r = THREE.MathUtils.lerp(0.26, SOIL_OUT - 0.06, hash(i + 740))
       const rad = 0.04 + hash(i + 780) * 0.055
       const lump = new THREE.Mesh(new THREE.SphereGeometry(rad, 10, 8), grainMat)
       lump.scale.set(1, 0.62, 1.15)
@@ -611,25 +688,50 @@ export function buildLocustEgg(): InsectModel {
     }
   }
 
-  // ---- 整体偏航（理由见文件头「摆位」）
+  // ---- 整体倾斜 + 偏航（理由见文件头「摆位」）
   const root = new THREE.Group()
-  g.rotation.y = YAW
+  g.rotation.set(0, YAW, TILT)
   root.add(g)
 
   /*
    * 锚点全部落在实体内部或表面上：
-   * eggMass 在第 4 层轴心那一枚卵里，foamPlug 在泡沫芯柱里，
+   * eggMass 在卵间基质柱里（周围一圈就是卵），foamPlug 在泡沫芯柱里，
    * podWall / soil 取方位角 350°——那是剖口近侧的那条边，
    * 展台默认机位（方位角 56°）正对着它。
    */
   const wallAz = THREE.MathUtils.degToRad(350)
-  const wallR = keyframe(OUTER, 2.6)
+  const wallR = keyframe(OUTER, 2.4)
   const anchors: Record<string, THREE.Vector3> = {
-    eggMass: axisAt(EGG_Y0 + 3 * EGG_PITCH),
+    eggMass: axisAt(2.4),
     foamPlug: axisAt(FOAM_ANCHOR_Y),
-    podWall: toModel(bendX(2.6) + wallR * Math.cos(wallAz), 2.6, wallR * Math.sin(wallAz)),
-    soil: toModel(bendX(SOIL_TOP) + 0.45 * Math.cos(wallAz), SOIL_TOP - 0.03, 0.45 * Math.sin(wallAz)),
+    podWall: toModel(bendX(2.4) + wallR * Math.cos(wallAz), 2.4, wallR * Math.sin(wallAz)),
+    soil: toModel(bendX(SOIL_TOP) + 0.42 * Math.cos(wallAz), SOIL_TOP - 0.03, 0.42 * Math.sin(wallAz)),
   }
 
-  return finalize(root, anchors)
+  /*
+   * 取景半径：**逐顶点量出来的真实包围半径**，不是 `finalize()` 那个由包围盒
+   * 算的球（`boundingRadius()` 取的是盒对角线的一半）。
+   *
+   * 这一件是一根**斜置的细棒**：轴对齐包围盒把它外接成一个大方块，
+   * 盒对角线比棒本身长出三成，于是相机白退开三成、卵粒跟着缩小三成。
+   * 真实包围半径 = max|v − 中心|，对一根棒就是它自己的半长，一点空气都不多留。
+   * `radius` 本身不动——它仍是「模型有多大」的事实，落影等仍按它算。
+   */
+  root.updateMatrixWorld(true)
+  const box = new THREE.Box3().setFromObject(root)
+  const center = box.getCenter(new THREE.Vector3())
+  const v = new THREE.Vector3()
+  let far = 0
+  root.traverse((o) => {
+    const m = o as THREE.Mesh
+    if (!m.isMesh || !m.geometry) return
+    const pos = m.geometry.getAttribute('position')
+    for (let i = 0; i < pos.count; i++) {
+      v.fromBufferAttribute(pos, i)
+      m.localToWorld(v)
+      far = Math.max(far, v.distanceTo(center))
+    }
+  })
+
+  return finalize(root, anchors, { frameRadius: far * 1.02 })
 }
