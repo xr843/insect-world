@@ -51,10 +51,38 @@ export const MAX_HITS = 12
 const TEXT_TIER_MIN_LEN = 2
 
 /**
+ * 物种自己那几段可搜文本的小写副本，按物种缓存一次。
+ *
+ * 为什么要缓存：`tierOf` 是**每个物种、每次按键**各跑一遍的（63 次 × 每个按键，
+ * 双语数据下是 126 条）。`summary`/`trivia` 是整段正文，在这里现场 `toLowerCase()`
+ * 等于每敲一个字就重新拷一遍全站正文 —— 手机上按住退格连删时最明显。
+ * 数据是模块级常量、这辈子不会变，小写副本算一次就够。
+ */
+const lowered = new WeakMap<Insect, { latin: string; epithet: string; summary: string; trivia: string }>()
+
+function lower(insect: Insect) {
+  let v = lowered.get(insect)
+  if (!v) {
+    v = {
+      latin: insect.latin.toLowerCase(),
+      epithet: insect.epithet.toLowerCase(),
+      summary: insect.summary.toLowerCase(),
+      trivia: insect.trivia.toLowerCase(),
+    }
+    lowered.set(insect, v)
+  }
+  return v
+}
+
+/**
  * 单个物种对某个查询词的命中级别；没命中返回 null。
  *
  * `q` 必须是**已经 trim + toLowerCase 过**的查询词 —— 大小写归一化放在调用方
- * 做一次，这里每个物种都做一遍纯属浪费（63 次 × 每个按键）。
+ * 做一次，这里每个物种都做一遍纯属浪费（63 次 × 每个按键）。物种这一侧的文本
+ * 同理，走上面的 `lower()` 缓存。
+ *
+ * ⚠️ 两侧都必须小写。少一侧就是**只有大小写完全撞上才搜得到**：英文版的
+ * `Mexico`、`North America` 这类专有名词此前在小写查询下一条都搜不出来（PR #41）。
  */
 export function tierOf(
   insect: Insect,
@@ -70,13 +98,11 @@ export function tierOf(
   if (matchesAlias(locale, insect.id, q)) return 'alias'
   // 拼音只对中文版开：英文读者面对的本来就是英文名（老实现的判断，照旧）
   if (locale === 'zh' && matchesPinyin(insect.id, q)) return 'alias'
-  if (insect.latin.toLowerCase().includes(q)) return 'meta'
+  const text = lower(insect)
+  if (text.latin.includes(q)) return 'meta'
   if (orderLabel.toLowerCase().includes(q)) return 'meta'
-  if (insect.epithet.toLowerCase().includes(q)) return 'meta'
-  if (
-    q.length >= TEXT_TIER_MIN_LEN &&
-    (insect.summary.toLowerCase().includes(q) || insect.trivia.toLowerCase().includes(q))
-  ) {
+  if (text.epithet.includes(q)) return 'meta'
+  if (q.length >= TEXT_TIER_MIN_LEN && (text.summary.includes(q) || text.trivia.includes(q))) {
     return 'text'
   }
   return null
