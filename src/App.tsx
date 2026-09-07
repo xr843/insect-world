@@ -11,6 +11,8 @@ import { Gallery } from './components/Gallery'
 import { DetailPanel } from './components/DetailPanel'
 import { LibraryPanel } from './components/LibraryPanel'
 import { SiteFooter } from './components/SiteFooter'
+import { WishWall } from './components/WishWall'
+import { FeedbackDialog } from './components/FeedbackDialog'
 import { Stage } from './components/Stage'
 import { TopBar } from './components/TopBar'
 import { IconGrid, IconSparkle } from './components/icons'
@@ -65,6 +67,9 @@ export default function App() {
   }, [])
 
   const [galleryOpen, setGalleryOpen] = useState(false)
+  /** 点播墙与纠错对话框。跟 gallery / notes 一样是浮层，不占路由 */
+  const [wallOpen, setWallOpen] = useState(false)
+  const [reportOpen, setReportOpen] = useState(false)
   const [notesOpen, setNotesOpen] = useState(false)
   const [compareId, setCompareId] = useState<string | null>(null)
   /**
@@ -401,6 +406,10 @@ export default function App() {
           insect={insect}
           onCompare={toggleCompare}
           onDiscover={(kind) => openDiscovery(kind, 'panel')}
+          onReportError={() => {
+            track(EVENTS.FEEDBACK_OPEN, { kind: 'correction', source: 'panel' })
+            setReportOpen(true)
+          }}
         />
       </main>
 
@@ -412,7 +421,12 @@ export default function App() {
         onExplore={() => setGalleryOpen(true)}
       />
 
-      <SiteFooter />
+      <SiteFooter
+        onOpenWall={() => {
+          track(EVENTS.FEEDBACK_OPEN, { kind: 'wish', source: 'footer' })
+          setWallOpen(true)
+        }}
+      />
 
       <div className="rail-float">
         <button onClick={() => setGalleryOpen(true)} title={t('library.allCount', { n: SPECIES.length })}>
@@ -429,6 +443,16 @@ export default function App() {
           activeId={activeId}
           onSelect={select}
           onClose={() => setGalleryOpen(false)}
+        />
+      )}
+
+      {wallOpen && <WishWall onClose={() => setWallOpen(false)} />}
+
+      {reportOpen && (
+        <FeedbackDialog
+          insect={insect}
+          focusAnchor={focusAnchor}
+          onClose={() => setReportOpen(false)}
         />
       )}
 

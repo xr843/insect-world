@@ -1,0 +1,225 @@
+.backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 92;
+  background: #3a2b1e2e;
+  backdrop-filter: blur(3px);
+  display: grid;
+  place-items: center;
+  padding: 40px 24px;
+  animation: fade-up 0.18s ease both;
+}
+
+.sheet {
+  width: min(560px, 100%);
+  max-height: 100%;
+  overflow-y: auto;
+  padding: 26px 28px 24px;
+  background: var(--paper-solid);
+  border-radius: 22px;
+  border: 1px solid var(--line);
+  box-shadow: 0 32px 90px #3a2b1e33;
+}
+
+.head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 18px;
+}
+
+.title {
+  font-size: 26px;
+  color: var(--ink);
+}
+
+.sub {
+  font-size: 10.5px;
+  letter-spacing: 0.18em;
+  color: var(--brass);
+  margin-top: 4px;
+}
+
+.close {
+  font-size: 20px;
+  line-height: 1;
+  padding: 4px 8px;
+  border: none;
+  background: transparent;
+  color: var(--muted);
+  cursor: pointer;
+}
+
+.close:hover {
+  color: var(--ink);
+}
+
+.note {
+  padding: 22px 4px;
+  font-size: 13px;
+  color: var(--muted);
+  line-height: 1.7;
+}
+
+.retry {
+  border: none;
+  background: transparent;
+  padding: 0;
+  font: inherit;
+  font-size: 13px;
+  color: var(--primary-a);
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.list {
+  list-style: none;
+  margin: 0 0 22px;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+/*
+  整行即按钮。条形是行的背景填充（.bar 绝对定位在下层），所以「看见排名」
+  与「点下去投票」共用同一块面积 —— 投票是这面墙唯一的低门槛动作，
+  任何额外的瞄准成本都直接折损参与率。
+*/
+.row {
+  position: relative;
+  isolation: isolate;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 11px 14px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--line);
+  background: var(--field);
+  color: var(--ink);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  overflow: hidden;
+  transition:
+    border-color 0.15s ease,
+    transform 0.12s ease;
+}
+
+.row:hover:not(:disabled) {
+  border-color: var(--line-strong);
+}
+
+.row:active:not(:disabled) {
+  transform: translateY(1px);
+}
+
+.row:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 1px;
+}
+
+/* 已投过的行不再可点，但保留条形与票数 —— 它仍然是榜单的一部分 */
+.row:disabled {
+  cursor: default;
+  opacity: 0.72;
+}
+
+/*
+  条形用 brass 调出来，而不是 --tint。
+  --tint 是 7% 透明度的「悬停浅洗」，当装饰刚好，当数据条则完全读不出长短 ——
+  而这面墙的排名信息全靠这条长度承载（真机上看才发现的：九行几乎一模一样）。
+*/
+.bar {
+  position: absolute;
+  inset: 0 auto 0 0;
+  z-index: -1;
+  background: color-mix(in srgb, var(--brass) 20%, transparent);
+  transition: width 0.3s ease;
+}
+
+.rowText {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.rowTitle {
+  font-size: 14px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.count {
+  flex: none;
+  font-variant-numeric: tabular-nums;
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.block {
+  border-top: 1px solid var(--line);
+  padding-top: 16px;
+  margin-top: 4px;
+}
+
+.block + .block {
+  margin-top: 20px;
+}
+
+.blockTitle {
+  font-size: 11px;
+  letter-spacing: 0.18em;
+  color: var(--brass);
+  margin-bottom: 10px;
+}
+
+.quotes {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.quote {
+  padding: 10px 14px;
+  border-radius: var(--radius-sm);
+  background: var(--field);
+  font-size: 13.5px;
+  line-height: 1.7;
+  color: var(--ink);
+  white-space: pre-wrap;
+}
+
+@media (max-width: 640px) {
+  .backdrop {
+    padding: 16px 12px;
+  }
+
+  .sheet {
+    padding: 20px 18px 18px;
+  }
+
+  .title {
+    font-size: 22px;
+  }
+}
+
+/* 零票那行的行尾是「投一票」而不是数字 —— 淡一档，别跟真实票数抢读数的注意力 */
+.count[data-zero='true'] {
+  opacity: 0.65;
+}
+
+/* 投过的勾号。跟票数同色但小半号，确认归确认，别喧宾夺主盖过数字 */
+.check {
+  margin-right: 4px;
+  font-size: 11px;
+  color: var(--brass);
+}

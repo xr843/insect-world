@@ -1,0 +1,129 @@
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.context {
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  color: var(--brass);
+}
+
+.textarea {
+  width: 100%;
+  resize: vertical;
+  min-height: 74px;
+  padding: 10px 12px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--line);
+  background: var(--field);
+  color: var(--ink);
+  font: inherit;
+  line-height: 1.6;
+}
+
+.textarea:focus-visible,
+.email:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 1px;
+}
+
+.email {
+  width: 100%;
+  padding: 8px 12px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--line);
+  background: var(--field);
+  color: var(--ink);
+  font: inherit;
+  font-size: 13px;
+}
+
+/*
+  蜜罐：挪出视野而不是隐藏。display:none 与 hidden 会被越来越多的爬虫识别
+  并跳过，而绝对定位到屏幕外的输入框在 DOM 里看起来跟普通字段一模一样。
+  尺寸留 1px 而不是 0 —— 有些无头浏览器会忽略零尺寸元素。
+*/
+.honeypot {
+  position: absolute;
+  left: -9999px;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 2px;
+}
+
+.hint,
+.emailHint {
+  font-size: 11px;
+  color: var(--muted);
+  line-height: 1.5;
+}
+
+.submit {
+  flex: none;
+  padding: 7px 18px;
+  border-radius: 999px;
+  border: 1px solid transparent;
+  background: var(--primary-a);
+  color: var(--on-primary);
+  font: inherit;
+  font-size: 13px;
+  cursor: pointer;
+  transition: opacity 0.15s ease;
+}
+
+.submit:hover:not(:disabled) {
+  opacity: 0.88;
+}
+
+.submit:disabled {
+  background: var(--disabled);
+  color: var(--muted);
+  cursor: default;
+}
+
+.error {
+  font-size: 12px;
+  color: var(--danger);
+  line-height: 1.5;
+}
+
+.thanks {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px 4px;
+}
+
+.thanksText {
+  font-size: 15px;
+  color: var(--ink);
+}
+
+.again {
+  flex: none;
+  padding: 5px 14px;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  background: transparent;
+  color: var(--muted);
+  font: inherit;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.again:hover {
+  color: var(--ink);
+  border-color: var(--line-strong);
+}

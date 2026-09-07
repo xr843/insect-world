@@ -1,6 +1,7 @@
 import { PART as cards } from './_parts/cards'
 import { PART as common } from './_parts/common'
 import { PART as discovery } from './_parts/discovery'
+import { PART as feedback } from './_parts/feedback'
 import { PART as panels } from './_parts/panels'
 import { PART as stage } from './_parts/stage'
 import { PART as topbar } from './_parts/topbar'
@@ -14,4 +15,5 @@ export const en: Dict = {
   ...panels.en,
   ...discovery.en,
   ...cards.en,
+  ...feedback.en,
 }
