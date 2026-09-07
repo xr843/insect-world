@@ -30,7 +30,7 @@ const withPhoto = INSECTS.find((i) => photoUrl(i.id))!
 const withoutPhoto = INSECTS.find((i) => !photoUrl(i.id))!
 
 function mount(insect = withPhoto) {
-  renderZh(<DetailPanel insect={insect} onCompare={vi.fn()} onDiscover={vi.fn()} />)
+  renderZh(<DetailPanel insect={insect} onCompare={vi.fn()} onDiscover={vi.fn()} onReportError={() => {}} />)
 }
 
 describe('实物照片入口的位置', () => {

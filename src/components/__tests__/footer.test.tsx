@@ -30,19 +30,19 @@ const repoUrl = pkg.repository.url.replace(/^git\+/, '').replace(/\.git$/, '')
 
 describe('页脚', () => {
   it('GitHub 链接与 package.json 里的仓库地址一致', () => {
-    renderZh(<SiteFooter />)
+    renderZh(<SiteFooter onOpenWall={() => {}} />)
     expect(screen.getByRole('link', { name: /github/i }).getAttribute('href')).toBe(repoUrl)
   })
 
   it('外链带 rel="noreferrer"（防 tabnabbing）', () => {
-    renderZh(<SiteFooter />)
+    renderZh(<SiteFooter onOpenWall={() => {}} />)
     const link = screen.getByRole('link', { name: /github/i })
     expect(link.getAttribute('target')).toBe('_blank')
     expect(link.getAttribute('rel')).toContain('noreferrer')
   })
 
   it('版权年份是当前年份，不是写死的', () => {
-    renderZh(<SiteFooter />)
+    renderZh(<SiteFooter onOpenWall={() => {}} />)
     expect(screen.getByText(new RegExp(`© *${new Date().getFullYear()}`))).toBeTruthy()
   })
 })

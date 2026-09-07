@@ -26,10 +26,12 @@ export function DetailPanel({
   insect,
   onCompare,
   onDiscover,
+  onReportError,
 }: {
   insect: Insect
   onCompare: () => void
   onDiscover: (kind: DiscoveryKind) => void
+  onReportError: () => void
 }) {
   const t = useT()
   const locale = useLocale()
@@ -241,6 +243,21 @@ export function DetailPanel({
           <span className={s.metaValue}>{insect.relatives.join(' · ')}</span>
         </div>
       </div>
+
+      {/*
+        纠错入口放在正文最末、吸底按钮之上，而且刻意做得很轻。
+
+        位置是想清楚的：这一栏可视 51%，末尾确实在折叠线以下 —— 但会发现
+        错处的人，按定义就是**把这段读完了**的人，他自然会走到这儿。反过来，
+        把它提到显眼处只会招来「这虫真丑」之类落不了地的反馈，
+        而且要跟「读讲解」那个主 CTA 抢注意力。
+
+        README 里那句「AI 撰写未核校」是这个站被拿去上课的硬门槛
+        （issue #3 那位老师就卡在这儿）。这个入口是把访客变成校对的那条路。
+      */}
+      <button className={s.reportError} onClick={onReportError}>
+        {t('feedback.correction.open')}
+      </button>
 
       {/*
         主按钮做成**栏内吸底**，而不是待在底部的动作组里。

@@ -3,7 +3,7 @@ import s from './SiteFooter.module.css'
 import { useT } from '../i18n/useT'
 
 /**
- * 页面最下端的一行：站名、年份、源码出口。
+ * 页面最下端的一行：站名、年份、点播墙入口、源码出口。
  *
  * 全站唯一指向 GitHub 的地方 —— 这个项目的卖点之一是「每一只虫都是代码
  * 实时生成的」，看完标本想去看代码的人得有条路走，否则只能靠 README 里
@@ -11,16 +11,26 @@ import { useT } from '../i18n/useT'
  *
  * 地址写成常量而不是散在 JSX 里，是为了让 footer.test.tsx 能拿它跟
  * package.json 的 repository.url 对答案 —— 改仓库名时两处必须一起动。
+ *
+ * 点播墙的入口也放这儿：在此之前，全站唯一的对外通道就是右边那个 GitHub
+ * 图标 —— 而访客里的老师、家长、孩子根本不会去开 issue（上线至今 6885
+ * 人/月，历史总共收到过 1 个）。这一行是给他们的那条路。
  */
 const REPO_URL = 'https://github.com/xr843/insect-world'
 
-export function SiteFooter() {
+export function SiteFooter({ onOpenWall }: { onOpenWall: () => void }) {
   const t = useT()
   return (
     <footer className={s.footer}>
       <span>
         {t('brand.name')} © {new Date().getFullYear()}
       </span>
+      <span className={s.sep} aria-hidden="true">
+        ·
+      </span>
+      <button className={s.link} onClick={onOpenWall}>
+        {t('wall.open')}
+      </button>
       <span className={s.sep} aria-hidden="true">
         ·
       </span>

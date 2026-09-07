@@ -76,6 +76,12 @@ export const EVENTS = {
   PHOTO_LINK: 'photo_link',
   /** 左栏名录滚动深度 —— 首页①号问题（63 种里人均只翻到 5~6 种）直接量的就是这条 */
   LIBRARY_SCROLL_DEPTH: 'library_scroll_depth',
+  /** 点播墙上投出一票（带候选项 id） —— 墙上唯一低门槛的动作，用它判断墙活没活 */
+  WISH_VOTE: 'wish_vote',
+  /** 反馈表单被打开（kind=wish|correction，source=footer|panel） */
+  FEEDBACK_OPEN: 'feedback_open',
+  /** 反馈提交成功（带 kind）。两周后拿它跟 note_write(14/月) 对比就知道这块该不该留 */
+  FEEDBACK_SUBMIT: 'feedback_submit',
 } as const
 
 /**

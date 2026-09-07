@@ -34,7 +34,7 @@ describe('分享点击 —— share_click(method)', () => {
       value: { writeText: vi.fn().mockResolvedValue(undefined) },
       configurable: true,
     })
-    renderZh(<DetailPanel insect={ladybird} onCompare={vi.fn()} onDiscover={vi.fn()} />)
+    renderZh(<DetailPanel insect={ladybird} onCompare={vi.fn()} onDiscover={vi.fn()} onReportError={() => {}} />)
     fireEvent.click(screen.getByText('复制本页链接'))
     expect(trackMock).toHaveBeenCalledWith(EVENTS.SHARE_CLICK, { method: 'copy' })
   })
@@ -44,7 +44,7 @@ describe('分享点击 —— share_click(method)', () => {
       value: vi.fn().mockResolvedValue(undefined),
       configurable: true,
     })
-    renderZh(<DetailPanel insect={ladybird} onCompare={vi.fn()} onDiscover={vi.fn()} />)
+    renderZh(<DetailPanel insect={ladybird} onCompare={vi.fn()} onDiscover={vi.fn()} onReportError={() => {}} />)
     fireEvent.click(screen.getByText('分享这只虫'))
     expect(trackMock).toHaveBeenCalledWith(EVENTS.SHARE_CLICK, { method: 'system' })
   })

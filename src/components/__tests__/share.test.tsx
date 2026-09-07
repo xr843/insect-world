@@ -26,7 +26,7 @@ afterEach(() => {
 })
 
 function mountZh() {
-  renderZh(<DetailPanel insect={ladybird} onCompare={vi.fn()} onDiscover={vi.fn()} />)
+  renderZh(<DetailPanel insect={ladybird} onCompare={vi.fn()} onDiscover={vi.fn()} onReportError={() => {}} />)
 }
 
 function stubClipboard() {
@@ -68,7 +68,7 @@ describe('没有系统分享面板：复制链接', () => {
 
   it('英文版复制的是 /en/ 前缀的路径', async () => {
     const writeText = stubClipboard()
-    renderEn(<DetailPanel insect={ladybird} onCompare={vi.fn()} onDiscover={vi.fn()} />)
+    renderEn(<DetailPanel insect={ladybird} onCompare={vi.fn()} onDiscover={vi.fn()} onReportError={() => {}} />)
     await act(async () => {
       fireEvent.click(screen.getByText('Copy page link'))
     })

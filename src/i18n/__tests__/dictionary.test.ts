@@ -4,11 +4,12 @@ import { zh } from '../zh'
 import { PART as cards } from '../_parts/cards'
 import { PART as common } from '../_parts/common'
 import { PART as discovery } from '../_parts/discovery'
+import { PART as feedback } from '../_parts/feedback'
 import { PART as panels } from '../_parts/panels'
 import { PART as stage } from '../_parts/stage'
 import { PART as topbar } from '../_parts/topbar'
 
-const PARTS = { common, topbar, stage, panels, discovery, cards }
+const PARTS = { common, topbar, stage, panels, discovery, cards, feedback }
 
 describe('两份字典对齐', () => {
   it('键集合完全相同', () => {

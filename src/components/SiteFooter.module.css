@@ -21,10 +21,17 @@
   opacity: 0.55;
 }
 
+/* 同一个类同时给 <a>（源码链接）与 <button>（点播墙）用 —— 两者在这一行里
+   长得一模一样，重置掉按钮自带的边框/背景/字体就够，不必分两套 */
 .link {
   display: inline-flex;
   align-items: center;
   gap: 6px;
+  padding: 0;
+  border: none;
+  background: transparent;
+  font: inherit;
+  cursor: pointer;
   color: var(--muted);
   text-decoration: none;
   transition: color 0.16s ease;
