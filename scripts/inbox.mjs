@@ -10,6 +10,7 @@
  *
  * 用法：
  *   npm run inbox                       列出待处理的提交
+ *   npm run inbox -- summary            一行摘要（挂在 postdeploy 上，见下）
  *   npm run inbox -- wishes             列出候选项与当前票数
  *   npm run inbox -- pick <id>          精选上墙
  *   npm run inbox -- hide <id>          收起（垃圾、或已处理完的纠错）
@@ -86,6 +87,32 @@ function wishes() {
   }
 }
 
+/**
+ * 一行摘要 —— `npm run deploy` 的 postdeploy 会调它。
+ *
+ * 为什么挂在部署上：这套东西**没有任何推送**，留言进库之后只有主动查才看得见。
+ * 而"记得每周查一次"是最容易断的那种习惯。部署是你本来就会做、且必然在这台
+ * 机器上（凭证都在这儿）的动作，把摘要贴在它后面，等于零成本地借了一个既有触发点。
+ *
+ * 两条硬约束：
+ *
+ * 1. **绝不能让部署失败。** 网络抖一下、库还没建好、凭证过期 —— 任何一种都
+ *    只该让这一行摘要消失，不该让 `npm run deploy` 非零退出。所以整个函数吞掉
+ *    一切异常，连报错都不打（部署日志里多一段红字，比少一行摘要糟得多）。
+ * 2. **没有新留言时一个字都不说。** 每次部署都打一行"收件箱：0 条"，两周之后
+ *    你就不看它了 —— 那这个提醒等于不存在。
+ */
+function summary() {
+  let n = 0
+  try {
+    const rows = d1("SELECT COUNT(*) AS n FROM messages WHERE status = 'new'")
+    n = rows[0]?.n ?? 0
+  } catch {
+    return
+  }
+  if (n > 0) console.log(`\n📬 收件箱 ${n} 条待处理 —— npm run inbox`)
+}
+
 function setStatus(id, status) {
   if (!id) throw new Error('要给一个提交 id')
   d1(`UPDATE messages SET status = ${q(status)} WHERE id = ${q(id)}`)
@@ -112,6 +139,7 @@ function promote([id, slug, kind, titleZh, titleEn]) {
 
 try {
   if (cmd === 'list') list()
+  else if (cmd === 'summary') summary()
   else if (cmd === 'wishes') wishes()
   else if (cmd === 'pick') setStatus(args[1], 'featured')
   else if (cmd === 'hide') setStatus(args[1], 'hidden')
