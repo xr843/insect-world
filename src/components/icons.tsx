@@ -178,6 +178,20 @@ export const IconGrid = ({ size, className, strokeWidth }: P) => (
   </svg>
 )
 
+/**
+ * 点播墙（右侧浮栏第三个）。
+ *
+ * 画成条形图而不是「意见箱/喇叭」那类隐喻：墙本身就是一张按票数排的条形榜，
+ * 图标直接预告点开会看见什么。也顺带跟同栏的格子（看全部）、星芒（随便看一只）
+ * 拉开语义距离 —— 三个都是「看什么」，但看的东西各不相同。
+ */
+export const IconPoll = ({ size, className, strokeWidth }: P) => (
+  <svg {...base(size, strokeWidth)} className={className}>
+    <path d="M4.5 4.5v15" />
+    <path d="M6.5 8h12M6.5 12h8M6.5 16h5" />
+  </svg>
+)
+
 export const IconLeaf = ({ size, className, strokeWidth }: P) => (
   <svg {...base(size, strokeWidth)} className={className}>
     <path d="M4 20c0-8 5-13 16-13 0 9-5 13-13 13H4Z" />

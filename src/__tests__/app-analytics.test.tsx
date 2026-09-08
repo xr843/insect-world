@@ -11,7 +11,7 @@
  * 会真的触发建模（含 jsdom 没有的 2D canvas 上下文），又慢又不稳定，
  * 而这份测试根本不关心建模结果，只关心埋点调用。
  */
-import { cleanup, fireEvent, screen } from '@testing-library/react'
+import { cleanup, fireEvent, screen, within } from '@testing-library/react'
 import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest'
 import { renderZh } from '../i18n/testing'
 import { INSECTS } from '../data/insects.zh'
@@ -141,5 +141,37 @@ describe('主题切换 —— theme_toggle(theme)', () => {
     renderZh(<App />)
     fireEvent.click(screen.getByLabelText('切换到深色主题'))
     expect(trackMock).toHaveBeenCalledWith(EVENTS.THEME_TOGGLE, { theme: 'dark' })
+  })
+})
+
+describe('点播墙的两个入口 —— feedback_open(source)', () => {
+  /**
+   * 页脚与右侧浮栏的曝光度差着一个量级（浮栏一直在视野里，页脚要滚到底），
+   * source 分不开的话，两周后就没法判断「墙没人用」是功能问题还是入口太深。
+   */
+  it('右侧浮栏那个按钮上报 source: rail', () => {
+    renderZh(<App />)
+    fireEvent.click(screen.getByTitle('大家想看什么'))
+    expect(trackMock).toHaveBeenCalledWith(EVENTS.FEEDBACK_OPEN, { kind: 'wish', source: 'rail' })
+  })
+
+  it('页脚那个上报 source: footer', () => {
+    renderZh(<App />)
+    // 两个入口的无障碍名字都是「大家想看什么」（浮栏靠 title，页脚靠文字），
+    // 所以按角色查会同时命中两个 —— 同一个动作两个入口，这不是缺陷，
+    // 但测试必须各自限定作用域，否则只是在测「随便点中了哪一个」
+    const footer = document.querySelector('footer')!
+    fireEvent.click(within(footer).getByRole('button', { name: '大家想看什么' }))
+    expect(trackMock).toHaveBeenCalledWith(EVENTS.FEEDBACK_OPEN, { kind: 'wish', source: 'footer' })
+  })
+
+  /**
+   * 浮栏在 ≤1240px 下整条 display:none（global.css），也就是手机与平板看不见它 ——
+   * 页脚那个是窄屏上唯一的入口，撤掉等于 29% 的访客再也进不了墙。
+   */
+  it('两个入口同时存在，页脚那个不能因为浮栏有了就撤掉', () => {
+    renderZh(<App />)
+    expect(document.querySelector('.rail-float [title="大家想看什么"]')).toBeTruthy()
+    expect(document.querySelector('footer button')?.textContent).toContain('大家想看什么')
   })
 })
