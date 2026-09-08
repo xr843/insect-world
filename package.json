@@ -30,7 +30,7 @@
     "db:schema": "wrangler d1 execute insect-world --remote --file=db/schema.sql",
     "db:seed": "wrangler d1 execute insect-world --remote --file=db/seed.sql",
     "deploy": "npm test && npm run build && npx wrangler pages deploy dist --project-name=insect-world --branch=master --commit-dirty=true",
-    "postdeploy": "node scripts/indexnow-submit.mjs"
+    "postdeploy": "node scripts/indexnow-submit.mjs && node scripts/inbox.mjs summary"
   },
   "dependencies": {
     "@react-three/drei": "^9.117.3",
