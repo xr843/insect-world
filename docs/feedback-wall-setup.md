@@ -1,52 +1,57 @@
-# 点播墙上线手册
+# 点播墙的线上配置
 
-代码合并之后，还有三步只能在 Cloudflare 面板 / 命令行手动做一次。**做完之前
-前端是完好的**（墙会显示「墙暂时看不了」，纠错入口照常显示、提交时提示重试），
-所以这三步不急，但没做完就一条反馈也收不到。
+**2026-09-08 已全部配好，这份文档留作记录与排障。** 设计与取舍见
+`superpowers/specs/2026-09-07-feedback-wall-design.md`。
 
-设计与取舍见 `superpowers/specs/2026-09-07-feedback-wall-design.md`。
+## 现状
 
-## 1. 建库并绑定
+| 项 | 值 |
+| --- | --- |
+| D1 库 | `insect-world`（APAC，`ae238cb7-429a-469c-8b78-fb0f937278c5`） |
+| 绑定 | `DB` → 上面那个库，**写在仓库的 `wrangler.toml` 里**，生产与预览各一份 |
+| 密钥 | `FEEDBACK_SALT`，生产与预览各一个不同的随机值 |
+| 表 | `wishes` / `messages` / `votes`，已建 |
+| 候选项 | 9 条，票数全 0（`db/seed.sql`） |
+
+## 三个只有实操才撞得出来的坑
+
+### 1. `pages_build_output_dir` 不写，`wrangler.toml` 里的绑定会被**静默忽略**
+
+只写 `[[env.production.d1_databases]]` 而不写 `pages_build_output_dir`，
+`wrangler pages deploy` **不报任何错**，照常部署成功 —— 但部署出来的
+`env.DB` 是 `undefined`，端点一律回 503 `unconfigured`。
+
+wrangler 是靠这一行判断"这份配置是给 Pages 项目的"；缺了它整个文件被当作
+Workers 配置处理，`env.production` 那一段就没人读。
+
+排障线索：端点返回 `{"error":"unconfigured"}` 而不是 HTML —— 说明 Function
+部署成功、路由正常，**只是拿不到绑定**。
+
+### 2. 密钥是**部署时**注入的，设完必须重新部署
+
+`wrangler pages secret put` 成功之后，**已经在线上的那个部署仍然读不到它**。
+实测：设完 preview 的 `FEEDBACK_SALT`，直接打预览 URL 仍是 `unconfigured`，
+重新 `pages deploy` 一次才好。
+
+所以顺序必须是**先设密钥、后部署**。反过来就要多部署一次。
+
+### 3. `npm run deploy` 不用改
+
+`wrangler.toml` 里已有 `pages_build_output_dir = "dist"`，而 deploy 脚本又在
+命令行传了位置参数 `dist` —— 实测**不冲突**，原命令原样可用，绑定照样带上。
+（验的办法：部署到 `--branch=wall-binding-test` 这种预览分支，curl 它的
+`/api/wall` 看返回的是候选项还是 `unconfigured`。预览分支不碰生产。）
+
+## 重建 / 迁移时的完整步骤
 
 ```bash
-npx wrangler d1 create insect-world
+npx wrangler d1 create insect-world          # 记下 database_id 填进 wrangler.toml
+npm run db:schema                            # 建表，可重复执行
+npm run db:seed                              # 播种，可重复执行且不清零已有票数
+openssl rand -hex 32 | npx wrangler pages secret put FEEDBACK_SALT --project-name=insect-world
+openssl rand -hex 32 | npx wrangler pages secret put FEEDBACK_SALT --project-name=insect-world --env preview
+npm run deploy                               # 密钥要这一步之后才生效
 ```
-
-记下输出里的 `database_id`，然后去
-**Cloudflare 面板 → Workers & Pages → insect-world → Settings → Functions →
-D1 database bindings**，加一条：
-
-| 变量名 | 绑定到 |
-| --- | --- |
-| `DB` | 刚建的 `insect-world` |
-
-变量名必须是 `DB` —— `functions/api/*` 里读的就是 `env.DB`。
-
-## 2. 设一个盐
-
-同一页的 **Environment variables**，加密类型（Secret）：
-
-| 变量名 | 值 |
-| --- | --- |
-| `FEEDBACK_SALT` | 随便一串长随机字符 |
-
-`openssl rand -hex 32` 就够了。
-
-这个盐拌进 ip_hash（`src/feedback/rules.ts` 的 `ipHashInput`）。**缺了它端点会
-直接拒收**，这是故意的：没有盐的哈希等于把访客 IP 明文存进库，比少收几条反馈
-严重得多。
-
-盐可以随时换，代价只是当天的限流与投票去重重新计数。
-
-## 3. 建表并播种
-
-```bash
-npm run db:schema   # 建三张表，可重复执行
-npm run db:seed     # 九个初始候选项，可重复执行且不会清零已有票数
-```
-
-种子候选项是按 2026-09-07 的真实流量挑的（还没有 3D 生活史、但浏览量最高的
-六个物种，加上三项已知诉求），理由写在 `db/seed.sql` 的注释里。
 
 ## 日常：审收件箱
 

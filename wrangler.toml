@@ -1,0 +1,33 @@
+# Cloudflare Pages 的项目配置。
+#
+# 这个文件只为一件事存在：**把 D1 绑定写进仓库**。在此之前它只存在于
+# Cloudflare 面板的设置页里 —— 没有任何人能从代码里看出 `env.DB` 是怎么来的，
+# 而 `functions/api/*` 三个端点全靠它。
+#
+# `name` / `compatibility_date` 是 `wrangler pages download config` 从线上项目
+# 拉下来的原值，不是拍脑袋写的，改动它们等于改线上设置。
+name = "insect-world"
+compatibility_date = "2026-08-06"
+# 有这一行 wrangler 才把本文件当 Pages 配置读；缺了它 d1_databases 会被静默忽略
+# （实测：不加时预览部署上 env.DB 仍是 undefined，端点回 503 unconfigured）
+pages_build_output_dir = "dist"
+
+# 生产与预览各绑一次同一个库。
+#
+# Pages 的绑定是按环境分开存的，只写 production 的话，预览部署上
+# `env.DB` 会是 undefined —— 端点会老老实实回 503「还没配好」（这是设计好的
+# 降级路径，见 src/feedback/edge.ts 的 FeedbackEnv），但那样预览就永远验不了
+# 这块功能，等于每次改动都只能赌生产。
+#
+# 两个环境共用同一个库是刻意的：这面墙的数据量是几十行候选项加零星留言，
+# 为它维护两套库、两套种子、两套审核命令，成本远超"预览写脏了生产数据"
+# 那点风险 —— 而预览 URL 本来就没人知道。
+[[env.production.d1_databases]]
+binding = "DB"
+database_name = "insect-world"
+database_id = "ae238cb7-429a-469c-8b78-fb0f937278c5"
+
+[[env.preview.d1_databases]]
+binding = "DB"
+database_name = "insect-world"
+database_id = "ae238cb7-429a-469c-8b78-fb0f937278c5"
