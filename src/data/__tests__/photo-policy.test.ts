@@ -123,3 +123,22 @@ describe('licenseLabel', () => {
     expect(licenseLabel(input)).toBe(want)
   })
 })
+
+describe('licenseUrl', () => {
+  it('每一个允许的许可证都有对应的条款页 —— 缺了就等于署名不完整', async () => {
+    const { ALLOWED_LICENSES, licenseUrl } = await import('../photoPolicy')
+    const missing = ALLOWED_LICENSES.filter((l) => !licenseUrl(l))
+    expect(missing).toEqual([])
+  })
+
+  it('cc0 指向 public domain 而不是 licenses 路径', async () => {
+    const { licenseUrl } = await import('../photoPolicy')
+    expect(licenseUrl('cc0')).toContain('publicdomain/zero')
+  })
+
+  it('认不出的返回 null —— 宁可不给链接，也不给指错条款的链接', async () => {
+    const { licenseUrl } = await import('../photoPolicy')
+    expect(licenseUrl('cc-by-nd')).toBe(null)
+    expect(licenseUrl(null)).toBe(null)
+  })
+})

@@ -29,6 +29,21 @@ const SITE = 'https://insect-world.pages.dev'
 const { INSECTS: ZH } = await import('../src/data/insects.zh.ts')
 const { INSECTS: EN } = await import('../src/data/insects.en.ts')
 const { ORDER_LABEL } = await import('../src/i18n/orders.ts')
+const { licenseUrl, licenseLabel } = await import('../src/data/photoPolicy.ts')
+/**
+ * 实拍图清单。壳页要带图有两个理由：
+ *
+ * 1. **图片搜索** —— 这个站近 30 天自然搜索 0/2872，常规 SEO 代码侧已经做完
+ *    只能等。而 60 张实拍图在此之前**对爬虫完全不存在**（壳页里一个 <img>
+ *    都没有，图只在 React 挂载后才出现）。图片搜索是它唯一还没试过的入口。
+ * 2. **首屏** —— 图不必等主包下载完才显示。
+ *
+ * 清单缺失时整段跳过，构建照常 —— 跟前端 photoOf 返回 null 是同一条降级路径。
+ */
+const PHOTOS = (() => {
+  const f = path.join(ROOT, 'src/data/photos.json')
+  return existsSync(f) ? JSON.parse(readFileSync(f, 'utf8')) : {}
+})()
 
 const LISTS = { zh: ZH, en: EN }
 
@@ -147,8 +162,35 @@ function websiteNode(locale) {
   }
 }
 
+/**
+ * 实拍图的结构化数据。
+ *
+ * `license` + `acquireLicensePage` 两个字段齐了，Google Images 才会给
+ * **「可授权（Licensable）」标记** —— 这既是曝光，也是把 CC 署名做成
+ * 机器可读的一份。`creditText` / `creator` 对应 BY 的署名要求。
+ *
+ * 没有实拍图的物种返回 null，调用方回落到那张生成的分享卡。
+ */
+function photoImageObject(insect) {
+  const p = PHOTOS[insect.id]
+  if (!p) return null
+  const ext = p.ext === 'png' ? 'png' : 'jpg'
+  const lic = licenseUrl(p.license)
+  return {
+    '@type': 'ImageObject',
+    contentUrl: `${SITE}/photos/${insect.id}.${ext}`,
+    creditText: p.photographer,
+    creator: { '@type': 'Person', name: p.photographer },
+    copyrightNotice: p.attribution,
+    ...(lic ? { license: lic } : {}),
+    // 「去哪儿拿授权」指向 iNat 的观察页 —— 那儿有摄影者本人与原始授权声明
+    acquireLicensePage: p.inatUrl,
+  }
+}
+
 function speciesJsonLd(locale, insect, self, title, desc) {
   const image = ogImageFor(insect.id, locale)
+  const photo = photoImageObject(insect)
   // 62 只是双名（种），淡色库蚊是三名（亚种）——按词数分，别把亚种标成种
   const rank = insect.latin.trim().split(/\s+/).length >= 3 ? 'subspecies' : 'species'
   return {
@@ -183,7 +225,8 @@ function speciesJsonLd(locale, insect, self, title, desc) {
         scientificName: insect.latin,
         taxonRank: rank,
         description: insect.summary,
-        image,
+        // 真实照片排在前面：分享卡是自制插画卡，图片搜索要的是实拍
+        image: photo ? [photo, image] : image,
         parentTaxon: {
           '@type': 'Taxon',
           name: ORDER_LABEL[locale][insect.order],
@@ -279,6 +322,9 @@ const PANEL = {
 }
 
 const S = {
+  figure: 'margin:1.25rem 0',
+  img: 'display:block;width:100%;height:auto;border-radius:.5rem',
+  figcaption: 'font-size:.8rem;opacity:.7;margin-top:.35rem',
   wrap: 'max-width:46rem;margin:0 auto;padding:3rem 1.25rem 4rem;font-family:\'Noto Serif SC\',Georgia,serif;color:var(--ink,#2b2622);line-height:1.75',
   name: 'font-family:\'Playfair Display\',Georgia,serif;font-size:2rem;margin:0 0 .25rem',
   latin: 'font-style:italic;opacity:.72;margin:0 0 .1rem',
@@ -305,6 +351,39 @@ const S = {
  */
 const SEO_ROOT_TAG = 'article'
 
+/**
+ * 静态正文里的实拍图。
+ *
+ * ⚠️ **图注不能省。** 这些图全是 CC 授权的，BY 就是署名要求 —— 摄影者、
+ * 许可证、回原页的链接三样缺一不可。应用里那份图注在爬虫看来不存在
+ * （它要等 JS），所以静态这份必须自带完整署名，不能指望前端补。
+ *
+ * alt 里带上学名：图片搜索匹配的是 alt 与周边文字，而学名是这类查询里
+ * 最具区分度的词。
+ */
+function staticPhoto(locale, insect) {
+  const p = PHOTOS[insect.id]
+  if (!p) return ''
+  const ext = p.ext === 'png' ? 'png' : 'jpg'
+  const alt =
+    locale === 'zh'
+      ? `${insect.name}（${insect.latin}）的实拍照片`
+      : `Photograph of ${insect.name} (${insect.latin})`
+  const by = locale === 'zh' ? '摄影' : 'Photo by'
+  const lic = licenseUrl(p.license)
+  const licHtml = lic
+    ? `<a href="${esc(lic)}" rel="license noopener" target="_blank">${esc(licenseLabel(p.license))}</a>`
+    : esc(licenseLabel(p.license))
+  return (
+    `<figure style="${S.figure}">` +
+    `<img src="/photos/${insect.id}.${ext}" alt="${esc(alt)}" width="500" height="313" ` +
+    `loading="lazy" decoding="async" style="${S.img}" />` +
+    `<figcaption style="${S.figcaption}">${by} ${esc(p.photographer)} · ${licHtml} · ` +
+    `<a href="${esc(p.inatUrl)}" rel="noopener" target="_blank">iNaturalist</a></figcaption>` +
+    `</figure>`
+  )
+}
+
 /** 生成一页的静态正文。内容与应用里显示的是同一份数据。 */
 function staticBody(locale, insect) {
   const L = PANEL[locale]
@@ -314,6 +393,7 @@ function staticBody(locale, insect) {
     `<h1 style="${S.name}">${esc(insect.name)}</h1>`,
     `<p style="${S.latin}">${esc(insect.latin)}</p>`,
     `<p style="${S.epithet}">${esc(insect.epithet)}</p>`,
+    staticPhoto(locale, insect),
     `<p style="${S.p}">${esc(insect.summary)}</p>`,
     `<h2 style="${S.h2}">${esc(L.facts)}</h2>`,
     `<dl style="${S.dl}">`,
@@ -516,12 +596,53 @@ function buildPage(locale, insect) {
     ld['@graph'].some((n) => n['@type'] === 'Taxon' && n.scientificName === insect.latin),
     `${insect.id} 的 JSON-LD 回读不到学名「${insect.latin}」—— 转义环节把数据弄丢了`,
   )
+  /*
+   * 实拍图的两道回读断言。
+   *
+   * 这两件事失守都是**静默**的：页面照常渲染、图照常显示、构建照常绿。
+   * 第一件是许可证义务（CC 的 BY 要求署名摄影者并指明许可证），
+   * 漏了不是难看，是违约；第二件是这次做壳页图的**全部理由** ——
+   * license + acquireLicensePage 齐了 Google Images 才给「可授权」标记，
+   * 少一个就等于白做。
+   */
+  if (PHOTOS[insect.id]) {
+    const img = ld['@graph'].find((n) => n['@type'] === 'Taxon')?.image
+    const obj = Array.isArray(img) ? img.find((x) => x && x['@type'] === 'ImageObject') : null
+    assert(obj, `${insect.id}（${locale}）有实拍图，但 JSON-LD 的 Taxon.image 里没有 ImageObject`)
+    assert(
+      obj.license && obj.acquireLicensePage,
+      `${insect.id}（${locale}）的 ImageObject 缺 license 或 acquireLicensePage —— ` +
+        `Google Images 的「可授权」标记要求两者齐备，缺一个这块就白做了`,
+    )
+    assert(
+      obj.creditText,
+      `${insect.id}（${locale}）的 ImageObject 没有 creditText —— CC 的 BY 是署名要求，不是可选项`,
+    )
+  }
 
   // 静态正文注入 #root —— 见 staticBody() 的注释
+  const body = staticBody(locale, insect)
+  if (PHOTOS[insect.id]) {
+    const p = PHOTOS[insect.id]
+    assert(
+      body.includes(`/photos/${insect.id}.`),
+      `${insect.id}（${locale}）的静态正文里没有实拍图 —— 爬虫看不见图，这次改动就白做了`,
+    )
+    assert(
+      body.includes(p.photographer) && body.includes('creativecommons.org'),
+      `${insect.id}（${locale}）的静态图注缺摄影者或许可证链接 —— ` +
+        `应用里那份图注爬虫看不见（要等 JS），静态这份必须自带完整署名`,
+    )
+  } else {
+    assert(
+      !body.includes('<figure'),
+      `${insect.id}（${locale}）没有实拍图，却渲染出了 figure —— 会变成一个坏掉的 <img>`,
+    )
+  }
   html = replaceOnce(
     html,
     /<div id="root"><\/div>/,
-    `<div id="root">${staticBody(locale, insect)}</div>`,
+    `<div id="root">${body}</div>`,
     'root 容器',
   )
   assert(
