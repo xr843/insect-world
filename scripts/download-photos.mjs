@@ -22,7 +22,16 @@
  * 而前端对「没有照片」本来就有分支（photos.json 里没有的物种同样走那条路）。
  */
 import { createHash } from 'node:crypto'
-import { existsSync, mkdirSync, readFileSync, writeFileSync, copyFileSync, statSync } from 'node:fs'
+import {
+  copyFileSync,
+  existsSync,
+  mkdirSync,
+  readFileSync,
+  readdirSync,
+  statSync,
+  unlinkSync,
+  writeFileSync,
+} from 'node:fs'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 
@@ -39,6 +48,24 @@ if (!existsSync(MANIFEST)) {
 const manifest = JSON.parse(readFileSync(MANIFEST, 'utf8'))
 mkdirSync(CACHE, { recursive: true })
 mkdirSync(OUT, { recursive: true })
+
+/*
+ * 先清掉清单里已经没有的旧图。
+ *
+ * 不清的话，一个物种被移出清单（比如黑翅土白蚁 —— 候选全是繁殖蚁、没有兵蚁，
+ * 判定为不配图）之后，它上一次下载的那张**仍然躺在 public/photos/ 里并被部署**。
+ * 页面不会渲染它（photoOf 返回 null），所以看不出问题 —— 但产物里就多了一张
+ * 与清单自相矛盾的孤儿文件，日后核对「线上到底在用哪张」时会被它误导。
+ * 线上实测撞到过：termite-soldier.jpg 排除之后仍然 200。
+ */
+const wanted = new Set(
+  Object.entries(manifest).map(([id, e]) => `${id}.${e.ext === 'png' ? 'png' : 'jpg'}`),
+)
+for (const f of readdirSync(OUT)) {
+  if (f === 'checksums.json' || wanted.has(f)) continue
+  unlinkSync(path.join(OUT, f))
+  console.log(`  清掉不在清单里的旧图：${f}`)
+}
 
 let fromCache = 0
 let downloaded = 0
