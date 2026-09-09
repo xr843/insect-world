@@ -16,6 +16,12 @@
  * 位置这种东西最容易在重构里被顺手挪走，而挪走之后**任何常规断言都不会红**
  * （链接还在、href 还对、点了还能跳）。所以这里直接钉 DOM 顺序：
  * 它必须出现在「关键数据」之前。
+ *
+ * ⚠️ 2026-09-09：这个入口从「外链小胶囊」变成了**站内实拍图**本身
+ * （photo_link 30 天 660 次，是站上量最大的未满足需求，值得直接把图放进来）。
+ * 承载它的元素换了，但下面这三条位置约束**一条都没变** —— 它们钉的是
+ * 「回答『它真长什么样』的那个东西必须在身份区」，跟那东西是链接还是图无关。
+ * 所以这里改的是选择器，不是断言。
  */
 import { cleanup, screen } from '@testing-library/react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
@@ -23,29 +29,41 @@ import { renderZh } from '../../i18n/testing'
 import { DetailPanel } from '../DetailPanel'
 import { INSECTS } from '../../data/insects.zh'
 import { photoUrl } from '../../data/external'
+import { photoOf } from '../../data/photos'
 
 afterEach(cleanup)
 
-const withPhoto = INSECTS.find((i) => photoUrl(i.id))!
-const withoutPhoto = INSECTS.find((i) => !photoUrl(i.id))!
+const withPhoto = INSECTS.find((i) => photoOf(i.id))!
+/** 有 iNat taxon 记录、但一张授权合适的照片都没有 —— 这类退回外链胶囊 */
+const chipOnly = INSECTS.find((i) => photoUrl(i.id) && !photoOf(i.id))
+/** 连 taxon 记录都没有的（63 种里 2 只）—— 两样都不该出现 */
+const withoutAny = INSECTS.find((i) => !photoUrl(i.id))!
 
 function mount(insect = withPhoto) {
   renderZh(<DetailPanel insect={insect} onCompare={vi.fn()} onDiscover={vi.fn()} onReportError={() => {}} />)
 }
 
+/** 身份区里回答「它真长什么样」的那个块：有站内图时是 figure，没有时是外链胶囊 */
+function realityBlock(): HTMLElement {
+  return (
+    document.querySelector('figure') ??
+    (screen.getByRole('link', { name: /实物图/ }) as HTMLElement)
+  )
+}
+
 describe('实物照片入口的位置', () => {
   it('排在「关键数据」之前 —— 也就是在身份区，不在底部动作清单里', () => {
     mount()
-    const link = screen.getByRole('link', { name: /实物图/ })
+    const block = realityBlock()
     const facts = screen.getByText('关键数据')
     /*
-     * compareDocumentPosition 的 FOLLOWING 位在「link 之后是 facts」时置位。
+     * compareDocumentPosition 的 FOLLOWING 位在「block 之后是 facts」时置位。
      * 用它而不是比 y 坐标：jsdom 没有真实布局，所有元素的 y 都是 0，
      * 拿坐标断言在这里永远是绿的 —— 那正是这条测试要防的那种假绿。
      */
     expect(
-      link.compareDocumentPosition(facts) & Node.DOCUMENT_POSITION_FOLLOWING,
-      '「看实物照片」跑到「关键数据」后面去了 —— 右栏一次只看得到一半，' +
+      block.compareDocumentPosition(facts) & Node.DOCUMENT_POSITION_FOLLOWING,
+      '实拍图跑到「关键数据」后面去了 —— 右栏一次只看得到一半，' +
         '它一旦落到下半截就等于不存在（issue #3 就是这么来的）',
     ).toBeTruthy()
   })
@@ -59,33 +77,48 @@ describe('实物照片入口的位置', () => {
    *
    * 英文总述比中文长 148px，把整块推出了折叠线。也就是说「贴着总述放」等于
    * **让位置跟着正文长度走**，那是个会随内容漂移的锚点。改成放在总述之前，
-   * 位置就只取决于标题区，两种语言、任何视口高度下都钉在同一格（实测
-   * 中文 y=182 / 英文 y=240，全部整行可见）。
+   * 位置就只取决于标题区，两种语言、任何视口高度下都钉在同一格。
    *
-   * 读起来是「标题—副标题—动作条—正文」，不是打断。
+   * 换成实拍图之后这条只增不减：图比一行胶囊高得多，掉到折叠线下的损失更大。
    */
   it('排在总述之前 —— 位置不能跟着正文长度走，否则换个语言就掉出折叠线', () => {
     mount()
-    const link = screen.getByRole('link', { name: /实物图/ })
+    const block = realityBlock()
     const summary = screen.getByText(withPhoto.summary)
     expect(
-      link.compareDocumentPosition(summary) & Node.DOCUMENT_POSITION_FOLLOWING,
-      '实物照片入口跑到总述后面去了 —— 英文站上这会把它推出折叠线',
+      block.compareDocumentPosition(summary) & Node.DOCUMENT_POSITION_FOLLOWING,
+      '实拍图跑到总述后面去了 —— 英文站上这会把它推出折叠线',
     ).toBeTruthy()
   })
 
-  it('是外链，且带 noopener', () => {
+  it('图注里带署名与回原页的外链 —— CC 的 BY 是许可条件，漏了是违约', () => {
     mount()
-    const link = screen.getByRole('link', { name: /实物图/ })
-    expect(link.getAttribute('href')).toMatch(/^https:\/\/www\.inaturalist\.org\/taxa\/\d+$/)
+    const link = screen.getByRole('link', { name: /更多实拍图/ })
+    // 链的是**观察页**而不是 /photos/<id>：观察页带拍摄者、日期、地点，
+    // 是更完整的署名落点
+    expect(link.getAttribute('href')).toMatch(/^https:\/\/www\.inaturalist\.org\/observations\/\d+$/)
     expect(link.getAttribute('target')).toBe('_blank')
     expect(link.getAttribute('rel')).toContain('noopener')
   })
 
-  it('没有核对过的 taxon 记录时整个不渲染 —— 宁可不给，也不把人送到错的物种页', () => {
-    expect(withoutPhoto, '需要一个没有 iNat 链接的物种来测这条').toBeTruthy()
-    mount(withoutPhoto)
+  /**
+   * 有 taxon 但没有授权照片的物种（robber-fly / shining-chafer）必须退回外链胶囊。
+   * 换成站内图时如果顺手把胶囊删了，这两只就彻底失去实物图入口 —— 纯粹的回归，
+   * 而且不会有任何报错。
+   */
+  it('拿不到授权照片时退回 iNaturalist 外链，而不是什么都不给', () => {
+    if (!chipOnly) return
+    mount(chipOnly)
+    const link = screen.getByRole('link', { name: /实物图/ })
+    expect(link.getAttribute('href')).toMatch(/^https:\/\/www\.inaturalist\.org\/taxa\/\d+$/)
+    expect(link.getAttribute('rel')).toContain('noopener')
+  })
+
+  it('连 taxon 记录都没有时两样都不渲染 —— 宁可不给，也不把人送到错的物种页', () => {
+    expect(withoutAny, '需要一个没有 iNat 链接的物种来测这条').toBeTruthy()
+    mount(withoutAny)
     expect(screen.queryByRole('link', { name: /实物图/ })).toBeNull()
+    expect(document.querySelector('figure')).toBeNull()
   })
 })
 
@@ -155,20 +188,37 @@ describe('分享入口的位置', () => {
     ).toBeTruthy()
   })
 
-  it('排在总述之前 —— 与实物照片同一行，位置不跟正文长度走', () => {
+  it('排在总述之前 —— 位置不跟正文长度走', () => {
     mount()
     const summary = screen.getByText(withPhoto.summary)
     expect(shareBtn().compareDocumentPosition(summary) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
   })
 
-  it('与实物照片外链同处一个容器 —— 两个是一组次要动作，不该被拆散', () => {
+  /**
+   * ⚠️ 2026-09-09：这条原先要求分享与实物照片外链同处一个容器（「两个是一组
+   * 次要动作，不该被拆散」）。实拍图搬进站内之后那个前提没了 —— 回原页的链接
+   * 现在在图注里，是**署名的一部分**（CC 的 BY 要求），不再是一个并列的动作。
+   *
+   * 所以改成钉真正还成立的那条：分享这一行**必须能只放一个**。原注释里已经
+   * 写过这个要求（那时是为了 taxon 缺失的两只），现在它成了常态 —— 59 种都
+   * 只剩分享一个。假设「永远是两个并排」的布局代码会在这里红。
+   */
+  it('实拍图搬进站内之后，这一行只剩分享一个 —— 布局不能假设永远是两个并排', () => {
     mount()
+    const row = shareBtn().parentElement!
+    expect(row.children.length).toBe(1)
+    expect(screen.queryByRole('link', { name: /实物图/ })).toBeNull()
+  })
+
+  it('退回外链胶囊的物种，两个仍并排在同一容器里', () => {
+    if (!chipOnly) return
+    mount(chipOnly)
     const link = screen.getByRole('link', { name: /实物图/ })
     expect(shareBtn().parentElement).toBe(link.parentElement)
   })
 
   it('没有实物照片外链的物种照样有分享 —— 那一行不能假设永远是两个并排', () => {
-    mount(withoutPhoto)
+    mount(withoutAny)
     expect(screen.queryByRole('link', { name: /实物图/ })).toBeNull()
     expect(shareBtn()).toBeTruthy()
   })
