@@ -101,3 +101,31 @@ export function licenseLabel(license: string): string {
   const n = normalize(license)
   return n === 'cc0' ? 'CC0' : n.toUpperCase().replace(/^CC-/, 'CC ')
 }
+
+/**
+ * 许可证代码 → Creative Commons 条款页地址。
+ *
+ * 用途有两个，都不是装饰：
+ *
+ * 1. **CC 的署名要求包含「指明许可证」** —— 光写 "CC BY-NC" 四个字，
+ *    读者点不到条款原文。给出链接才算把 BY 这一条做完整。
+ * 2. **Google Images 的「可授权（Licensable）」标记**需要结构化数据里同时有
+ *    `license` 与 `acquireLicensePage`。这个站自然搜索是 0，图片搜索是它
+ *    唯一还没试过的入口 —— 而 60 张实拍图在此之前对爬虫完全不存在。
+ *
+ * ⚠️ 版本一律写 4.0。iNaturalist 的 API **不返回版本号**，而它自己站上
+ * 这些代码链的就是 4.0。老照片实际授予的可能是 2.0/3.0 —— 这里跟随
+ * iNat 的惯例，而不是自己编一个版本出来。真要精确只能逐张去查原页。
+ */
+const LICENSE_URLS: Record<string, string> = {
+  cc0: 'https://creativecommons.org/publicdomain/zero/1.0/',
+  'cc-by': 'https://creativecommons.org/licenses/by/4.0/',
+  'cc-by-sa': 'https://creativecommons.org/licenses/by-sa/4.0/',
+  'cc-by-nc': 'https://creativecommons.org/licenses/by-nc/4.0/',
+  'cc-by-nc-sa': 'https://creativecommons.org/licenses/by-nc-sa/4.0/',
+}
+
+/** 认不出的许可证返回 null —— 宁可不给链接，也不给一个指错条款的链接。 */
+export function licenseUrl(license: string | null | undefined): string | null {
+  return LICENSE_URLS[normalize(license)] ?? null
+}

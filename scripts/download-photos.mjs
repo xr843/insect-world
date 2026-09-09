@@ -40,6 +40,22 @@ const MANIFEST = path.join(ROOT, 'src/data/photos.json')
 const CACHE = path.join(ROOT, '.photo-cache')
 const OUT = path.join(ROOT, 'public/photos')
 
+/*
+ * CI 里不下载。
+ *
+ * prebuild 挂在 `npm run build` 上，而 CI 每次 push 都跑一次构建 —— 那等于
+ * 每次都去 iNat 的 S3 拉 60 张图（实测让 CI 从 1m20s 涨到 1m41s），既慢又是
+ * 白白骚扰人家。CI 只是把构建当检查跑，产物扔掉，有没有图无所谓；
+ * **真正部署的产物是本地 `npm run deploy` 构建的**，本地有 .photo-cache。
+ *
+ * 这跟 make-species-pages.mjs 里 lastmod 那条注释是同一个前提：
+ * 部署在本地，不在 CI。哪天把部署搬进 CI，这一行要一起改。
+ */
+if (process.env.CI) {
+  console.log('CI 环境，跳过实拍图下载（部署在本地进行）')
+  process.exit(0)
+}
+
 if (!existsSync(MANIFEST)) {
   console.log('photos.json 不存在，跳过实拍图（先跑 npm run photos）')
   process.exit(0)

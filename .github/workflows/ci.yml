@@ -26,7 +26,14 @@ jobs:
 
       # 用 ci 而非 install：严格按 lockfile 装，锁不上就直接失败，
       # 免得 CI 悄悄装了跟本地不同的版本
+      #
+      # playwright 现在写进了 devDependencies（在此之前它被 8 个截图脚本用着
+      # 却没声明 —— node_modules 被清空一次就全废了）。但它的 postinstall 会
+      # 下载几百 MB 浏览器，而 CI 只跑 typecheck/test/build，一个都用不上，
+      # 所以显式跳过。要在 CI 里跑截图脚本时，再单独 `npx playwright install`。
       - run: npm ci
+        env:
+          PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: '1'
 
       - name: 类型检查
         run: npm run typecheck
