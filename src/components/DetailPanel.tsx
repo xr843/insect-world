@@ -19,6 +19,8 @@ import s from './DetailPanel.module.css'
 import { useT, useLocale } from '../i18n/useT'
 import { canonicalPath } from '../i18n/hrefForLocale'
 import { photoUrl } from '../data/external'
+import { photoOf } from '../data/photos'
+import { SpeciesPhoto } from './SpeciesPhoto'
 import { pinyinOf } from '../data/pinyin'
 import { EVENTS, track } from '../analytics'
 
@@ -37,6 +39,13 @@ export function DetailPanel({
   const locale = useLocale()
   // 拼音只在中文版有意义：英文读者要的是学名，注音反而是噪声
   const pinyin = locale === 'zh' ? pinyinOf(insect.id) : null
+  /**
+   * 站内有没有实拍图。有的话身份区直接放图（署名与「更多实拍图」都在图注里），
+   * 没有的话才退回原来那个外链小胶囊 —— robber-fly 与 shining-chafer 有 iNat
+   * taxon 记录但一张授权合适的照片都没有，直接把胶囊删掉会让这两只彻底
+   * 失去实物图入口，那是纯粹的回归。
+   */
+  const hasLocalPhoto = photoOf(insect.id) !== null
 
   /**
    * 分享当前物种。有系统分享面板（手机、部分桌面浏览器）就用它 ——
@@ -141,7 +150,7 @@ export function DetailPanel({
         没有外链（63 种里 61 种有），那两只这里只剩分享。
       */}
       <div className={s.idActions}>
-        {photoUrl(insect.id) && (
+        {!hasLocalPhoto && photoUrl(insect.id) && (
           <a
             className={s.photoLink}
             href={photoUrl(insect.id) as string}
@@ -163,6 +172,16 @@ export function DetailPanel({
           {copied ? t('detail.linkCopied') : canShare ? t('detail.share') : t('detail.copyLink')}
         </button>
       </div>
+
+      {/*
+        实拍图放在身份区、总述之前 —— 沿用上面那段注释里第三次搬家定下的位置，
+        理由同样成立而且更强：「它真长什么样」是**认这只虫**的一部分，属于身份区；
+        钉在总述之前，位置就不随中英文总述长度变化而漂。
+
+        `photo_link` 30 天 660 次说明这是站上量最大的未满足需求，所以它值得
+        占这块版面 —— 代价是「关键数据」被推下约 170px。这个代价是量过才认的。
+      */}
+      <SpeciesPhoto insectId={insect.id} name={insect.name} />
 
       <p className={s.summary}>{insect.summary}</p>
 

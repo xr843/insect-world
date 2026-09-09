@@ -20,3 +20,8 @@ scripts/_*.mjs
 
 # subagent-driven-development 的任务简报与台账，不进仓库
 .superpowers/
+
+# 实拍图的下载缓存与产物：图片字节从不进 git（仓库是 MIT，而部分照片禁商用，
+# 理由见 scripts/fetch-photos.mjs 的文件头）。清单 src/data/photos.json 才进。
+.photo-cache/
+public/photos/

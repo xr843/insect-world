@@ -8,6 +8,10 @@ import { definePart } from './part'
  */
 export const PART = definePart(
   {
+    'photo.credit': '摄影 {name}',
+    'photo.alt': '{name}的实拍照片',
+    'photo.more': '更多实拍图',
+
     'wall.open': '大家想看什么',
     'wall.title': '大家想看什么',
     'wall.sub': '投一票，或者说点什么',
@@ -42,6 +46,10 @@ export const PART = definePart(
     'feedback.err.net': '没发出去。回头再试一次。',
   },
   {
+    'photo.credit': 'Photo by {name}',
+    'photo.alt': 'Photograph of {name}',
+    'photo.more': 'More photos',
+
     'wall.open': 'Wish wall',
     'wall.title': 'What people want to see',
     'wall.sub': 'Cast a vote, or say something',
