@@ -95,7 +95,7 @@ hovering really is stationary.
 ## A whole life
 
 The **life cycle** card at the bottom steps the stand through egg, larva and pupa
-as you page through the panel. Thirteen species so far, **35 stage models**. Complete metamorphosis: **Japanese
+as you page through the panel. Eighteen species so far, **48 stage models**. Complete metamorphosis: **Japanese
 rhinoceros beetle** (a creamy white grub → a pupa that already carries the
 beginnings of the horn → the glossy black adult — the sharpest contrast of the
 set), **monarch**, **Chinese oak silkmoth** (the caterpillar plus a
@@ -109,13 +109,25 @@ Japanese carpenter ant** (all of it inside the nest; a window in the side of the
 cocoon shows the pupa curled up within) and **the starry sky longhorn beetle**
 (the egg tucked into a chevron-shaped slit chewed through the bark; a ramrod
 straight grub under a broad shield-like pronotum; a pupa whose enormous antennae
-are already coiled along its flanks). Incomplete metamorphosis, as the
+are already coiled along its flanks), **the Chinese stag beetle** (an egg sunk
+into a shallow pit in rotting wood; a milk-white grub with an orange head capsule
+and big black mandibles, kept distinct from the rhinoceros grub; a male pupa that
+already carries the pair of great jaws), **the Chinese tiger beetle** (the larva
+is a burrow ambusher — its metallic head shield plugs the hole and a hooked hump
+on its back anchors it to the wall; the pupa lies on its back on dorsal spines)
+and **the common Mormon swallowtail** (a smooth round egg; a final-instar
+caterpillar with false eyespots and an orange osmeterium; a *girdled* pupa slung
+from a twig by a silk belt, against the monarch's hanging one). Incomplete
+metamorphosis, as the
 contrast: **the black cicada** (fossorial forelegs plus wing pads), **the
 emperor dragonfly** nymph (the hinged, mask-like labium plus four wing pads),
 **the Chinese mantis** (an ootheca lashed to a twig, with the hatching band
 running along its crest) and **the migratory locust** (an egg pod standing in
 the soil under a plug of hardened foam; the hopper's wing pads are *reversed* —
-front and back swapped relative to the adult).
+front and back swapped relative to the adult), **the German cockroach** (a
+ribbed, purse-shaped ootheca; a dark nymph with a pale stripe down its back) and
+**the stick insect** (seed-like eggs with a lid and a micropylar plate; the nymph
+is a smaller, greener twig — the adult is wingless, so there are no wing pads).
 
 **Those wing pads are the visible evidence that the wings are still "buds"** —
 the difference between complete and incomplete metamorphosis is the first thing
