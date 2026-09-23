@@ -129,6 +129,44 @@ describe('搜索发起埋点 —— 停顿后报一次，不带查询词原文',
     expect(trackMock).toHaveBeenCalledWith(EVENTS.SEARCH, { has_results: true, tier: 'exact' })
   })
 
+  /**
+   * 输入法拼写中的拼音不是搜索。2026-09-23 复盘：线上一半搜索记成零结果、
+   * 九成落在 unknown —— 而「hudie」「mayi」这类拼到一半的串全是 0 条，
+   * 选字停顿一超过 500ms 就被记一次。
+   */
+  describe('输入法拼写期间', () => {
+    const searches = () => trackMock.mock.calls.filter((c) => c[0] === EVENTS.SEARCH)
+
+    it('拼音停顿再久也不报、下拉不说「没有找到」', () => {
+      const { input } = mount()
+      fireEvent.compositionStart(input)
+      fireEvent.change(input, { target: { value: "hu'die" } })
+      act(() => vi.advanceTimersByTime(2000))
+      expect(searches()).toHaveLength(0)
+      expect(screen.queryByText(/没有找到|找不到/)).toBeNull()
+    })
+
+    it('Chrome 顺序（最后一个 input 在 compositionend 之前）：上屏后按上屏的字报一次', () => {
+      const { input } = mount()
+      fireEvent.compositionStart(input)
+      fireEvent.change(input, { target: { value: 'piaochong' } })
+      fireEvent.change(input, { target: { value: '瓢虫' } })
+      fireEvent.compositionEnd(input)
+      act(() => vi.advanceTimersByTime(500))
+      expect(searches()).toEqual([[EVENTS.SEARCH, { has_results: true, tier: 'name' }]])
+    })
+
+    it('Safari 顺序（compositionend 在最后一个 input 之前）同样只报上屏的字', () => {
+      const { input } = mount()
+      fireEvent.compositionStart(input)
+      fireEvent.change(input, { target: { value: 'hudie' } })
+      fireEvent.compositionEnd(input)
+      fireEvent.change(input, { target: { value: '瓢虫' } })
+      act(() => vi.advanceTimersByTime(500))
+      expect(searches()).toEqual([[EVENTS.SEARCH, { has_results: true, tier: 'name' }]])
+    })
+  })
+
   it('连续敲键、还没停顿够 500ms 时不报', () => {
     const { input } = mount()
     fireEvent.change(input, { target: { value: '瓢' } })
