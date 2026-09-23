@@ -81,7 +81,22 @@ export function TopBar({
   const labels = useLabels()
   const locale = useLocale()
   const [active, setActive] = useState<string>('explore')
+  /** 输入框里显示的原文 —— 输入法拼写中的拼音也在这里 */
   const [query, setQuery] = useState('')
+  /**
+   * 真正拿去搜索的词：只在输入法**上屏之后**才跟上 `query`。
+   *
+   * 中文输入法拼写期间，框里是「hudie」「hu'die」这种拼音串，每个字母都触发
+   * onChange。拿它去搜，下拉会闪「没有找到 hudie」；选字停顿一超过 500ms，
+   * 埋点还会记一次零结果搜索 —— 实测 蝴蝶/蚂蚁/蜻蜓/蚊子/苍蝇/蟑螂 拼到一半
+   * 全是 0 条，而线上一半的搜索被记成零结果、九成落在 `unknown`。
+   */
+  const [settled, setSettled] = useState('')
+  const composing = useRef(false)
+  const clearQuery = () => {
+    setQuery('')
+    setSettled('')
+  }
   const [open, setOpen] = useState(false)
   /** 同一时刻只允许一个下拉展开：分类、头像菜单 */
   const [menu, setMenu] = useState<'orders' | 'account' | null>(null)
@@ -124,7 +139,7 @@ export function TopBar({
     return [...m.entries()].sort((a, b) => b[1] - a[1])
   }, [insects])
 
-  const q = query.trim().toLowerCase()
+  const q = settled.trim().toLowerCase()
   /**
    * 匹配与排序全在 `searchInsects.ts`（五级：正式名/俗名精确 → 名字含 →
    * 俗名含或拼音 → 学名/目/雅称 → 正文）。抽出去是因为它是这里分支最多、
@@ -278,7 +293,18 @@ export function TopBar({
               placeholder={t('search.placeholder')}
               onChange={(e) => {
                 setQuery(e.target.value)
+                if (!composing.current) setSettled(e.target.value)
                 setOpen(true)
+              }}
+              onCompositionStart={() => {
+                composing.current = true
+              }}
+              onCompositionEnd={(e) => {
+                // 上屏那一下：Chrome 的最后一个 input 事件在 compositionend
+                // **之前**（那时还算拼写中，被上面跳过了），Safari 在之后 ——
+                // 两种顺序都靠这里补上一次
+                composing.current = false
+                setSettled(e.currentTarget.value)
               }}
               onFocus={() => setOpen(true)}
             />
@@ -287,7 +313,7 @@ export function TopBar({
             <div className={`card ${s.results}`}>
               {hits.length === 0 ? (
                 <div className={s.empty}>
-                  <div>{t('search.noResults', { query })}</div>
+                  <div>{t('search.noResults', { query: settled })}</div>
                   {miss && (
                     <p className={s.emptyWhy}>
                       {t(
@@ -303,7 +329,7 @@ export function TopBar({
                       track(EVENTS.SPECIES_SWITCH, { source: 'search', species_id: pick.id, order: pick.order })
                       onPick(pick.id)
                       setOpen(false)
-                      setQuery('')
+                      clearQuery()
                     }}
                   >
                     {t('search.suggest')}
@@ -318,7 +344,7 @@ export function TopBar({
                       track(EVENTS.SPECIES_SWITCH, { source: 'search', species_id: i.id, order: i.order })
                       onPick(i.id)
                       setOpen(false)
-                      setQuery('')
+                      clearQuery()
                     }}
                   >
                     <span className={s.resultDot} style={{ background: i.accent }} />
