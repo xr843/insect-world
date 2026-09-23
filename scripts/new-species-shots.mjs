@@ -10,10 +10,12 @@
  * 用法：
  *   npx vite --port 5303 --strictPort &   # dev server（TS 模块由它转译）
  *   node scripts/new-species-shots.mjs [id ...]   # 缺省渲染三只新虫
+ *   node scripts/new-species-shots.mjs ladybird-larva   # 生活史阶段同样可以：
+ *     id 在 builders/stages/ 下有同名文件就从那里取（导出名同样是 build+驼峰）
  *   # 图落在 audit-out/<id>-<view>.png
  */
 import { chromium } from 'playwright'
-import { mkdirSync } from 'node:fs'
+import { existsSync, mkdirSync } from 'node:fs'
 
 const BASE = process.env.SHOTS_BASE ?? 'http://localhost:5303/'
 const OUT = process.env.SHOTS_OUT ?? 'audit-out'
@@ -42,10 +44,13 @@ await page.goto(BASE + 'preview.html', { waitUntil: 'load' })
 
 for (const id of SPECIES) {
   const camelName = 'build' + id.replace(/(^|-)(\w)/g, (_, __, c) => c.toUpperCase())
+  const modPath = existsSync(`src/three/builders/stages/${id}.ts`)
+    ? `/src/three/builders/stages/${id}.ts`
+    : `/src/three/builders/${id}.ts`
   const shots = await page.evaluate(
-    async ({ id, camelName, views }) => {
+    async ({ id, camelName, modPath, views }) => {
       const THREE = await import('/node_modules/three/build/three.module.js')
-      const mod = await import(`/src/three/builders/${id}.ts`)
+      const mod = await import(modPath)
       const builder = mod[camelName]
       if (!builder) throw new Error(`${id} 未导出 ${camelName}`)
       const model = builder()
@@ -118,7 +123,7 @@ for (const id of SPECIES) {
       renderer.dispose()
       return out
     },
-    { id, camelName, views: VIEWS },
+    { id, camelName, modPath, views: VIEWS },
   )
 
   for (const [view, dataUrl] of Object.entries(shots)) {
