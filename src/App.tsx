@@ -11,11 +11,10 @@ import { Gallery } from './components/Gallery'
 import { DetailPanel } from './components/DetailPanel'
 import { LibraryPanel } from './components/LibraryPanel'
 import { SiteFooter } from './components/SiteFooter'
-import { WishWall } from './components/WishWall'
 import { FeedbackDialog } from './components/FeedbackDialog'
 import { Stage } from './components/Stage'
 import { TopBar } from './components/TopBar'
-import { IconGrid, IconPoll, IconSparkle } from './components/icons'
+import { IconGrid, IconSparkle } from './components/icons'
 import { isKnownSpecies, prefetchInsectModel } from './three/registry'
 import type { LifeStage } from './three/stages'
 import { THEME_COLOR, THEME_KEY, resolveTheme, type Theme } from './theme'
@@ -67,18 +66,8 @@ export default function App() {
   }, [])
 
   const [galleryOpen, setGalleryOpen] = useState(false)
-  /** 点播墙与纠错对话框。跟 gallery / notes 一样是浮层，不占路由 */
-  const [wallOpen, setWallOpen] = useState(false)
+  /** 纠错对话框。跟 gallery / notes 一样是浮层，不占路由 */
   const [reportOpen, setReportOpen] = useState(false)
-
-  /**
-   * 开墙。source 区分是从页脚还是右侧浮栏进来的 —— 这两处的曝光度差得很远
-   * （浮栏一直在视野里，页脚要滚到底），分开记才知道该不该继续挪入口。
-   */
-  const openWall = useCallback((source: 'footer' | 'rail') => {
-    track(EVENTS.FEEDBACK_OPEN, { kind: 'wish', source })
-    setWallOpen(true)
-  }, [])
   const [notesOpen, setNotesOpen] = useState(false)
   const [compareId, setCompareId] = useState<string | null>(null)
   /**
@@ -430,20 +419,14 @@ export default function App() {
         onExplore={() => setGalleryOpen(true)}
       />
 
-      <SiteFooter onOpenWall={() => openWall('footer')} />
+      <SiteFooter />
 
       {/*
-        右侧浮栏：三个都是「看什么」，看的东西各不相同 —— 看全部、随便看一只、
-        看大家想看什么。
+        右侧浮栏：看全部、随便看一只。
 
-        点播墙的入口在这儿而不只在页脚，是因为它跟纠错入口的曝光需求正相反：
-        纠错要安静（显眼只会招来落不了地的话），而墙**需要量** —— 几票堆出来的
-        排名没有价值，「投票门槛低所以墙不会空」这个前提，只有在人找得到它的
-        时候才成立。
-
-        ⚠ 这条栏在 ≤1240px 下整条 display:none（见 global.css），也就是手机与
-        平板（约 29% 的访问）看不见它。页脚那个入口因此不能撤 —— 那是窄屏上
-        唯一的路。
+        这里曾有第三个按钮「大家想看什么」（点播墙），2026-09-23 按上线时定的
+        标准撤掉：15 天 4681 次访问只投了 8 票、自由留言 0 条，与观察笔记同一量级。
+        ⚠ 这条栏在 ≤1240px 下整条 display:none（见 global.css）。
       */}
       <div className="rail-float">
         <button onClick={() => setGalleryOpen(true)} title={t('library.allCount', { n: SPECIES.length })}>
@@ -451,9 +434,6 @@ export default function App() {
         </button>
         <button onClick={surprise} title={t('rail.surprise')}>
           <IconSparkle size={16} />
-        </button>
-        <button onClick={() => openWall('rail')} title={t('wall.open')}>
-          <IconPoll size={16} />
         </button>
       </div>
 
@@ -465,8 +445,6 @@ export default function App() {
           onClose={() => setGalleryOpen(false)}
         />
       )}
-
-      {wallOpen && <WishWall onClose={() => setWallOpen(false)} />}
 
       {reportOpen && (
         <FeedbackDialog

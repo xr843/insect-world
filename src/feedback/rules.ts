@@ -4,8 +4,6 @@ import type {
   FeedbackKind,
   RawSubmission,
   ValidationResult,
-  WallWish,
-  WishRow,
 } from './types'
 
 /**
@@ -189,21 +187,4 @@ export async function hashIp(salt: string, ip: string, now: Date): Promise<strin
   const bytes = new TextEncoder().encode(ipHashInput(salt, ip, now))
   const digest = await crypto.subtle.digest('SHA-256', bytes)
   return [...new Uint8Array(digest)].map((b) => b.toString(16).padStart(2, '0')).join('')
-}
-
-/**
- * 榜单排序：票数降序，同票按上架时间升序。
- *
- * 同票必须有个稳定的第二关键字，否则 D1 返回的行序一变，墙上同票的几项每次
- * 刷新都在互相换位置 —— 看起来像有人在投票，其实什么都没发生。用 created_at
- * 而不是 id：先上架的排前面，符合「它已经在这儿等了更久」的直觉。
- */
-export function sortWishes(rows: readonly WishRow[]): WishRow[] {
-  return [...rows].sort((a, b) => b.votes - a.votes || a.created_at - b.created_at)
-}
-
-/** 按语言挑标题，落成墙上的候选项。缺译文时回落到中文，不显示空标题。 */
-export function toWallWish(row: WishRow, locale: Locale): WallWish {
-  const title = (locale === 'en' ? row.title_en : row.title_zh) || row.title_zh
-  return { id: row.id, kind: row.kind, title, votes: row.votes }
 }

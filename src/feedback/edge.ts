@@ -99,11 +99,11 @@ export function localeFromQuery(raw: string | null): Locale {
  *
  * 本地 `wrangler pages dev` 实测出来的：绑了 D1 但还没跑 schema 时，
  * `no such table: wishes` 会一路冒到 Pages 运行时，返回 **500 并把完整堆栈
- * 连同 `/home/…/functions/api/wall.ts` 这样的文件路径一起吐给客户端**。
+ * 连同 `/home/…/functions/api/*.ts` 这样的文件路径一起吐给客户端**。
  * 两个问题：泄露内部结构，以及前端分不清"后端没配好"与"后端坏了"。
  *
  * 统一收成 503：对访客来说这两种情况本来就是同一件事 —— 这块暂时用不了，
- * 墙显示一行说明就好。真正的原因留在服务端日志里。
+ * 表单显示一句「没发出去」就好。真正的原因留在服务端日志里。
  */
 export async function guard(fn: () => Promise<Response>): Promise<Response> {
   try {
