@@ -37,9 +37,14 @@ import { HOLOMETABOLOUS, builtStagesOf, metamorphosisOf } from '../../stages'
 /** 三个阶段都远低于这个预算；上限只防「某次改动让面数失控」 */
 const TRIANGLE_BUDGET = 60_000
 
-/** 验收机位（与 scripts/new-species-shots.mjs 一致）+ 展台默认机位（InsectCanvas 的 [2,1,3]） */
+/**
+ * 验收机位（与 scripts/new-species-shots.mjs 一致）+ 展台默认机位。
+ * home 是展台打开时的相机方向（0.86, 0.44, 1.25）—— 用户第一眼看到的画面；
+ * canvas 是 InsectCanvas 的初始相机位置 [2,1,3]，两者很接近，一起查。
+ */
 const VIEWS: Record<string, THREE.Vector3> = {
-  home: new THREE.Vector3(2, 1, 3).normalize(),
+  home: new THREE.Vector3(0.86, 0.44, 1.25).normalize(),
+  canvas: new THREE.Vector3(2, 1, 3).normalize(),
   top: new THREE.Vector3(0.18, 1, 0.14).normalize(),
   side: new THREE.Vector3(0.12, 0.28, 1).normalize(),
   front: new THREE.Vector3(1, 0.32, 0.4).normalize(),
@@ -209,6 +214,61 @@ function surfaceDistance(mesh: THREE.Mesh, p: THREE.Vector3): number {
     best = Math.min(best, q.distanceTo(p))
   }
   return best
+}
+
+/**
+ * 某机位下被选中的网格「露在最前面」的像素数（逐三角形光栅化的 z-buffer，正交投影）。
+ *
+ * 用来回答「这个部件在画面上看不看得见」—— 部件在不在、在哪，都不等于看得见：
+ * 贴在腹面的足芽 mesh 一个不少，默认机位下却被身体整个挡住（上一版就是）。
+ * ⚠️ 第一版用顶点喷点代替光栅化：体壁顶点间距 0.1 以上、格子 0.03，身体在
+ * z-buffer 里是一张筛子，把足整个埋进体内这条照样绿（变异测试抓到）。
+ */
+function visibleCells(model: InsectModel, dir: THREE.Vector3, pick: (m: THREE.Mesh) => boolean): number {
+  const e1 = new THREE.Vector3().crossVectors(dir, new THREE.Vector3(0, 1, 0)).normalize()
+  const e2 = new THREE.Vector3().crossVectors(dir, e1).normalize()
+  const CELL = 0.03
+  const depth = new Map<number, { d: number; hit: boolean }>()
+  const key = (i: number, j: number) => i * 100003 + j
+  model.group.updateMatrixWorld(true)
+  const v = new THREE.Vector3()
+  model.group.traverse((o) => {
+    const m = o as THREE.Mesh
+    if (!m.isMesh) return
+    const hit = pick(m)
+    const pos = m.geometry.getAttribute('position')
+    const P: [number, number, number][] = []
+    for (let i = 0; i < pos.count; i++) {
+      v.fromBufferAttribute(pos, i).applyMatrix4(m.matrixWorld)
+      P.push([v.dot(e1) / CELL, v.dot(e2) / CELL, v.dot(dir)])
+    }
+    const idx = m.geometry.index
+    const n = idx ? idx.count : pos.count
+    for (let t = 0; t < n; t += 3) {
+      const [a, b, c] = [0, 1, 2].map((k) => P[idx ? idx.getX(t + k) : t + k])
+      const area = (b[0] - a[0]) * (c[1] - a[1]) - (c[0] - a[0]) * (b[1] - a[1])
+      if (Math.abs(area) < 1e-9) continue
+      const x0 = Math.floor(Math.min(a[0], b[0], c[0]))
+      const x1 = Math.ceil(Math.max(a[0], b[0], c[0]))
+      const y0 = Math.floor(Math.min(a[1], b[1], c[1]))
+      const y1 = Math.ceil(Math.max(a[1], b[1], c[1]))
+      for (let i = x0; i <= x1; i++) {
+        for (let j = y0; j <= y1; j++) {
+          const w1 = ((i - a[0]) * (c[1] - a[1]) - (c[0] - a[0]) * (j - a[1])) / area
+          const w2 = ((b[0] - a[0]) * (j - a[1]) - (i - a[0]) * (b[1] - a[1])) / area
+          const w0 = 1 - w1 - w2
+          if (w0 < 0 || w1 < 0 || w2 < 0) continue
+          const d = w0 * a[2] + w1 * b[2] + w2 * c[2] // 越大越靠近镜头
+          const k = key(i, j)
+          const cur = depth.get(k)
+          if (!cur || d > cur.d) depth.set(k, { d, hit })
+        }
+      }
+    }
+  })
+  let count = 0
+  for (const c of depth.values()) if (c.hit) count++
+  return count
 }
 
 /** 离一组点最近的距离 */
@@ -723,22 +783,27 @@ describe('蛹（雄）：离蛹，一对大颚已经成形', () => {
       const maxZ = Math.max(...line.map((p) => Math.abs(p.z)))
       expect(maxZ - Math.abs(tip.z), '末端没有向内钩回 —— 两根往外叉的棍，不是钳').toBeGreaterThan(0.2)
       expect(maxZ - Math.abs(base.z), '基部之后没有外张').toBeGreaterThan(0.1)
-      expect(base.y - tip.y, '颚没有向下弯 —— 那是成虫平端着的姿势').toBeGreaterThan(0.25)
+      // 两颚下弯的幅度不等（见 MANDIBLE_PITCH_TO 的注释），这里只卡较浅的那一侧也在往下弯
+      expect(base.y - tip.y, '颚没有向下弯 —— 那是成虫平端着的姿势').toBeGreaterThan(0.15)
       expect(tip.x - base.x, '颚垂成了竖直的獠牙').toBeGreaterThan(0.9)
     }
   })
 
-  it('两颚在画面上分得开：顶视 / 前斜视的投影间距 ≥ 0.1', () => {
+  it('两颚在画面上分得开：展台默认机位 / 初始相机 / 顶视 / 前斜视的投影间距都 ≥ 0.1', () => {
     /*
-     * 只查顶视与前斜视。默认机位与侧机位的视线几乎就是 ±Z，一左一右的一对东西
-     * 在那两个方向上**必然**前后叠住 —— 成虫模型自己的那对颚在默认机位也只隔
-     * 0.004（实测）。强求那两个机位分开，只能把颚掰成上下错开，那就不是锹甲了。
+     * 默认机位是用户第一眼看到的画面，必须是两根。
+     * ⚠️ 上一版只查了顶视与前斜视（理由是「一左一右的一对从 ±Z 看必然叠住」），
+     * 结果默认机位下两颚叠成一根向前弯的刺，读成独角仙蛹的角 —— 协调人一眼看出。
+     * 现在靠近镜头的右颚弯得更低，两颚在画面上沿竖直方向拉开。
+     * 只量伸出头前的那一段（颚根埋在头里，本来就挨着）。
      */
-    const pts = verticesOf(pupa, 'pupa-mandible')
+    const headFront = Math.max(...local('pupa-head').map((p) => p.x))
+    const pts = verticesOf(pupa, 'pupa-mandible').filter((p) => unpose(p).x > headFront)
     const r = pts.filter((p) => unpose(p).z > 0)
     const l = pts.filter((p) => unpose(p).z < 0)
-    expect(r.length + l.length).toBe(pts.length)
-    for (const view of ['top', 'front'] as const) {
+    expect(r.length).toBeGreaterThan(50)
+    expect(l.length).toBeGreaterThan(50)
+    for (const view of ['home', 'canvas', 'top', 'front'] as const) {
       const gap = minProjectedGap(l, r, VIEWS[view])
       expect(gap, `${view} 机位两颚只隔 ${gap.toFixed(3)}，糊成了一支`).toBeGreaterThan(0.1)
     }
@@ -772,28 +837,87 @@ describe('蛹（雄）：离蛹，一对大颚已经成形', () => {
   })
 
   it('腹部宽扁、末端圆钝，不是胡萝卜', () => {
-    const abd = local('pupa-abdomen')
-    const box = new THREE.Box3().setFromPoints(abd)
-    const width = (x0: number, x1: number) => {
-      const zs = abd.filter((p) => p.x > x0 && p.x < x1).map((p) => p.z)
-      return Math.max(...zs) - Math.min(...zs)
+    // 按放样环量每一环的左右宽（z 不受腹部弯曲影响），末环 / 最宽环
+    const abd = meshesNamed(pupa, 'pupa-abdomen')[0]
+    const pos = abd.geometry.getAttribute('position')
+    const uv = abd.geometry.getAttribute('uv')
+    const rings = new Map<number, number[]>()
+    for (let i = 0; i < pos.count; i++) {
+      const k = Math.round(uv.getY(i) * 1e6)
+      const zs = rings.get(k) ?? []
+      zs.push(unpose(new THREE.Vector3().fromBufferAttribute(pos, i).applyMatrix4(abd.matrixWorld)).z)
+      rings.set(k, zs)
     }
-    const maxW = box.getSize(new THREE.Vector3()).z
-    const tailW = width(box.min.x, box.min.x + 0.2)
+    const widths = [...rings.entries()].sort((a, b) => a[0] - b[0]).map(([, zs]) => Math.max(...zs) - Math.min(...zs))
+    const maxW = Math.max(...widths)
+    const tailW = widths[widths.length - 1]
     expect(tailW / maxW, `末端宽只有最宽处的 ${(tailW / maxW).toFixed(2)}，收成了尖锥`).toBeGreaterThan(0.55)
     expect(tailW / maxW, '腹部前后一样粗，读成一根圆筒').toBeLessThan(0.9)
   })
 
-  it('离蛹：翅芽一对、足芽三对、触角芽一对，全在腹面（回到体坐标判）', () => {
+  it('腹部向腹面弯：首尾两节的轴向夹角 20°~60°，而且是往腹面（−Y）弯', () => {
+    // 一根直挺挺的锥读成胡萝卜（协调人第二条）。离蛹躺在蛹室里，腹部总是向腹面卷起
+    const line = centerline(meshesNamed(pupa, 'pupa-abdomen')[0]).map(unpose)
+    const n = line.length
+    const head = new THREE.Vector3().subVectors(line[5], line[0]).normalize()
+    const tail = new THREE.Vector3().subVectors(line[n - 1], line[n - 6]).normalize()
+    const deg = THREE.MathUtils.radToDeg(head.angleTo(tail))
+    expect(deg, `腹部只弯了 ${deg.toFixed(0)}°，还是一根直锥`).toBeGreaterThan(20)
+    expect(deg, `腹部弯了 ${deg.toFixed(0)}°，卷成了一个球`).toBeLessThan(60)
+    // 往腹面：末节方向比首节方向更朝下
+    expect(tail.y - head.y, '腹部往背面翘了').toBeLessThan(-0.2)
+  })
+
+  it('离蛹：翅芽一对、三对足（每条腿节 / 胫节 / 跗节三段）、触角芽一对，全在腹面', () => {
     const wing = meshesNamed(pupa, 'pupa-wing-pad')
-    const leg = meshesNamed(pupa, 'pupa-leg-pad')
+    const leg = meshesNamed(pupa, 'pupa-femur', 'pupa-tibia', 'pupa-tarsus')
     const ant = meshesNamed(pupa, 'pupa-antenna-pad')
     expect(wing.length).toBe(2)
-    expect(leg.length).toBe(6)
+    expect(leg.length, '三对足不是 18 段').toBe(18)
     expect(ant.length).toBe(2)
+    // 回到体坐标判「腹面」—— 直接看世界 y 会被「略仰卧」那层滚转带偏
     for (const m of [...wing, ...leg, ...ant]) {
       const c = unpose(new THREE.Box3().setFromObject(m).getCenter(new THREE.Vector3()))
       expect(c.y, `${m.name} 跑到背面去了`).toBeLessThan(0)
+    }
+  })
+
+  it('足是折起来的：膝处腿节与胫节夹角 10°~60°，而且贴着体壁（不悬空、不埋进去）', () => {
+    const segs = (name: string) =>
+      meshesNamed(pupa, name).map((m) => ({ pair: m.userData.pair as number, line: centerline(m).map(unpose), mesh: m }))
+    const femurs = segs('pupa-femur')
+    const tibias = segs('pupa-tibia')
+    const body = ['pupa-abdomen', 'pupa-thorax', 'pupa-head'].map((n) => meshesNamed(pupa, n)[0])
+    for (const f of femurs) {
+      const t = tibias.find((x) => x.pair === f.pair && Math.sign(x.line[0].z) === Math.sign(f.line[0].z))!
+      // 膝处：腿节从膝指回基节、胫节从膝指向踝 —— 两者夹角小 = 折得紧
+      const knee = f.line[f.line.length - 4] // 去掉末端球冠那几环
+      const toCoxa = new THREE.Vector3().subVectors(f.line[3], knee).normalize()
+      const toAnkle = new THREE.Vector3().subVectors(t.line[t.line.length - 4], t.line[3]).normalize()
+      const deg = THREE.MathUtils.radToDeg(toCoxa.angleTo(toAnkle))
+      expect(deg, `第 ${f.pair} 对足膝处张开 ${deg.toFixed(0)}° —— 那是伸直的腿，不是折起来的`).toBeLessThan(60)
+      expect(deg, `第 ${f.pair} 对足腿节与胫节叠成了一根`).toBeGreaterThan(10)
+      // 贴壁：膝的管心离体壁表面 0.12~0.35（管半径 ~0.1 + 抬起量 0.1）
+      const kneeWorld = pose.localToWorld(knee.clone())
+      const d = Math.min(...body.map((b) => surfaceDistance(b, kneeWorld)))
+      expect(d, `第 ${f.pair} 对足的膝离体壁 ${d.toFixed(2)}，悬在空中`).toBeLessThan(0.35)
+      expect(d, `第 ${f.pair} 对足的膝埋进了体壁`).toBeGreaterThan(0.1)
+    }
+  })
+
+  it('前中两对足的腿节与胫节在展台默认机位与侧视里真的露在最前面', () => {
+    /*
+     * 离蛹的教学点是「附肢已经分开、折叠贴在身上」—— 得看得见。
+     * 上一版的足芽是腹面三条浅脊，mesh 一个不少，默认机位下几乎全被身体挡住。
+     * 这里用 z-buffer 数前中两对足的腿节、胫节各自有多少格露在最前面。
+     */
+    for (const view of ['home', 'side'] as const) {
+      for (const pair of [0, 1]) {
+        for (const name of ['pupa-femur', 'pupa-tibia']) {
+          const n = visibleCells(pupa, VIEWS[view], (m) => m.name === name && m.userData.pair === pair)
+          expect(n, `${view} 机位下第 ${pair} 对足的 ${name} 只露出 ${n} 格`).toBeGreaterThan(25)
+        }
+      }
     }
   })
 
@@ -808,7 +932,7 @@ describe('蛹（雄）：离蛹，一对大颚已经成形', () => {
     expect(body - ring, '膜环在淡黄身上勒成了黑箍').toBeLessThan(0.15)
   })
 
-  it('淡黄，比独角仙的橙褐蛹明显更浅；大颚深一档；不是鞘翅材质、不开透射', () => {
+  it('淡黄，比独角仙的橙褐蛹明显更浅；大颚与体色同档；足深一档；不是鞘翅材质、不开透射', () => {
     const mat = materialOf(pupa, 'pupa-abdomen')
     const { h, l } = hslOf(mat)
     const deg = h * 360
@@ -819,9 +943,17 @@ describe('蛹（雄）：离蛹，一对大颚已经成形', () => {
     const rhino = hslOf(materialOf(buildRhinocerosBeetlePupa(), 'pupa-abdomen')).l
     expect(l - rhino, '跟独角仙的蛹一样深，并排分不出来').toBeGreaterThan(0.15)
 
-    const mand = hslOf(materialOf(pupa, 'pupa-mandible')).l
-    expect(l - mand, '大颚跟身体一个颜色，从头前那团淡黄里剥不出来').toBeGreaterThan(0.08)
-    expect(mand, '大颚已经黑了 —— 那是成虫').toBeGreaterThan(0.45)
+    /*
+     * 大颚与体色同一档：颚和全身是同一层蛹皮。上一版深一档的琥珀（明度差 0.15）
+     * 在默认机位下读成另外插上去的一个部件 —— 配上叠成一根的剪影，就是独角仙蛹的角。
+     */
+    const mand = hslOf(materialOf(pupa, 'pupa-mandible'))
+    expect(Math.abs(l - mand.l), '大颚的颜色从体色里跳出来了').toBeLessThan(0.05)
+    expect(Math.abs(h - mand.h) * 360, '大颚色相跟体色不是一档').toBeLessThan(6)
+    // 足深一档：叠在体壁外面的一层，同色的话「〈」字轮廓剥不出来
+    const legL = hslOf(materialOf(pupa, 'pupa-femur')).l
+    expect(l - legL, '足跟体色一样，折叠轮廓看不出来').toBeGreaterThan(0.08)
+    expect(l - legL, '足压得太深，读成另一种东西').toBeLessThan(0.3)
 
     expect(mat.clearcoat).toBeLessThanOrEqual(0.2)
     expect(mat.metalness).toBeLessThanOrEqual(0.05)
