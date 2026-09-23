@@ -1,10 +1,9 @@
 import { definePart } from './part'
 
 /**
- * 点播墙与反馈表单的文案。
+ * 实拍图署名与纠错表单的文案。
  *
- * 两个组件合成一片：它们共用同一个提交表单（FeedbackForm），文案上也大量
- * 互相引用（错误提示、隐私说明两处都要），拆成两片只会让改一句话要开两个文件。
+ * 点播墙（wall.*、feedback.wish.*）2026-09-23 撤掉，文案一并删了。
  */
 export const PART = definePart(
   {
@@ -12,30 +11,17 @@ export const PART = definePart(
     'photo.alt': '{name}的实拍照片',
     'photo.more': '更多实拍图',
 
-    'wall.open': '大家想看什么',
-    'wall.title': '大家想看什么',
-    'wall.sub': '投一票，或者说点什么',
-    'wall.vote': '投一票',
-    'wall.voted': '已投',
-    'wall.votes': '{n} 票',
-    'wall.wishOwn': '我也想看…',
-    'wall.featuredTitle': '编辑选了几句',
-    'wall.loading': '正在取…',
-    'wall.offline': '墙暂时看不了，稍后再来。',
-    'wall.retry': '重试',
 
     'feedback.correction.open': '这里画得不对？',
     'feedback.correction.title': '这里画得不对？',
     'feedback.correction.sub': '说说哪儿不对，我去核',
     'feedback.correction.about': '关于{name}',
     'feedback.correction.placeholder': '哪儿不对？越具体越好，比如「后翅的尾突太短了」',
-    'feedback.wish.title': '我也想看…',
-    'feedback.wish.placeholder': '想看哪只虫，或者想要什么功能',
 
     'feedback.email': '邮箱',
     'feedback.emailPlaceholder': '选填，留了我会回信（可能隔几天）',
     'feedback.emailHint': '只用来回信，不公开。',
-    'feedback.privacy': '留言不会自动公开 —— 除非我挑出来放上墙。',
+    'feedback.privacy': '只有我看得到，不会公开。',
     'feedback.submit': '发送',
     'feedback.sending': '发送中…',
     'feedback.cancel': '取消',
@@ -50,17 +36,6 @@ export const PART = definePart(
     'photo.alt': 'Photograph of {name}',
     'photo.more': 'More photos',
 
-    'wall.open': 'Wish wall',
-    'wall.title': 'What people want to see',
-    'wall.sub': 'Cast a vote, or say something',
-    'wall.vote': 'Vote',
-    'wall.voted': 'Voted',
-    'wall.votes': '{n}',
-    'wall.wishOwn': 'Something else…',
-    'wall.featuredTitle': 'A few we picked',
-    'wall.loading': 'Loading…',
-    'wall.offline': 'The wall is unavailable right now.',
-    'wall.retry': 'Retry',
 
     'feedback.correction.open': 'Something wrong here?',
     'feedback.correction.title': 'Something wrong here?',
@@ -68,13 +43,11 @@ export const PART = definePart(
     'feedback.correction.about': 'About {name}',
     'feedback.correction.placeholder':
       "What's wrong? The more specific the better — e.g. “the hindwing tail is too short”.",
-    'feedback.wish.title': 'Something else…',
-    'feedback.wish.placeholder': 'Which insect, or what feature, would you like to see?',
 
     'feedback.email': 'Email',
     'feedback.emailPlaceholder': "Optional — leave one and I'll reply (may take a few days)",
     'feedback.emailHint': 'Only used to reply. Never shown.',
-    'feedback.privacy': "Messages aren't published automatically — only if we pick one for the wall.",
+    'feedback.privacy': 'Only I will see this. It is never published.',
     'feedback.submit': 'Send',
     'feedback.sending': 'Sending…',
     'feedback.cancel': 'Cancel',

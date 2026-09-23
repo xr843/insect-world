@@ -1,21 +1,20 @@
 #!/usr/bin/env node
 /**
- * 反馈收件箱 —— 点播墙的全部后台功能。
+ * 反馈收件箱 —— 纠错提交的全部后台功能。
+ *
+ * 点播墙 2026-09-23 撤掉后，pick / promote / wishes 三个命令随之删除；
+ * 库里的 wishes / votes 两张表与已有票数原样留着，没有删数据。
  *
  * ── 为什么是命令行而不是一个后台页面 ─────────────────────────────────
- * 「留言默认不公开、只有精选的才上墙」这条产品决策，最大的红利就在这儿：
- * 审核不是必须天天干的活（不干也不会有脏东西公开），所以它不值得一个要
+ * 提交默认不公开，审核不是必须天天干的活（不干也不会有脏东西公开），
+ * 所以它不值得一个要
  * 维护、要登录、要防护的后台页面。一个读 wrangler 的脚本就够了，而且
  * 它天然只有作者本人跑得动 —— 鉴权就是那台机器上的 wrangler 凭证。
  *
  * 用法：
  *   npm run inbox                       列出待处理的提交
  *   npm run inbox -- summary            一行摘要（挂在 postdeploy 上，见下）
- *   npm run inbox -- wishes             列出候选项与当前票数
- *   npm run inbox -- pick <id>          精选上墙
  *   npm run inbox -- hide <id>          收起（垃圾、或已处理完的纠错）
- *   npm run inbox -- promote <id> <slug> <kind> <中文标题> <English title>
- *                                       把一条自由填的心愿升格成候选项
  *
  * 加 `--local` 打本地开发库（wrangler pages dev 用的那份），默认打线上。
  */
@@ -72,19 +71,7 @@ function list() {
     )
     if (r.email) console.log(`  ↩ ${r.email}`)
   }
-  console.log(`\n共 ${rows.length} 条。pick 上墙 / hide 收起 / promote 升格成候选项。`)
-}
-
-function wishes() {
-  const rows = d1('SELECT id, kind, title_zh, votes, listed FROM wishes ORDER BY votes DESC, created_at ASC')
-  if (rows.length === 0) {
-    console.log('还没有候选项。先跑 db/seed.sql。')
-    return
-  }
-  for (const r of rows) {
-    const mark = r.listed ? ' ' : '×'
-    console.log(`${mark} ${String(r.votes).padStart(4)}  ${r.title_zh}  (${r.id}, ${r.kind})`)
-  }
+  console.log(`\n共 ${rows.length} 条。处理完用 hide 收起。`)
 }
 
 /**
@@ -119,31 +106,10 @@ function setStatus(id, status) {
   console.log(`#${id} → ${status}`)
 }
 
-function promote([id, slug, kind, titleZh, titleEn]) {
-  if (!id || !slug || !kind || !titleZh || !titleEn) {
-    throw new Error('用法：promote <提交 id> <slug> <lifecycle|species|feature> <中文标题> <English title>')
-  }
-  if (!['lifecycle', 'species', 'feature'].includes(kind)) {
-    throw new Error(`kind 只能是 lifecycle / species / feature，收到 ${kind}`)
-  }
-  // created_at 用当前毫秒：新候选项排在同票的老项后面（sortWishes 的第二关键字），
-  // 这符合「它才刚上架，还没等过」
-  d1(
-    `INSERT OR IGNORE INTO wishes (id, kind, title_zh, title_en, votes, listed, created_at)
-     VALUES (${q(slug)}, ${q(kind)}, ${q(titleZh)}, ${q(titleEn)}, 0, 1, ${Date.now()})`,
-  )
-  // 这条提交已经变成候选项了，从收件箱里收起来，免得下次又看见它
-  d1(`UPDATE messages SET status = 'hidden' WHERE id = ${q(id)}`)
-  console.log(`#${id} → 候选项 ${slug}（${titleZh}）`)
-}
-
 try {
   if (cmd === 'list') list()
   else if (cmd === 'summary') summary()
-  else if (cmd === 'wishes') wishes()
-  else if (cmd === 'pick') setStatus(args[1], 'featured')
   else if (cmd === 'hide') setStatus(args[1], 'hidden')
-  else if (cmd === 'promote') promote(args.slice(1))
   else throw new Error(`不认识的命令：${cmd}`)
 } catch (err) {
   console.error(err.message)

@@ -1,26 +1,22 @@
 /**
  * @vitest-environment jsdom
  *
- * 点播墙与反馈表单。
+ * 反馈表单与纠错对话框。
  *
  * 这几条各守一个「坏了也不会报错、只会静静地少收反馈」的点：
  *
- * 1. **后端不存在时前端要完好** —— D1 绑定要人去 Cloudflare 面板手动点一次，
- *    在那之前 `/api/*` 全是 404。这不是异常路径，是上线头几天的正常状态。
- *    墙必须显示一行说明而不是白屏或抛异常。
- * 2. **蜜罐不能被真人碰到** —— 它一旦对键盘用户可达，认真填表的人就会被
+ * 1. **蜜罐不能被真人碰到** —— 它一旦对键盘用户可达，认真填表的人就会被
  *    静默丢弃，而且没有任何报错、没人会发现。
- * 3. **纠错必须带上物种与部位** —— 少了它反馈落不了地。前端本来握着这两个
+ * 2. **纠错必须带上物种与部位** —— 少了它反馈落不了地。前端本来握着这两个
  *    上下文，漏传不会报错，只会让每条纠错都变成「网站有个地方不对」。
- * 4. **限流与校验各说各的话** —— 全都提示「发送失败」的话，被限流的人会
+ * 3. **限流与校验各说各的话** —— 全都提示「发送失败」的话，被限流的人会
  *    一直重试。
  */
 import { cleanup, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 import { renderZh } from '../../i18n/testing'
 import { INSECTS } from '../../data/insects.zh'
-import { WishWall } from '../WishWall'
 import { FeedbackDialog } from '../FeedbackDialog'
 import { FeedbackForm } from '../FeedbackForm'
 
@@ -41,92 +37,8 @@ function stubFetch(handler: (url: string, init?: RequestInit) => Response | Prom
 const json = (data: unknown, status = 200) =>
   new Response(JSON.stringify(data), { status, headers: { 'Content-Type': 'application/json' } })
 
-beforeEach(() => {
-  localStorage.clear()
-})
-
 afterEach(() => {
   vi.unstubAllGlobals()
-})
-
-describe('后端不存在时墙要安静降级', () => {
-  it('/api/wall 返回 404 时显示一行说明，不抛异常', async () => {
-    stubFetch(() => new Response('not found', { status: 404 }))
-    renderZh(<WishWall onClose={() => {}} />)
-    expect(await screen.findByText(/墙暂时看不了/)).toBeTruthy()
-  })
-
-  it('fetch 直接抛（断网）时也一样', async () => {
-    vi.stubGlobal('fetch', async () => {
-      throw new Error('offline')
-    })
-    renderZh(<WishWall onClose={() => {}} />)
-    expect(await screen.findByText(/墙暂时看不了/)).toBeTruthy()
-  })
-
-  it('响应体缺字段时按空墙处理，不因为 undefined.map 崩掉', async () => {
-    stubFetch(() => json({}))
-    renderZh(<WishWall onClose={() => {}} />)
-    // 没崩、走到了 ready 态：「我也想看…」那块出现了
-    expect(await screen.findByText('我也想看…')).toBeTruthy()
-  })
-})
-
-describe('投票', () => {
-  const wallData = {
-    wishes: [
-      { id: 'lifecycle-cockroach', kind: 'lifecycle', title: '德国小蠊的生活史', votes: 3 },
-      { id: 'feature-photos', kind: 'feature', title: '配上实拍对照图', votes: 7 },
-    ],
-    featured: [],
-  }
-
-  it('点整行就投票，票数立刻涨、按钮变成不可再点', async () => {
-    const calls = stubFetch((url) =>
-      url.startsWith('/api/wish/vote') ? json({ ok: true, votes: 4, counted: true }) : json(wallData),
-    )
-    renderZh(<WishWall onClose={() => {}} />)
-
-    const row = await screen.findByRole('button', { name: /德国小蠊的生活史/ })
-    await userEvent.click(row)
-
-    await waitFor(() => expect(screen.getByRole('button', { name: /德国小蠊/ }).hasAttribute('disabled')).toBe(true))
-    expect(calls.some((c) => c.url === '/api/wish/vote')).toBe(true)
-    expect(calls.find((c) => c.url === '/api/wish/vote')?.body).toEqual({ id: 'lifecycle-cockroach' })
-  })
-
-  it('投票请求失败也不把按钮弹回可点 —— 弹回会让人以为自己点错了', async () => {
-    stubFetch((url) =>
-      url.startsWith('/api/wish/vote') ? new Response('boom', { status: 500 }) : json(wallData),
-    )
-    renderZh(<WishWall onClose={() => {}} />)
-    const row = await screen.findByRole('button', { name: /德国小蠊的生活史/ })
-    await userEvent.click(row)
-    await waitFor(() => expect(row.hasAttribute('disabled')).toBe(true))
-  })
-
-  it('票数为 0 时不因为除以零而画出畸形条形', async () => {
-    stubFetch(() => json({ wishes: [{ id: 'a', kind: 'feature', title: '零票项', votes: 0 }], featured: [] }))
-    renderZh(<WishWall onClose={() => {}} />)
-    const row = await screen.findByRole('button', { name: /零票项/ })
-    const bar = row.querySelector('span[style]') as HTMLElement
-    expect(bar.style.width).toBe('0%')
-  })
-})
-
-describe('精选留言', () => {
-  it('一条都没有时整块不出现 —— 空着的「编辑选了几句」比没有更难看', async () => {
-    stubFetch(() => json({ wishes: [], featured: [] }))
-    renderZh(<WishWall onClose={() => {}} />)
-    await screen.findByText('我也想看…')
-    expect(screen.queryByText('编辑选了几句')).toBeNull()
-  })
-
-  it('有精选时原样显示', async () => {
-    stubFetch(() => json({ wishes: [], featured: [{ body: '带二年级孩子看了一下午。', at: 1 }] }))
-    renderZh(<WishWall onClose={() => {}} />)
-    expect(await screen.findByText('带二年级孩子看了一下午。')).toBeTruthy()
-  })
 })
 
 describe('蜜罐', () => {

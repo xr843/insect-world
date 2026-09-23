@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import s from './FeedbackForm.module.css'
 import { useLocale, useT } from '../i18n/useT'
-import { useFeedbackSubmit, type SubmitResult } from '../hooks/useWall'
+import { useFeedbackSubmit, type SubmitResult } from '../hooks/useFeedbackSubmit'
 import { BODY_MAX, BODY_MIN, codePointLength } from '../feedback/rules'
 import type { FeedbackKind } from '../feedback/types'
 
