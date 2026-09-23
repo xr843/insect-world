@@ -15,12 +15,13 @@
  *    描述不够细（只确认了「背面有成对的刺突/突起、用于支撑」这一层），
  *    这里取「第 2~5 腹节、4 对」是示意性的，不是逐节核对过的计数。
  * 2. **成虫的雏形已经看得见**：头宽于前胸、两侧一对**大复眼**（半径 0.11，
- *    已开始显色的红褐 —— 乳白的蛹上只靠隆起读不出眼）；前胸窄成细腰；
+ *    已开始变深的灰褐 —— 乳白的蛹上只靠隆起读不出眼）；前胸窄成细腰；
  *    头前一对张开的**镰刀状上颚芽** —— 成虫最戏剧性的两处特征
  *    （`tiger-beetle.ts` 的大复眼与 sickleJaws）在这里都有了雏形；
- *    还有**很长的足**：后足跗节伸过腹末，跑得最快的昆虫从蛹期就是长腿。
+ *    三对足各自折成紧凑的 V、贴着腹面从前往后排开 —— 离蛹「附肢已分开成形、
+ *    折好贴在身上」的教学点。
  * 3. **仰躺**：离蛹的附肢全折在腹面，仰躺正好把它们翻到上面，顶视机位一眼
- *    看得见三对折起的长足、翅芽和沿体侧后伸的触角。
+ *    看得见三对折起的足、翅芽和沿体侧后伸的触角。
  *
  * ## 室底与蜕下的幼虫皮
  *
@@ -74,8 +75,12 @@ const BODY_REAR = -0.78
 const ABD_FROM = 0.02
 const ABD_TO = -0.74
 const ABD_SEGMENTS = 7
-/** 节间沟深 6%（松果红线 9%） */
-const ABD_GROOVE = 0.06
+/**
+ * 节间沟：深 8%、宽而软（`|cos|^3`）。第一版 6%、`|cos|^6` 的窄折痕在乳白体上
+ * 几乎看不出来，整只蛹读成一块光滑的肥皂。蛹是软的，分节该是一圈圈缓起伏而不是刻痕；
+ * 深度仍压在松果红线（9%）以下
+ */
+const ABD_GROOVE = 0.08
 
 /** 横截面：背腹略扁 */
 const FLAT_Y = 0.9
@@ -96,8 +101,12 @@ const BODY_COLOR = '#f2e7cc'
 /** 附肢：比体色深一档（明度 0.71，差 0.16；第一版 0.76 的足在乳白体上糊成一片） */
 const APPENDAGE_COLOR = '#dcc18e'
 const PAD_COLOR = '#e8d6ab'
-/** 复眼：已显色的红褐（明度 0.35），与体色差 0.5 */
-const EYE_COLOR = '#8a4a2a'
+/**
+ * 复眼：灰褐（明度 0.41，饱和 0.19），与体色差 0.46。
+ * 甲虫蛹的眼随发育由白转深；虎甲蛹具体经过什么色没查到可靠描述，所以不取第一版那种
+ * 饱和的番茄红褐，取「正在变深」的中性灰褐
+ */
+const EYE_COLOR = '#7c6655'
 /** 上颚芽：浅琥珀，比附肢再深一档 */
 const JAW_COLOR = '#caa064'
 /** 刺尖刚毛 */
@@ -126,7 +135,7 @@ function keyframe(keys: readonly (readonly [number, number])[], t: number): numb
 function abdomenCrease(x: number): number {
   if (x > ABD_FROM || x < ABD_TO) return 1
   const p = ((ABD_FROM - x) / (ABD_FROM - ABD_TO)) * ABD_SEGMENTS
-  return 1 - ABD_GROOVE * Math.pow(Math.abs(Math.cos(p * Math.PI)), 6)
+  return 1 - ABD_GROOVE * Math.pow(Math.abs(Math.cos(p * Math.PI)), 3)
 }
 
 function bodyRadius(x: number): number {
@@ -262,16 +271,18 @@ function jawBuds(material: THREE.Material): THREE.Group {
 
 // ---------------------------------------------------------------- 触角
 
-/** 触角：自复眼前内侧出发，沿体侧后伸到腹基，压在足的外层 */
+/**
+ * 触角：自复眼内侧出发，**沿体侧**（β 70~82，介于足的膝与翅芽之间）贴着体壁
+ * 往后走到腹基。第一版先抬到离体壁 0.12 再落回，还斜穿过腹面，读成横在足上的一根杆。
+ */
 function antenna(side: 1 | -1, material: THREE.Material): THREE.Mesh {
   const pts: THREE.Vector3[] = []
   const steps = 40
   for (let i = 0; i <= steps; i++) {
     const t = i / steps
-    const x = THREE.MathUtils.lerp(0.66, -0.2, t)
-    const beta = THREE.MathUtils.lerp(50, 80, THREE.MathUtils.smoothstep(t, 0, 0.5))
-    const extra = 0.02 + 0.1 * THREE.MathUtils.smoothstep(t, 0, 0.35) - 0.03 * THREE.MathUtils.smoothstep(t, 0.7, 1)
-    pts.push(shell(x, beta, extra, side))
+    const x = THREE.MathUtils.lerp(0.64, -0.3, t)
+    const beta = THREE.MathUtils.lerp(70, 82, THREE.MathUtils.smoothstep(t, 0, 0.3))
+    pts.push(shell(x, beta, 0.02, side))
   }
   // 11 节：半径按节点收一下
   const cum = [0]
@@ -290,8 +301,8 @@ function antenna(side: 1 | -1, material: THREE.Material): THREE.Mesh {
 
 // ---------------------------------------------------------------- 翅芽
 
-/** 翅芽所在方位角（离腹中线）：体侧略偏背，包在足的外面 */
-const PAD_BETA = 112
+/** 翅芽所在方位角（离腹中线）：体侧偏背，让出 β 90° 以内给足与触角 */
+const PAD_BETA = 120
 const PAD_EXTRA = 0.02
 const PAD_HALF_T = 0.04
 
@@ -305,10 +316,10 @@ function wingPad(side: 1 | -1, material: THREE.Material): THREE.Group {
   g.rotation.x = Math.PI - THREE.MathUtils.degToRad(PAD_BETA) * side
   const samples: readonly (readonly [number, number])[] = [
     [0.2, 0.04],
-    [0.12, 0.12],
-    [0.0, 0.16],
-    [-0.14, 0.165],
-    [-0.28, 0.13],
+    [0.12, 0.1],
+    [0.0, 0.13],
+    [-0.14, 0.13],
+    [-0.28, 0.11],
     [-0.38, 0.07],
     [-0.42, 0.02],
   ]
@@ -338,18 +349,22 @@ interface LegPlan {
 }
 
 /**
- * 三对折起的长足：腿节几乎横着伸到体侧的膝，胫节折回、顺体轴往后，跗节再往后。
- * 虎甲是跑得最快的昆虫之一，足在蛹期就很长 —— 后足跗节伸过腹末（−0.86 对腹末 −0.78）。
+ * 三对足：每条都是**腿节 + 胫节折成一个紧凑的「V」**，V 尖（膝）朝体侧，
+ * 跗节顺着胫节再往后收一小截。三条都**贴着腹面轮廓**走（管心离体壁 0.7 个管径，
+ * 下半截压进体壁），不起拱、不跨中线（基节离腹中线 13°），同侧三条沿体轴
+ * 从前往后依次排开、互不相碰。
  *
- * **三对胫节各走一条「车道」**：前足最靠腹中线（β 58→34）、中足居中、后足最外
- * （β 66→54），彼此平行不交叉。第一版三对胫节都往腹中线收（β 60→25），在腹面
- * 交叉成一片，顶视读成「一地折断的小棍」。真实的离蛹里各足的胫节就是这样
- * 并排顺着身子折好的，交叉只发生在后一对的腿节压过前一对的胫节那一处。
+ * 第一、二版是「长足各走一条车道」：后足腿节横跨前两对的胫节，净空按 0.02 / 0.055 /
+ * 0.09 分三层叠起来。目视验收打回 —— home、侧视、后视都读成一盘面条或一架梯子，
+ * 恰恰看不出离蛹最该讲的那件事：**附肢已经分开成形、各自折好贴在身上**。
+ * 所以这一版宁可让足短一点（后足跗节到腹部第 6 节，不再伸过腹末），也要三个 V 各占一段。
+ *
+ * [x, 离腹中线的角度 β]：基节 → 膝 → 胫跗关节 → 跗端
  */
 const LEGS: readonly LegPlan[] = [
-  { joints: [[0.36, 14], [0.3, 58], [0.02, 34], [-0.16, 26]], extra: 0.02, thick: 0.036 },
-  { joints: [[0.2, 12], [0.12, 62], [-0.28, 44], [-0.48, 36]], extra: 0.055, thick: 0.038 },
-  { joints: [[0.06, 10], [-0.06, 66], [-0.52, 54], [-0.86, 44]], extra: 0.09, thick: 0.04 },
+  { joints: [[0.45, 13], [0.39, 62], [0.31, 28], [0.27, 22]], extra: 0.024, thick: 0.034 },
+  { joints: [[0.18, 13], [0.12, 64], [0.05, 30], [0.0, 24]], extra: 0.025, thick: 0.036 },
+  { joints: [[-0.1, 13], [-0.24, 70], [-0.46, 34], [-0.58, 26]], extra: 0.026, thick: 0.038 },
 ]
 
 function pupaLeg(plan: LegPlan, side: 1 | -1, material: THREE.Material): THREE.Group {

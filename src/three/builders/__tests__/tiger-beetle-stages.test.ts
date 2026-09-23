@@ -615,27 +615,126 @@ describe('蛹：仰躺在背刺上的乳白离蛹', () => {
     expect(centerOf(antennae).y).toBeGreaterThan(bodyC.y)
   })
 
-  it('离蛹：足与触角离开体壁，不是体壁上的浅浮雕', () => {
+  // ---- 附肢的量具：以蛹体体轴（过中心的 X 向直线）为准的向径，与同一 x 处体壁的最大向径
+  const radial = (v: THREE.Vector3) => Math.hypot(v.y - bodyC.y, v.z - bodyC.z)
+  const wallCache = new Map<number, number>()
+  const wall = (x: number) => {
+    const k = Math.round(x * 100)
+    let r = wallCache.get(k)
+    if (r === undefined) {
+      r = Math.max(...bodyVerts.filter((v) => Math.abs(v.x - k / 100) < 0.012).map(radial))
+      wallCache.set(k, r)
+    }
+    return r
+  }
+  /** 离腹中线的角度（度）：仰躺后腹面朝 +Y，0 = 正对上方的腹中线，90 = 正侧面 */
+  const betaOf = (v: THREE.Vector3) => (Math.atan2(Math.abs(v.z - bodyC.z), v.y - bodyC.y) * 180) / Math.PI
+  /** 每条足 = 一个 group（3 节 + 2 个关节球） */
+  const legGroups = [...new Set(legs.map((m) => m.parent as THREE.Object3D))]
+  const legVerts = (g: THREE.Object3D) =>
+    vertsOf(meshesByName(pupa, 'pupa-leg-segment', 'pupa-leg-joint').filter((m) => m.parent === g))
+
+  it('离蛹：每节足是独立成形的管，贴着体壁、不起拱、也不是体壁上的浅浮雕', () => {
     /*
-     * 以蛹体的体轴（y=中心、z=中心的 X 向直线）为准，量每个附肢顶点离轴的距离，
-     * 与同一 x 处蛹体截面的最大向径比较。实测 94% 的足顶点落在体壁之外；
-     * 把足的净空压成 0 并埋进体壁（extra = −0.03）时掉到 50% 以下。
+     * 每一节量「最外顶点离体壁多高」与「最贴体的顶点离体壁多远」。
+     * 腿节、胫节实测最高 0.039~0.062；跗节细，另算。所有节最贴体处都压进体壁（< 0）。
+     * 起拱（第二版分层净空到 0.09）最高超过 0.1，这条红；
+     * 埋成浮雕（净空 −0.035）最高跌到 0.02 以下，这条也红。
      */
-    const cy = bodyC.y
-    const cz = bodyC.z
-    const radial = (v: THREE.Vector3) => Math.hypot(v.y - cy, v.z - cz)
-    const wall = (x: number) => Math.max(...bodyVerts.filter((v) => Math.abs(v.x - x) < 0.02).map(radial))
-    const lv = vertsOf([...legs, ...antennae]).filter((v) => v.x > bodyBox.min.x + 0.03 && v.x < bodyBox.max.x - 0.03)
-    const outside = lv.filter((v) => radial(v) > wall(v.x)).length / lv.length
-    expect(outside).toBeGreaterThan(0.8)
+    for (const g of legGroups) {
+      const segs = g.children.filter((c) => c.name === 'pupa-leg-segment') as THREE.Mesh[]
+      segs.forEach((seg, i) => {
+        const d = vertsOf([seg]).map((v) => radial(v) - wall(v.x))
+        if (i < 2) expect(Math.max(...d), '腿节/胫节埋进体壁成了浮雕').toBeGreaterThan(0.03)
+        expect(Math.max(...d), '这节足悬空起拱').toBeLessThan(0.085)
+        expect(Math.min(...d), '这节足离开了体壁').toBeLessThan(0.015)
+      })
+    }
   })
 
-  it('长足：后足跗节伸过腹末', () => {
-    // 6 条 × 3 节
-    expect(legs).toHaveLength(18)
-    const tail = bodyBox.min.x
-    expect(boxOf(legs).min.x, '足短得够不到腹末 —— 丢了「跑得最快」').toBeLessThan(tail)
-    expect(boxOf(legs).min.x).toBeGreaterThan(tail - 0.25)
+  it('每条足折成紧凑的 V：腿节与胫节在膝处夹角小于 85°', () => {
+    expect(legGroups).toHaveLength(6)
+    for (const g of legGroups) {
+      const segs = g.children.filter((c) => c.name === 'pupa-leg-segment') as THREE.Mesh[]
+      const joints = g.children.filter((c) => c.name === 'pupa-leg-joint') as THREE.Mesh[]
+      expect(segs).toHaveLength(3)
+      const knee = centerOf([joints[0]])
+      const femur = vertsOf([segs[0]])
+      const tibia = vertsOf([segs[1]])
+      const far = (vs: THREE.Vector3[]) => vs.reduce((a, v) => (v.distanceTo(knee) > a.distanceTo(knee) ? v : a), vs[0])
+      const angle = far(femur).sub(knee).angleTo(far(tibia).sub(knee)) * (180 / Math.PI)
+      // 实测 前 56°、中 44°、后 80°（胸部太短，后足的 V 再收紧就要撞上中足）；伸直的足接近 180°
+      expect(angle, '腿节与胫节没有折起来').toBeLessThan(85)
+      expect(angle).toBeGreaterThan(15)
+    }
+  })
+
+  it('足不跨中线；同侧三条从前往后依次排开、互不相碰', () => {
+    for (const side of [1, -1]) {
+      const mine = legGroups
+        .filter((g) => Math.sign(centerOf([g]).z - bodyC.z) === side)
+        .map((g) => ({ g, v: legVerts(g) }))
+      expect(mine, '左右不成对').toHaveLength(3)
+      for (const { v } of mine) {
+        // 整条足都在自己这一侧（实测离中线最近 0.022）
+        expect(Math.min(...v.map((p) => side * (p.z - bodyC.z))), '足跨过了腹中线').toBeGreaterThan(0.015)
+      }
+      // 沿体轴的范围两两不重叠 —— 叠在一起就是第二版那架梯子（实测相邻两条之间空 0.05~0.06）
+      const ranges = mine
+        .map(({ v }) => [Math.min(...v.map((p) => p.x)), Math.max(...v.map((p) => p.x))])
+        .sort((a, b) => b[0] - a[0])
+      for (let i = 1; i < ranges.length; i++) {
+        expect(ranges[i - 1][0] - ranges[i][1], '前后两条足在体轴上叠在一起').toBeGreaterThan(0)
+      }
+    }
+  })
+
+  it('后足最长，顺着腹部往后伸到腹部后半', () => {
+    const spans = legGroups.map((g) => {
+      const v = legVerts(g)
+      return { min: Math.min(...v.map((p) => p.x)), span: Math.max(...v.map((p) => p.x)) - Math.min(...v.map((p) => p.x)) }
+    })
+    const hind = spans.reduce((a, b) => (b.min < a.min ? b : a))
+    const fore = spans.reduce((a, b) => (b.min > a.min ? b : a))
+    // 后足沿体轴的跨度是前足的 2.4 倍（0.52 对 0.22）；缩到 1.4 倍这条红
+    expect(hind.span / fore.span, '后足不比前足长').toBeGreaterThan(1.8)
+    // 实测到体长 16% 处（0 = 腹末）
+    expect(rel(hind.min), '后足太短').toBeLessThan(0.22)
+    expect(rel(hind.min)).toBeGreaterThan(0)
+  })
+
+  it('触角沿体侧贴着往后走，不横跨腹面', () => {
+    expect(antennae).toHaveLength(2)
+    for (const a of antennae) {
+      const v = vertsOf([a])
+      // 实测 β 最小 63°（出发处）、离体壁最高 0.058，全程贴在体侧
+      expect(Math.min(...v.map(betaOf)), '触角横到腹面上来了').toBeGreaterThan(55)
+      expect(Math.max(...v.map((p) => radial(p) - wall(p.x))), '触角悬空').toBeLessThan(0.075)
+      const xs = v.map((p) => p.x)
+      expect(Math.max(...xs) - Math.min(...xs), '触角太短').toBeGreaterThan(0.6)
+    }
+  })
+
+  it('腹部看得出分节：体壁向径沿体轴有一串软起伏', () => {
+    /*
+     * 在腹部逐 0.01 采样体壁向径，找 ±0.03 窗口内的局部低谷，量它比窗口两端低多少。
+     * 实测 4 道（腹末收尖那两道被包络的斜率吃掉）、平均深 0.0185；
+     * 第一版（6%·|cos|^6，出图像一块肥皂）平均只有 0.0138，这条红。
+     * 上限 0.04：再深就是松果的鳞片。
+     */
+    const x0 = bodyBox.min.x + bodyLen * 0.03
+    const x1 = bodyBox.min.x + bodyLen * 0.52
+    const r: number[] = []
+    for (let x = x0; x <= x1; x += 0.01) r.push(wall(x))
+    const depths: number[] = []
+    for (let i = 3; i < r.length - 3; i++) {
+      const win = r.slice(i - 3, i + 4)
+      if (r[i] === Math.min(...win)) depths.push(Math.max(r[i - 3], r[i + 3]) - r[i])
+    }
+    expect(depths.length, '腹部光滑成一块肥皂').toBeGreaterThanOrEqual(4)
+    const mean = depths.reduce((a, b) => a + b, 0) / depths.length
+    expect(mean, '节间起伏太浅，读成一块肥皂').toBeGreaterThan(0.016)
+    expect(Math.max(...depths), '节间沟深成了松果鳞片').toBeLessThan(0.04)
   })
 
   it('一对大复眼，已显色，在头端两侧', () => {
@@ -651,6 +750,10 @@ describe('蛹：仰躺在背刺上的乳白离蛹', () => {
     const e = hslByName(pupa, 'pupa-eye')
     const b = hslByName(pupa, 'pupa-body')
     expect(b.l - e.l, '乳白蛹上光靠隆起读不出眼').toBeGreaterThan(0.4)
+    // 灰褐，不是番茄红：蛹眼由白变深的色没查到可靠依据，取中性褐（实测饱和 0.19、色相 26°）
+    expect(e.s, '眼色太艳，读成番茄').toBeLessThan(0.35)
+    expect(e.h).toBeGreaterThan(15)
+    expect(e.h).toBeLessThan(50)
   })
 
   it('镰刀状上颚芽：一对，伸在头前、中段外凸、两支分得开', () => {
