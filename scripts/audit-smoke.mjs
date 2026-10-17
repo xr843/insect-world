@@ -96,6 +96,16 @@ try {
     ['/en/s/honeybee/', 'Sources and checks', 3, '2026-10-01', null],
     ['/s/mantis/', '来源与核校', 2, '2026-10-01', null],
     ['/en/s/mantis/', 'Sources and checks', 2, '2026-10-01', null],
+    ['/s/monarch-butterfly/', '来源与核校', 5, '2026-10-17', null],
+    ['/en/s/monarch-butterfly/', 'Sources and checks', 5, '2026-10-17', null],
+    ['/s/dragonfly/', '来源与核校', 6, '2026-10-17', null],
+    ['/en/s/dragonfly/', 'Sources and checks', 6, '2026-10-17', null],
+    ['/s/ant/', '来源与核校', 5, '2026-10-17', null],
+    ['/en/s/ant/', 'Sources and checks', 5, '2026-10-17', null],
+    ['/s/cicada/', '来源与核校', 7, '2026-10-17', null],
+    ['/en/s/cicada/', 'Sources and checks', 7, '2026-10-17', null],
+    ['/s/longhorn-beetle/', '来源与核校', 5, '2026-10-17', null],
+    ['/en/s/longhorn-beetle/', 'Sources and checks', 5, '2026-10-17', null],
   ]) {
     const sourcePage = await testPage({ viewport: { width: 320, height: 844 } })
     await sourcePage.goto(`${base}${path}`)

@@ -26,6 +26,14 @@ export type ContentClaim =
   | 'ant-size-nest-and-range'
   | 'ant-claustral-founding'
   | 'ant-aphid-tending'
+  | 'monarch-milkweed-toxins-and-warning'
+  | 'monarch-morphology-and-life-cycle'
+  | 'monarch-migration-and-navigation'
+  | 'monarch-iucn-status'
+  | 'dragonfly-east-asian-taxon-traits'
+  | 'dragonfly-capture-trials-other-genus'
+  | 'dragonfly-predictive-interception-other-genera'
+  | 'dragonfly-odonate-eye-polarization'
 
 export interface ContentSource {
   id: string
@@ -38,12 +46,106 @@ export interface ContentSource {
     | 'sources.nutrientsCicadaReviewTitle' | 'sources.jacSoundApparatusTitle' | 'sources.jinhuaOutbreakTitle' | 'sources.zookeysNymphTitle' | 'sources.mitogenomeTitle' | 'sources.actaEntomologicaDevelopmentTitle' | 'sources.illinoisCicadasTitle'
     | 'sources.jantJaponicusTitle' | 'sources.watanabeChcReceptionTitle' | 'sources.maHeadPhenotypesTitle' | 'sources.hasegawaFirstWorkersTitle'
     | 'sources.frontiersHoneydewAntLactobacillusTitle'
+    | 'sources.fwsMonarchTitle' | 'sources.monarchWatchBiologyTitle' | 'sources.guerraMagneticCompassTitle' | 'sources.iucnSpcRulingTitle' | 'sources.iucnRedListMonarchTitle'
+    | 'sources.kotobankGinyanmaTitle' | 'sources.hkWetlandParkAnaxJuliusTitle' | 'sources.combesDragonflyPredationTitle' | 'sources.wiedermanPredictiveFocusTitle' | 'sources.mischiatiInternalModelsTitle' | 'sources.cezarioOdonataPolarizedVisionTitle'
   supports: readonly ContentClaim[]
   access: 'full-text' | 'official-page' | 'abstract'
   checkedAt: string
 }
 
 export const CONTENT_SOURCES: Readonly<Record<string, readonly ContentSource[]>> = {
+  dragonfly: [
+    {
+      id: 'kotobank-ginyanma',
+      url: 'https://kotobank.jp/word/%E3%81%8E%E3%82%93%E3%82%84%E3%82%93%E3%81%BE-3149558',
+      titleKey: 'sources.kotobankGinyanmaTitle',
+      supports: ['dragonfly-east-asian-taxon-traits'],
+      access: 'official-page',
+      checkedAt: '2026-10-17',
+    },
+    {
+      id: 'hk-wetland-park-anax-julius',
+      url: 'https://wetlandpark.gov.hk/en/biodiversity/beauty-of-wetlands/wildlife/anax-julius',
+      titleKey: 'sources.hkWetlandParkAnaxJuliusTitle',
+      supports: ['dragonfly-east-asian-taxon-traits'],
+      access: 'official-page',
+      checkedAt: '2026-10-17',
+    },
+    {
+      id: 'combes-2012-dragonfly-predation',
+      url: 'https://dash.harvard.edu/server/api/core/bitstreams/7312037e-0433-6bd4-e053-0100007fdf3b/content',
+      titleKey: 'sources.combesDragonflyPredationTitle',
+      supports: ['dragonfly-capture-trials-other-genus'],
+      access: 'full-text',
+      checkedAt: '2026-10-17',
+    },
+    {
+      id: 'wiederman-2017-predictive-focus',
+      url: 'https://pmc.ncbi.nlm.nih.gov/articles/PMC5526664/',
+      titleKey: 'sources.wiedermanPredictiveFocusTitle',
+      supports: ['dragonfly-predictive-interception-other-genera'],
+      access: 'full-text',
+      checkedAt: '2026-10-17',
+    },
+    {
+      id: 'mischiati-2015-internal-models',
+      url: 'https://www.nature.com/articles/nature14045',
+      titleKey: 'sources.mischiatiInternalModelsTitle',
+      supports: ['dragonfly-predictive-interception-other-genera'],
+      access: 'abstract',
+      checkedAt: '2026-10-17',
+    },
+    {
+      id: 'cezario-2025-odonata-polarized-vision',
+      url: 'https://pmc.ncbi.nlm.nih.gov/articles/PMC11750933/',
+      titleKey: 'sources.cezarioOdonataPolarizedVisionTitle',
+      supports: ['dragonfly-odonate-eye-polarization'],
+      access: 'full-text',
+      checkedAt: '2026-10-17',
+    },
+  ],
+  'monarch-butterfly': [
+    {
+      id: 'fws-monarch-profile',
+      url: 'https://www.fws.gov/species/monarch-danaus-plexippus',
+      titleKey: 'sources.fwsMonarchTitle',
+      supports: ['monarch-milkweed-toxins-and-warning', 'monarch-morphology-and-life-cycle', 'monarch-migration-and-navigation'],
+      access: 'official-page',
+      checkedAt: '2026-10-17',
+    },
+    {
+      id: 'monarch-watch-biology',
+      url: 'https://monarchwatch.org/biology/',
+      titleKey: 'sources.monarchWatchBiologyTitle',
+      supports: ['monarch-milkweed-toxins-and-warning', 'monarch-morphology-and-life-cycle', 'monarch-migration-and-navigation'],
+      access: 'official-page',
+      checkedAt: '2026-10-17',
+    },
+    {
+      id: 'guerra-2014-magnetic-compass',
+      url: 'https://www.nature.com/articles/ncomms5164',
+      titleKey: 'sources.guerraMagneticCompassTitle',
+      supports: ['monarch-migration-and-navigation'],
+      access: 'full-text',
+      checkedAt: '2026-10-17',
+    },
+    {
+      id: 'iucn-spc-ruling-2023',
+      url: 'https://nc.iucnredlist.org/redlist/content/attachment_files/SPC-Ruling-Monarch_Butterfly-27Sept2023.pdf',
+      titleKey: 'sources.iucnSpcRulingTitle',
+      supports: ['monarch-iucn-status'],
+      access: 'official-page',
+      checkedAt: '2026-10-17',
+    },
+    {
+      id: 'iucn-red-list-migratory-monarch',
+      url: 'https://www.iucnredlist.org/species/194052138/246096271',
+      titleKey: 'sources.iucnRedListMonarchTitle',
+      supports: ['monarch-iucn-status'],
+      access: 'official-page',
+      checkedAt: '2026-10-17',
+    },
+  ],
   ant: [
     {
       id: 'jant-camponotus-japonicus',

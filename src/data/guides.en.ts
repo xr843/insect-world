@@ -64,50 +64,50 @@ export const GUIDES: Record<string, Guide> = {
     lesson: [
       {
         title: "Orange and Black as Warning",
-        body: "The forewing's orange with black veins is a warning color: toxins the caterpillar (larva) stored from milkweed persist into the adult, and a bird tasting the bitterness once remembers and avoids the pattern.",
+        body: "Orange and black warn predators: the caterpillar's milkweed toxins stay in the adult. In an early study, a blue jay that ate one vomited and refused more; a few species eat them anyway.",
         anchor: 'forewing',
       },
       {
         title: "Telling Males from Females",
-        body: "Each hindwing carries a small black spot near its base, a male-only scent patch releasing courtship pheromones; females lack it and have thicker, darker veins, the clearest way to tell the sexes apart.",
+        body: "Only males have a small black spot of special scales on each hindwing; females often look darker, with wider veins. Elsewhere such scales make courtship scents; in monarchs they seem unimportant.",
         anchor: 'hindwing',
       },
       {
-        title: "Navigating a Route Never Flown",
-        body: "The generation migrating south has never seen Mexico, yet reaches the same fir forest its ancestors wintered in, guided by an antennal clock and the sun's angle—or, on cloudy days, Earth's magnetic field.",
+        title: "How First-Time Migrants Orient",
+        body: "First-time migrants: the eyes track the sun and antennal clocks adjust the heading by time of day. Antennae may hold light-dependent magnetosensors; a magnetic map to exact sites is unproven.",
         anchor: 'antenna',
       },
       {
         title: "How the Proboscis Sips Nectar",
-        body: "The proboscis stays coiled like a watch spring, uncoiling to sip nectar in a flower's corolla; this structure, shared across Lepidoptera (butterflies and moths), replaces ancestral chewing mouthparts.",
+        body: "Monarchs spot flowers by sight; taste receptors on their feet find nectar, and when sugar touches the feet they extend the straw-like proboscis. At rest it is curled up.",
         anchor: 'proboscis',
       },
     ],
     motion: {
       title: "Navigating by a Sun Compass",
-      body: "Migrating monarchs track the sun's position, combined with an internal clock, to hold a fixed heading; over weeks, despite the sun's daily shift, they keep a southward course, converging on one fir forest valley in Mexico.",
+      body: "Eastern monarchs fly south by a time-compensated sun compass: eyes sense the sun and antennal clocks correct the heading. The trip may last over two months, ending in central Mexico's fir forests.",
     },
     quiz: [
       {
         question: "What is the main purpose of the monarch butterfly's bright orange and black wing pattern?",
         options: ["Attracting others of its kind for long-distance group recognition", "Warning predators of toxins stored in its body", "Helping regulate body temperature on long flights"],
         answer: 1,
-        explain: "Toxins the caterpillar stores from milkweed persist into the adult body; the orange and black pattern warns birds it tastes bad and causes sickness.",
+        explain: "Milkweed toxins gained by the caterpillar persist into the adult; the orange and black pattern warns predators that eating it can be toxic.",
       },
       {
-        question: "What allows monarchs that complete their autumn migration to reach their Mexican wintering grounds?",
+        question: "What do fall-migrating monarchs mainly use to set their flight direction?",
         options: [
           "Following experienced older individuals who lead the way",
-          "An internal sun compass and biological clock, switching to magnetic sensing on cloudy days",
+          "A time-compensated sun compass: eyes track the sun, antennal clocks keep time",
           "A chain of pheromone scent left along the route",
         ],
         answer: 1,
-        explain: "The generation flying south has never seen Mexico; it sets direction from the sun's angle and an internal clock, switching to Earth's field if cloudy.",
+        explain: "First-time migrants use a sun compass: eyes sense the sun, antennal clocks keep time. Tests also show a light-dependent magnetic compass.",
       },
     ],
     habitat: {
       title: "From Milkweed to Fir Forest",
-      body: "During the breeding season, monarchs scatter across grasslands and fields, caterpillars depending solely on toxic milkweed; come autumn, adults mass-migrate to a few fir forests in Mexico, converging in one tiny wintering area.",
+      body: "Breeding adults use fields, roadsides, open land and gardens; larvae eat only milkweed. In fall most eastern monarchs roost on firs in Mexico's highlands at about 2400–3600 m; western ones winter in coastal California.",
     },
   },
 
@@ -162,49 +162,49 @@ export const GUIDES: Record<string, Guide> = {
     lesson: [
       {
         title: "How Compound Eyes See the World",
-        body: "The compound eyes cover nearly the whole head, built from close to 30,000 facets (ommatidia), giving a near-360-degree view with no blind spot; each facet senses moving light, key to catching prey midair.",
+        body: "Adult dragonfly and damselfly eyes have up to about thirty thousand facets. A sky-facing rim reads polarized skylight; lower parts sense polarized glare off water, guiding them to it.",
         anchor: 'eye',
       },
       {
-        title: "Two Wing Pairs Flying Independently",
-        body: "The forewings and hindwings, each driven by their own muscles, can beat out of sync: the dragonfly hovers like a helicopter and turns sharply or flies backward instantly, a level of control rare among insects.",
+        title: "Clear Wings, Sea Crossings",
+        body: "Its wings are clear with a slight brown tint, sometimes deep brown in mature females. It is a swift flier that can cross seas in groups; it is common in Japan but rare in Hokkaido.",
         anchor: 'forewing',
       },
       {
-        title: "Legs That Form a Prey Basket",
-        body: "Rows of bristles cover all six legs; in flight they fold into a funnel-shaped basket, and small insects like mosquitoes blundering in rarely escape. A dragonfly need not bite or chase—legs alone catch prey.",
+        title: "Approaching from Below",
+        body: "Other dragonflies studied mostly attack from below, keeping prey in their sharpest view; most catches take under half a second. In trials they caught fruit flies at median rates of 83%–95%.",
         anchor: 'leg',
       },
       {
         title: "From Underwater to the Air",
-        body: "The nymph, or naiad, lurks underwater for months to a year, a fierce ambush hunter on the pond bottom; its final molt, climbing out along water plants, brings wings and eyes, turning hunter aerial.",
+        body: "Larvae grow in weedy lowland ponds; in Japan, adults emerge from about May to September, peaking in midsummer. New odonate adults have empty guts and little fat; feeding often doubles their weight in weeks.",
       },
     ],
     motion: {
       title: "Intercepting Prey in Midair",
-      body: "When hunting, a dragonfly does not just fix its gaze on prey; visual neurons compute its speed and direction, predict an interception point, and steer there. This intercept-not-chase tactic pushes success above ninety percent.",
+      body: "Studies of other dragonflies show the head turns ahead of time to keep tracking prey, and the body then swings onto the prey's flight path. Most steering runs on prediction; vision handles sudden swerves by the prey.",
     },
     quiz: [
       {
-        question: "What is the key reason dragonflies keep such a high hunting success rate?",
-        options: ["Compound eyes give a nearly 360-degree view with no blind spot", "Neurons predict prey trajectories and intercept ahead rather than chase", "Flight speed far exceeds that of any prey"],
+        question: "In an experiment where a dragonfly of another genus hunted fruit flies, what caused the most failed attacks?",
+        options: ["The fly noticing the dragonfly and dodging", "The fly's routine random turns in flight", "The fly outflying the dragonfly"],
         answer: 1,
-        explain: "Visual neurons predict an interception point from the prey's path, so the dragonfly flies to where prey will be, not chasing—key to its high hit rate.",
+        explain: "Flies usually did not notice the approaching dragonfly; their routine random turns foiled more attacks than deliberate dodges did.",
       },
       {
-        question: "Which statement about the dragonfly's development is correct?",
+        question: "Which statement about this species' larvae and egg-laying is correct?",
         options: [
-          "It passes through egg, larva, pupa, and adult stages, which is complete metamorphosis",
-          "The naiad molts directly into an adult with no pupal stage, which is incomplete metamorphosis",
-          "The naiad develops on land, and only the adult takes to the water",
+          "Larvae develop on land, and only adults take to the water",
+          "Larvae grow in lowland ponds, and females lay eggs on floating plants",
+          "Females lay eggs in bark crevices, and larvae grow up in trees",
         ],
         answer: 1,
-        explain: "Dragonflies undergo incomplete metamorphosis: the nymph (naiad) molts repeatedly underwater, emerging directly as an adult with no pupal stage.",
+        explain: "Larvae grow in lowland ponds; females, alone or in tandem with a male, lay eggs on plants floating on the water.",
       },
     ],
     habitat: {
-      title: "A Hunter Patrolling Its Territory",
-      body: "An adult male holds a stretch of shoreline airspace, patrolling and chasing off intruding males to defend water females need for egg-laying; the nymph lurks in mud to ambush prey. One pond holds two very different life forms.",
+      title: "Foraging Overhead, Courting at Ponds",
+      body: "By day, immature adults forage in flight about 1–2 m above open ground; mature males come to ponds to seek females, and females, alone or in tandem with a male, lay eggs on floating plants. The larvae then grow in the pond.",
     },
   },
 

@@ -4,12 +4,30 @@ import { afterEach, describe, expect, it } from 'vitest'
 import { renderEn, renderZh } from '../../i18n/testing'
 import { INSECTS as zhInsects } from '../../data/insects.zh'
 import { INSECTS as enInsects } from '../../data/insects.en'
+import { CONTENT_SOURCES } from '../../data/contentSources'
 import { DetailPanel } from '../DetailPanel'
 
 const props = { onCompare: () => {}, onDiscover: () => {}, onReportError: () => {} }
 afterEach(cleanup)
 
 describe('detail source evidence', () => {
+  for (const id of ['monarch-butterfly', 'dragonfly', 'ant', 'cicada', 'longhorn-beetle'] as const) {
+    it(`lists every scoped ${id} source in both languages without whole-species verification`, () => {
+      const urls = CONTENT_SOURCES[id].map(source => source.url)
+      expect(urls.length).toBeGreaterThanOrEqual(3)
+      renderZh(<DetailPanel insect={zhInsects.find(insect => insect.id === id)!} {...props} />)
+      const zh = screen.getByRole('region', { name: '来源与核校' })
+      expect(within(zh).getAllByRole('link').map(link => link.getAttribute('href'))).toEqual(urls)
+      expect(zh.textContent).toContain('非专家复审')
+      expect(zh.textContent).toContain('2026-10-17')
+      cleanup()
+      renderEn(<DetailPanel insect={enInsects.find(insect => insect.id === id)!} {...props} />)
+      const en = screen.getByRole('region', { name: 'Sources and checks' })
+      expect(within(en).getAllByRole('link')).toHaveLength(urls.length)
+      expect(en.textContent).toContain('No expert review')
+      expect(en.textContent).not.toMatch(/[一-鿿]/)
+    })
+  }
   it('shows mantis evidence with named claim scopes instead of whole-species verification', () => {
     renderZh(<DetailPanel insect={zhInsects.find(insect => insect.id === 'mantis')!} {...props} />)
     const section = screen.getByRole('region', { name: '来源与核校' })
@@ -121,7 +139,7 @@ describe('detail source evidence', () => {
   })
 
   it('does not manufacture evidence links for a species awaiting checks', () => {
-    renderZh(<DetailPanel insect={zhInsects.find(insect => insect.id === 'dragonfly')!} {...props} />)
+    renderZh(<DetailPanel insect={zhInsects.find(insect => insect.id === 'locust')!} {...props} />)
     const section = screen.getByRole('region', { name: '来源与核校' })
     expect(section.textContent).toContain('尚未逐条核校')
     expect(within(section).queryAllByRole('link')).toHaveLength(0)

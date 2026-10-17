@@ -143,8 +143,8 @@ describe('英文版', () => {
     // Mexico 只出现在 Monarch Butterfly 的 summary 里，名称/学名/目都没有它
     expect(en('mexico')).toContain('Monarch Butterfly')
     expect(en('Mexico')).toContain('Monarch Butterfly')
-    // North America 同样在 Monarch Butterfly 的 summary 里
-    expect(en('north')).toContain('Monarch Butterfly')
+    // milkweed 同样只在 Monarch Butterfly 的正文里（2026-10-17 核校后 summary 不再含 North America）
+    expect(en('milkweed')).toContain('Monarch Butterfly')
     // nocturnal 在 German Cockroach 的 epithet 里
     expect(en('nocturnal')).toContain('German Cockroach')
   })

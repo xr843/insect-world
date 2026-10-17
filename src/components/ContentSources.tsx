@@ -30,6 +30,14 @@ const claimKeys = {
   'ant-size-nest-and-range': 'sources.antSizeNestRange',
   'ant-claustral-founding': 'sources.antClaustralFounding',
   'ant-aphid-tending': 'sources.antAphidTending',
+  'monarch-milkweed-toxins-and-warning': 'sources.monarchMilkweedToxins',
+  'monarch-morphology-and-life-cycle': 'sources.monarchLifeCycle',
+  'monarch-migration-and-navigation': 'sources.monarchMigrationNavigation',
+  'monarch-iucn-status': 'sources.monarchIucnStatus',
+  'dragonfly-east-asian-taxon-traits': 'sources.dragonflyEastAsianTaxonTraits',
+  'dragonfly-capture-trials-other-genus': 'sources.dragonflyCaptureTrialsOtherGenus',
+  'dragonfly-predictive-interception-other-genera': 'sources.dragonflyPredictiveInterception',
+  'dragonfly-odonate-eye-polarization': 'sources.dragonflyOdonateEyePolarization',
 } as const satisfies Record<ContentClaim, string>
 
 const accessKeys = {
