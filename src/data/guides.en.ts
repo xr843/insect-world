@@ -311,50 +311,50 @@ export const GUIDES: Record<string, Guide> = {
   ant: {
     lesson: [
       {
-        title: "Why the Waist Is So Thin",
-        body: "Between thorax and abdomen the body narrows into a tiny segment, the petiole, a flexible joint letting the gaster swing and curl to aim a sting; this narrow waist sets ants apart from other insects.",
+        title: "Finding the Waist",
+        body: "The narrow segment between the thorax and the gaster is the petiole, the ant's 'waist'. Workers of this fairly large ant are about 7–12 mm long, so the waist is easy to find.",
         anchor: 'petiole',
       },
       {
-        title: "What the Mandibles Can Do",
-        body: "A major worker's jaws (mandibles) are as stout as pliers, used daily for cutting food, hauling debris, and defense; smaller nestmates have slenderer mandibles and handle more foraging and larval care.",
+        title: "Mandibles of Big and Small Workers",
+        body: "Major and minor workers differ clearly in head width and mandible length, with majors bearing longer jaws. Minors forage and tend brood, while majors mainly guard the nest and rarely forage.",
         anchor: 'mandible',
       },
       {
-        title: "Carrying Honeydew Home",
-        body: "Inside the gaster is an expandable crop storing nectar or aphid honeydew on the carry back; once full, a worker shares it mouth to mouth with nestmates, this 'social stomach' spreading food through the colony.",
+        title: "A Black Body",
+        body: "Workers are black, rounded gaster included. Though often called 'black carpenter ants', maroon-headed workers are actually more common in colder, higher-latitude northern China.",
         anchor: 'gaster',
       },
       {
-        title: "Dividing Labor Without Eyesight",
-        body: "Ants generally have limited eyesight, so coordination relies on antennal contact and pheromone scent: a worker finding food lays a scent trail to the nest, and nestmates follow it by scent alone.",
+        title: "Telling Nestmates by Touch",
+        body: "This ant recognizes nestmates by a blend of 18 cuticular hydrocarbons that differs by colony, like a nest ID card. Workers sense it with antennae and attack outsiders, not nestmates.",
       },
     ],
     motion: {
-      title: "Farming Aphids for Honeydew",
-      body: "A carpenter ant taps an aphid's abdomen with its antennae, prompting it to release honeydew, licked up at once. In return, it drives off predators, sometimes moving the colony to a tenderer branch; farming can last a generation.",
+      title: "Meeting an Outsider",
+      body: "Workers attack other colonies' ants; in preliminary tests, even vaporized hydrocarbons from another colony did it. They also groom their antennae; if stopped, hydrocarbons build up and they struggle to tell friend from foe.",
     },
     quiz: [
       {
-        question: "What is the main function of the noticeably narrow waist between an ant's thorax and abdomen?",
-        options: ["Reducing body weight to make flying easier", "Letting the heavy hind abdomen turn and curl flexibly", "Serving as a cluster of breathing pores"],
+        question: "What does this ant use to tell nestmates from ants of other colonies?",
+        options: ["Comparing body size", "Sensing cuticular hydrocarbons with its antennae", "Listening to wing vibrations"],
         answer: 1,
-        explain: "This narrow waist, the petiole, is a flexible joint letting the gaster swing for precise stinging or acid-spraying, not for weight or breathing.",
+        explain: "Workers sense each colony's distinct hydrocarbon blend; one nest has varied worker sizes, so size isn't a nest marker.",
       },
       {
-        question: "Which statement about the lifespan of this carpenter ant is correct?",
+        question: "When a founding queen invests a fixed amount, how are the number and size of her first workers related?",
         options: [
-          "A queen can live more than ten years, while most workers live less than two",
-          "Workers and queens both live around one to two years, with little difference",
-          "Workers outlive queens because egg-laying takes a heavy toll on the queen",
+          "More workers, smaller workers",
+          "More workers, larger workers",
+          "Number and size are unrelated",
         ],
         answer: 0,
-        explain: "A queen sheds her wings after mating, founding a nest for life, with a lifespan past ten years; workers outside typically live months to two years.",
+        explain: "Founding resources are limited: at equal investment, more first workers means smaller ones; more investment raises both number and size.",
       },
     ],
     habitat: {
-      title: "An Underground City of Chambers",
-      body: "The nest is usually built deep in soil, under rocks, or rotting wood, divided into brood chambers, food-storage rooms, and other spaces linked by tunnels; the queen lives in the innermost chamber, workers moving by role.",
+      title: "A Soil Nest in Open Ground",
+      body: "It nests in soil in open habitats, with entrances opening straight onto the surface and no mound around them. In mainland China, researchers collected its workers from 24° to 47° N at 22 sites, covering most of its range there.",
     },
   },
 

@@ -21,6 +21,11 @@ export type ContentClaim =
   | 'cicada-life-history'
   | 'cicada-distribution-pest-uses'
   | 'cicada-periodical-contrast'
+  | 'ant-worker-subcastes-and-head-color'
+  | 'ant-nestmate-recognition'
+  | 'ant-size-nest-and-range'
+  | 'ant-claustral-founding'
+  | 'ant-aphid-tending'
 
 export interface ContentSource {
   id: string
@@ -31,12 +36,56 @@ export interface ContentSource {
     | 'sources.ncMantisTitle' | 'sources.mantisBirdTitle'
     | 'sources.eppoAnoplophoraDatasheetTitle' | 'sources.eppoAnoplophoraDistributionTitle' | 'sources.eppoAnoplophoraReportingTitle' | 'sources.efsaAnoplophoraSurveyCardTitle' | 'sources.haackAnoplophoraReviewTitle'
     | 'sources.nutrientsCicadaReviewTitle' | 'sources.jacSoundApparatusTitle' | 'sources.jinhuaOutbreakTitle' | 'sources.zookeysNymphTitle' | 'sources.mitogenomeTitle' | 'sources.actaEntomologicaDevelopmentTitle' | 'sources.illinoisCicadasTitle'
+    | 'sources.jantJaponicusTitle' | 'sources.watanabeChcReceptionTitle' | 'sources.maHeadPhenotypesTitle' | 'sources.hasegawaFirstWorkersTitle'
+    | 'sources.frontiersHoneydewAntLactobacillusTitle'
   supports: readonly ContentClaim[]
   access: 'full-text' | 'official-page' | 'abstract'
   checkedAt: string
 }
 
 export const CONTENT_SOURCES: Readonly<Record<string, readonly ContentSource[]>> = {
+  ant: [
+    {
+      id: 'jant-camponotus-japonicus',
+      url: 'http://ant.miyakyo-u.ac.jp/E/Taxo/F80902.html',
+      titleKey: 'sources.jantJaponicusTitle',
+      supports: ['ant-size-nest-and-range'],
+      access: 'official-page',
+      checkedAt: '2026-10-17',
+    },
+    {
+      id: 'watanabe-2023-chc-reception',
+      url: 'https://pmc.ncbi.nlm.nih.gov/articles/PMC9940637/',
+      titleKey: 'sources.watanabeChcReceptionTitle',
+      supports: ['ant-nestmate-recognition'],
+      access: 'full-text',
+      checkedAt: '2026-10-17',
+    },
+    {
+      id: 'ma-2025-head-phenotypes',
+      url: 'https://pmc.ncbi.nlm.nih.gov/articles/PMC12336421/',
+      titleKey: 'sources.maHeadPhenotypesTitle',
+      supports: ['ant-worker-subcastes-and-head-color', 'ant-nestmate-recognition', 'ant-size-nest-and-range'],
+      access: 'full-text',
+      checkedAt: '2026-10-17',
+    },
+    {
+      id: 'hasegawa-imai-2012-first-workers',
+      url: 'https://link.springer.com/article/10.1007/s10164-011-0298-5',
+      titleKey: 'sources.hasegawaFirstWorkersTitle',
+      supports: ['ant-claustral-founding'],
+      access: 'abstract',
+      checkedAt: '2026-10-17',
+    },
+    {
+      id: 'frontiers-2021-honeydew-ant-lactobacillus',
+      url: 'https://pmc.ncbi.nlm.nih.gov/articles/PMC8814368/',
+      titleKey: 'sources.frontiersHoneydewAntLactobacillusTitle',
+      supports: ['ant-aphid-tending'],
+      access: 'full-text',
+      checkedAt: '2026-10-17',
+    },
+  ],
   cicada: [
     {
       id: 'nutrients-2023-cryptotympana-review',

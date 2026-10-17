@@ -25,6 +25,11 @@ const claimKeys = {
   'cicada-life-history': 'sources.cicadaLifeHistory',
   'cicada-distribution-pest-uses': 'sources.cicadaDistributionPestUses',
   'cicada-periodical-contrast': 'sources.cicadaPeriodicalContrast',
+  'ant-worker-subcastes-and-head-color': 'sources.antWorkerSubcastes',
+  'ant-nestmate-recognition': 'sources.antNestmateRecognition',
+  'ant-size-nest-and-range': 'sources.antSizeNestRange',
+  'ant-claustral-founding': 'sources.antClaustralFounding',
+  'ant-aphid-tending': 'sources.antAphidTending',
 } as const satisfies Record<ContentClaim, string>
 
 const accessKeys = {
