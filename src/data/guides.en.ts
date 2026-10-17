@@ -362,49 +362,49 @@ export const GUIDES: Record<string, Guide> = {
     lesson: [
       {
         title: "How the Song Is Made",
-        body: "A male has a thin, ribbed membrane (tymbal) on each side of the abdomen; muscles contract hundreds of times a second, snapping it into a buzz. A cicada's call can exceed 90 decibels, among the loudest insects.",
+        body: "Each side of a male's abdomen has a ribbed tymbal under a cover. Each muscle pull buckles it into a pulse burst; the sides alternate at about 180 Hz, near 80 dB at 2 m indoors.",
         anchor: 'tymbal',
       },
       {
         title: "The Abdomen as a Speaker",
-        body: "A male's abdomen is nearly hollow, like an instrument's resonance chamber, amplifying the tymbal's raw sound into a louder, farther-carrying call; females lack this and have a solid abdomen, so they never sing.",
+        body: "In a 1987 study, blocking or removing sound parts showed the abdominal chamber improves tone and loudness; its air-filled cavity works as a resonator, chiefly boosting output power.",
         anchor: 'abdomen',
       },
       {
         title: "How the Mouthparts Sip Sap",
-        body: "The mouthparts form a needle-thin piercing-sucking structure (rostrum), folded under the head at rest; feeding pierces a tree's xylem for sap, never biting or chewing leaves, often wrongly assumed leaf-eating.",
+        body: "The piercing-sucking rostrum, formed from the fused labium, sheathes mandibular and maxillary stylets. New adults first feed on tree sap; a final-instar nymph's rostrum reaches the hind coxae.",
         anchor: 'rostrum',
       },
       {
-        title: "Years Underground for Weeks Above",
-        body: "The nymph lives underground three to five years, feeding on root sap and molting before it matures; after emerging, it climbs a trunk for one final molt, growing wings, yet the adult sings and flies only weeks.",
+        title: "Years in the Soil",
+        body: "Eggs winter in twigs, hatching next May or June. Nymphs dig in with stout forelegs and suck root sap through 5 instars, usually 3–5 years or more, then climb a tree or weed to molt.",
       },
     ],
     motion: {
-      title: "Molting by Night to Emerge",
-      body: "A mature nymph emerges at dusk, climbs a trunk, and grips the bark; its back splits, and a milky-white adult pulls free of the shell and unfurls crumpled wings. This takes one to two hours, defenseless till the wings harden.",
+      title: "Climbing Out to Molt",
+      body: "A final-instar nymph leaves the soil, climbs nearby weeds or trees, and molts, leaving a cicada slough. In Zhejiang's Jinqu Basin, emergence starts in mid-to-late June and peaks in early-to-mid July.",
     },
     quiz: [
       {
-        question: "What are a cicada's mouthparts mainly used for?",
-        options: ["Chewing and biting leaves for nutrients", "Piercing a tree's xylem to feed on sap", "Preying on other small insects"],
+        question: "What are the large black cicada's mouthparts mainly used for?",
+        options: ["Chewing and biting leaves for nutrients", "Piercing a tree to feed on sap", "Preying on other small insects"],
         answer: 1,
-        explain: "A cicada's mouthparts pierce the trunk's xylem for sap; it neither chews leaves nor preys on insects, though often mistaken for a leaf-eating pest.",
+        explain: "Its mouthparts pierce and suck, with stylets inside the rostrum; sources record adults sucking tree sap and nymphs sucking root sap.",
       },
       {
-        question: "Does the cicada emerge en masse only once every many years, like North America's '17-year cicadas'?",
+        question: "Periodical cicadas in North America emerge en masse every 13 or 17 years. What do sources record for the large black cicada?",
         options: [
-          "Yes, it too waits a fixed number of years before appearing all at once",
-          "No, nymphs are not synchronized underground, so they can be seen almost every summer",
-          "No, in fact it only lives underground for a few weeks each year",
+          "It too appears en masse only every 13 or 17 years",
+          "Adults lay eggs every July and August",
+          "Nymphs live underground for only a few weeks",
         ],
         answer: 1,
-        explain: "Cicada nymphs live underground three to five years, not synchronized, so some emerge yearly, unlike a periodical cicada erupting once per many years.",
+        explain: "Sources record egg-laying every July and August, nymphs usually spending 3–5 years or more in soil, and nymphs of all instars overwintering there.",
       },
     ],
     habitat: {
       title: "Between Root and Trunk",
-      body: "The nymph lives hidden in soil around a tree's roots, developing on root sap; the adult moves to trunk and canopy, feeding, singing, and courting by day. One species thus occupies underground and treetop, rarely overlapping.",
+      body: "Hatched nymphs drop and burrow into moist, soft soil to feed on root sap; adults suck sap, mate, and lay eggs in trees. At a Jinhua airfield, adults were active by day, peaking from nine a.m. to five p.m.",
     },
   },
 

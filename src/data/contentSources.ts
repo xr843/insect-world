@@ -17,6 +17,10 @@ export type ContentClaim =
   | 'longhorn-beetle-life-cycle-and-boring'
   | 'longhorn-beetle-hosts-and-damage'
   | 'longhorn-beetle-distribution-and-pathways'
+  | 'cicada-sound-production'
+  | 'cicada-life-history'
+  | 'cicada-distribution-pest-uses'
+  | 'cicada-periodical-contrast'
 
 export interface ContentSource {
   id: string
@@ -26,12 +30,71 @@ export interface ContentSource {
     | 'sources.ufBeeTitle' | 'sources.waggleTitle' | 'sources.psuWinterTitle'
     | 'sources.ncMantisTitle' | 'sources.mantisBirdTitle'
     | 'sources.eppoAnoplophoraDatasheetTitle' | 'sources.eppoAnoplophoraDistributionTitle' | 'sources.eppoAnoplophoraReportingTitle' | 'sources.efsaAnoplophoraSurveyCardTitle' | 'sources.haackAnoplophoraReviewTitle'
+    | 'sources.nutrientsCicadaReviewTitle' | 'sources.jacSoundApparatusTitle' | 'sources.jinhuaOutbreakTitle' | 'sources.zookeysNymphTitle' | 'sources.mitogenomeTitle' | 'sources.actaEntomologicaDevelopmentTitle' | 'sources.illinoisCicadasTitle'
   supports: readonly ContentClaim[]
   access: 'full-text' | 'official-page' | 'abstract'
   checkedAt: string
 }
 
 export const CONTENT_SOURCES: Readonly<Record<string, readonly ContentSource[]>> = {
+  cicada: [
+    {
+      id: 'nutrients-2023-cryptotympana-review',
+      url: 'https://pmc.ncbi.nlm.nih.gov/articles/PMC10574283/',
+      titleKey: 'sources.nutrientsCicadaReviewTitle',
+      supports: ['cicada-life-history', 'cicada-distribution-pest-uses'],
+      access: 'full-text',
+      checkedAt: '2026-10-17',
+    },
+    {
+      id: 'acta-acustica-1987-sound-apparatus',
+      url: 'https://www.jac.ac.cn/cn/article/pdf/preview/10.15949/j.cnki.0371-0025.1987.01.006.pdf',
+      titleKey: 'sources.jacSoundApparatusTitle',
+      supports: ['cicada-sound-production'],
+      access: 'full-text',
+      checkedAt: '2026-10-17',
+    },
+    {
+      id: 'forest-research-2000-jinhua-outbreak',
+      url: 'https://www.aeeisp.com/lykxyj/cn/article/pdf/preview/78edff74-c3dd-4b71-8546-4db5ed9a245a.pdf',
+      titleKey: 'sources.jinhuaOutbreakTitle',
+      supports: ['cicada-life-history', 'cicada-distribution-pest-uses', 'cicada-periodical-contrast'],
+      access: 'full-text',
+      checkedAt: '2026-10-17',
+    },
+    {
+      id: 'zookeys-2014-final-instar-nymphs',
+      url: 'https://pmc.ncbi.nlm.nih.gov/articles/PMC4137304/',
+      titleKey: 'sources.zookeysNymphTitle',
+      supports: ['cicada-life-history', 'cicada-distribution-pest-uses'],
+      access: 'full-text',
+      checkedAt: '2026-10-17',
+    },
+    {
+      id: 'mitochondrial-dna-b-2021-mitogenome',
+      url: 'https://pmc.ncbi.nlm.nih.gov/articles/PMC8205032/',
+      titleKey: 'sources.mitogenomeTitle',
+      supports: ['cicada-distribution-pest-uses'],
+      access: 'full-text',
+      checkedAt: '2026-10-17',
+    },
+    {
+      id: 'acta-entomologica-2024-development',
+      url: 'https://www.insect.org.cn/CN/10.16380/j.kcxb.2024.02.012',
+      titleKey: 'sources.actaEntomologicaDevelopmentTitle',
+      supports: ['cicada-life-history'],
+      access: 'abstract',
+      checkedAt: '2026-10-17',
+    },
+    {
+      id: 'illinois-extension-cicadas',
+      url: 'https://extension.illinois.edu/insects/cicadas',
+      titleKey: 'sources.illinoisCicadasTitle',
+      supports: ['cicada-periodical-contrast'],
+      access: 'official-page',
+      checkedAt: '2026-10-17',
+    },
+  ],
   'longhorn-beetle': [
     {
       id: 'eppo-anoplophora-chinensis-datasheet',

@@ -21,6 +21,10 @@ const claimKeys = {
   'longhorn-beetle-life-cycle-and-boring': 'sources.longhornLifeCycle',
   'longhorn-beetle-hosts-and-damage': 'sources.longhornHostsDamage',
   'longhorn-beetle-distribution-and-pathways': 'sources.longhornDistribution',
+  'cicada-sound-production': 'sources.cicadaSoundProduction',
+  'cicada-life-history': 'sources.cicadaLifeHistory',
+  'cicada-distribution-pest-uses': 'sources.cicadaDistributionPestUses',
+  'cicada-periodical-contrast': 'sources.cicadaPeriodicalContrast',
 } as const satisfies Record<ContentClaim, string>
 
 const accessKeys = {
