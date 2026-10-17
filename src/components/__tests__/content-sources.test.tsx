@@ -11,7 +11,7 @@ const props = { onCompare: () => {}, onDiscover: () => {}, onReportError: () => 
 afterEach(cleanup)
 
 describe('detail source evidence', () => {
-  for (const id of ['monarch-butterfly', 'dragonfly', 'ant', 'cicada', 'longhorn-beetle'] as const) {
+  for (const id of ['monarch-butterfly', 'dragonfly', 'ant', 'cicada', 'longhorn-beetle', 'locust', 'tiger-beetle', 'swallowtail', 'stag-beetle', 'mole-cricket'] as const) {
     it(`lists every scoped ${id} source in both languages without whole-species verification`, () => {
       const urls = CONTENT_SOURCES[id].map(source => source.url)
       expect(urls.length).toBeGreaterThanOrEqual(3)
@@ -139,7 +139,8 @@ describe('detail source evidence', () => {
   })
 
   it('does not manufacture evidence links for a species awaiting checks', () => {
-    renderZh(<DetailPanel insect={zhInsects.find(insect => insect.id === 'locust')!} {...props} />)
+    // Locust now has scoped evidence; lacewing preserves the no-source case.
+    renderZh(<DetailPanel insect={zhInsects.find(insect => insect.id === 'lacewing')!} {...props} />)
     const section = screen.getByRole('region', { name: '来源与核校' })
     expect(section.textContent).toContain('尚未逐条核校')
     expect(within(section).queryAllByRole('link')).toHaveLength(0)

@@ -34,6 +34,23 @@ export type ContentClaim =
   | 'dragonfly-capture-trials-other-genus'
   | 'dragonfly-predictive-interception-other-genera'
   | 'dragonfly-odonate-eye-polarization'
+  | 'locust-asian-subspecies-traits'
+  | 'locust-chinese-development'
+  | 'locust-neurotransmitter-phase-change'
+  | 'tiger-japanese-taxon-biology'
+  | 'tiger-korean-life-history'
+  | 'tiger-other-species-visual-pursuit'
+  | 'swallowtail-traits-and-behavior'
+  | 'swallowtail-host-development'
+  | 'swallowtail-mimicry-genetics'
+  | 'stag-japanese-subspecies-traits'
+  | 'stag-korean-rearing'
+  | 'stag-chinese-morphology-genome'
+  | 'stag-other-species-jaw-growth'
+  | 'mole-japanese-seasonal-wings'
+  | 'mole-digging-vibrations'
+  | 'mole-burrow-functions'
+  | 'mole-diet-and-crop-damage'
 
 export interface ContentSource {
   id: string
@@ -48,12 +65,193 @@ export interface ContentSource {
     | 'sources.frontiersHoneydewAntLactobacillusTitle'
     | 'sources.fwsMonarchTitle' | 'sources.monarchWatchBiologyTitle' | 'sources.guerraMagneticCompassTitle' | 'sources.iucnSpcRulingTitle' | 'sources.iucnRedListMonarchTitle'
     | 'sources.kotobankGinyanmaTitle' | 'sources.hkWetlandParkAnaxJuliusTitle' | 'sources.combesDragonflyPredationTitle' | 'sources.wiedermanPredictiveFocusTitle' | 'sources.mischiatiInternalModelsTitle' | 'sources.cezarioOdonataPolarizedVisionTitle'
+    | 'sources.faoAsianLocustTitle'
+    | 'sources.locustDegreeDayTitle'
+    | 'sources.locustSerotoninTitle'
+    | 'sources.locustDopamineTitle'
+    | 'sources.horiTigerTitle'
+    | 'sources.chaTigerTitle'
+    | 'sources.zurekAntennaeTitle'
+    | 'sources.zurekJawsTitle'
+    | 'sources.adwPolytesTitle'
+    | 'sources.suwarnoPolytesTitle'
+    | 'sources.komataPolytesTitle'
+    | 'sources.koreanHopeiTitle'
+    | 'sources.kyotoHopeiTitle'
+    | 'sources.liHopeiTitle'
+    | 'sources.gotohMandiblesTitle'
+    | 'sources.endoWingsTitle'
+    | 'sources.hayashiVibrationsTitle'
+    | 'sources.endoBurrowsTitle'
+    | 'sources.moleGutDietTitle'
   supports: readonly ContentClaim[]
   access: 'full-text' | 'official-page' | 'abstract'
   checkedAt: string
 }
 
 export const CONTENT_SOURCES: Readonly<Record<string, readonly ContentSource[]>> = {
+  locust: [
+    {
+      id: 'faoAsianLocust',
+      url: 'https://www.fao.org/locusts-cca/bioecology/asian-migratory-locust-(lmi/en',
+      titleKey: 'sources.faoAsianLocustTitle',
+      supports: ['locust-asian-subspecies-traits'],
+      access: 'official-page',
+      checkedAt: '2026-10-17',
+    },
+    {
+      id: 'locustDegreeDay',
+      url: 'https://pmc.ncbi.nlm.nih.gov/articles/PMC3943769/',
+      titleKey: 'sources.locustDegreeDayTitle',
+      supports: ['locust-chinese-development'],
+      access: 'full-text',
+      checkedAt: '2026-10-17',
+    },
+    {
+      id: 'locustSerotonin',
+      url: 'https://pmc.ncbi.nlm.nih.gov/articles/PMC3791384/',
+      titleKey: 'sources.locustSerotoninTitle',
+      supports: ['locust-neurotransmitter-phase-change'],
+      access: 'full-text',
+      checkedAt: '2026-10-17',
+    },
+    {
+      id: 'locustDopamine',
+      url: 'https://pmc.ncbi.nlm.nih.gov/articles/PMC3053982/',
+      titleKey: 'sources.locustDopamineTitle',
+      supports: ['locust-neurotransmitter-phase-change'],
+      access: 'abstract',
+      checkedAt: '2026-10-17',
+    },
+  ],
+  'tiger-beetle': [
+    {
+      id: 'horiTiger',
+      url: 'https://repository.kulib.kyoto-u.ac.jp/server/api/core/bitstreams/c648b94b-db6c-4000-a13d-34bf9ad3245f/content',
+      titleKey: 'sources.horiTigerTitle',
+      supports: ['tiger-japanese-taxon-biology'],
+      access: 'full-text',
+      checkedAt: '2026-10-17',
+    },
+    {
+      id: 'chaTiger',
+      url: 'https://pmc.ncbi.nlm.nih.gov/articles/PMC12561995/',
+      titleKey: 'sources.chaTigerTitle',
+      supports: ['tiger-korean-life-history'],
+      access: 'full-text',
+      checkedAt: '2026-10-17',
+    },
+    {
+      id: 'zurekAntennae',
+      url: 'https://pmc.ncbi.nlm.nih.gov/articles/PMC3924084/',
+      titleKey: 'sources.zurekAntennaeTitle',
+      supports: ['tiger-other-species-visual-pursuit'],
+      access: 'abstract',
+      checkedAt: '2026-10-17',
+    },
+    {
+      id: 'zurekJaws',
+      url: 'https://pmc.ncbi.nlm.nih.gov/articles/PMC4261868/',
+      titleKey: 'sources.zurekJawsTitle',
+      supports: ['tiger-other-species-visual-pursuit'],
+      access: 'full-text',
+      checkedAt: '2026-10-17',
+    },
+  ],
+  swallowtail: [
+    {
+      id: 'adwPolytes',
+      url: 'https://animaldiversity.org/accounts/Papilio_polytes/',
+      titleKey: 'sources.adwPolytesTitle',
+      supports: ['swallowtail-traits-and-behavior', 'swallowtail-mimicry-genetics'],
+      access: 'official-page',
+      checkedAt: '2026-10-17',
+    },
+    {
+      id: 'suwarnoPolytes',
+      url: 'https://ejournal.usm.my/tlsr/article/download/tlsr_vol18-no-1-2007_4/pdf/1028',
+      titleKey: 'sources.suwarnoPolytesTitle',
+      supports: ['swallowtail-host-development'],
+      access: 'full-text',
+      checkedAt: '2026-10-17',
+    },
+    {
+      id: 'komataPolytes',
+      url: 'https://pmc.ncbi.nlm.nih.gov/articles/PMC7721872/',
+      titleKey: 'sources.komataPolytesTitle',
+      supports: ['swallowtail-mimicry-genetics'],
+      access: 'full-text',
+      checkedAt: '2026-10-17',
+    },
+  ],
+  'stag-beetle': [
+    {
+      id: 'koreanHopei',
+      url: 'https://koreascience.kr/article/JAKO200411922366300.page',
+      titleKey: 'sources.koreanHopeiTitle',
+      supports: ['stag-korean-rearing'],
+      access: 'abstract',
+      checkedAt: '2026-10-17',
+    },
+    {
+      id: 'kyotoHopei',
+      url: 'https://www.pref.kyoto.jp/kankyo/rdb2002/bio/db/ins0053.html',
+      titleKey: 'sources.kyotoHopeiTitle',
+      supports: ['stag-japanese-subspecies-traits'],
+      access: 'official-page',
+      checkedAt: '2026-10-17',
+    },
+    {
+      id: 'liHopei',
+      url: 'https://pmc.ncbi.nlm.nih.gov/articles/PMC11026507/',
+      titleKey: 'sources.liHopeiTitle',
+      supports: ['stag-chinese-morphology-genome'],
+      access: 'full-text',
+      checkedAt: '2026-10-17',
+    },
+    {
+      id: 'gotohMandibles',
+      url: 'https://pmc.ncbi.nlm.nih.gov/articles/PMC3120829/',
+      titleKey: 'sources.gotohMandiblesTitle',
+      supports: ['stag-other-species-jaw-growth'],
+      access: 'full-text',
+      checkedAt: '2026-10-17',
+    },
+  ],
+  'mole-cricket': [
+    {
+      id: 'endoWings',
+      url: 'https://www.eje.cz/artkey/eje-200604-0004_seasonal_wing_dimorphism_and_life_cycle_of_the_mole_cricket_gryllotalpa_orientalis_orthoptera_gryllotalpidae.php',
+      titleKey: 'sources.endoWingsTitle',
+      supports: ['mole-japanese-seasonal-wings'],
+      access: 'full-text',
+      checkedAt: '2026-10-17',
+    },
+    {
+      id: 'hayashiVibrations',
+      url: 'https://pmc.ncbi.nlm.nih.gov/articles/PMC6179226/',
+      titleKey: 'sources.hayashiVibrationsTitle',
+      supports: ['mole-digging-vibrations'],
+      access: 'full-text',
+      checkedAt: '2026-10-17',
+    },
+    {
+      id: 'endoBurrows',
+      url: 'https://doi.org/10.1111/j.1469-7998.2007.00345.x',
+      titleKey: 'sources.endoBurrowsTitle',
+      supports: ['mole-burrow-functions'],
+      access: 'abstract',
+      checkedAt: '2026-10-17',
+    },
+    {
+      id: 'moleGutDiet',
+      url: 'https://pmc.ncbi.nlm.nih.gov/articles/PMC11354742/',
+      titleKey: 'sources.moleGutDietTitle',
+      supports: ['mole-diet-and-crop-damage'],
+      access: 'full-text',
+      checkedAt: '2026-10-17',
+    },
+  ],
   dragonfly: [
     {
       id: 'kotobank-ginyanma',

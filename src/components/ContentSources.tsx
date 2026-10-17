@@ -4,6 +4,23 @@ import { useT } from '../i18n/useT'
 import s from './ContentSources.module.css'
 
 const claimKeys = {
+  'locust-asian-subspecies-traits': 'sources.locustAsianTraits',
+  'locust-chinese-development': 'sources.locustDevelopment',
+  'locust-neurotransmitter-phase-change': 'sources.locustPhaseChange',
+  'tiger-japanese-taxon-biology': 'sources.tigerJapaneseBiology',
+  'tiger-korean-life-history': 'sources.tigerKoreanLife',
+  'tiger-other-species-visual-pursuit': 'sources.tigerOtherVision',
+  'swallowtail-traits-and-behavior': 'sources.swallowtailTraits',
+  'swallowtail-host-development': 'sources.swallowtailHosts',
+  'swallowtail-mimicry-genetics': 'sources.swallowtailMimicry',
+  'stag-japanese-subspecies-traits': 'sources.stagJapaneseTraits',
+  'stag-korean-rearing': 'sources.stagKoreanRearing',
+  'stag-chinese-morphology-genome': 'sources.stagChineseGenome',
+  'stag-other-species-jaw-growth': 'sources.stagOtherJawGrowth',
+  'mole-japanese-seasonal-wings': 'sources.moleSeasonalWings',
+  'mole-digging-vibrations': 'sources.moleDiggingVibrations',
+  'mole-burrow-functions': 'sources.moleBurrows',
+  'mole-diet-and-crop-damage': 'sources.moleDiet',
   'japanese-subspecies-length': 'sources.length',
   'diet-and-range': 'sources.dietRange',
   'male-combat': 'sources.combat',

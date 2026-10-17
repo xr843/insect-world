@@ -62,7 +62,7 @@ const VOCAB: readonly Entry[] = [
   // ---- 不是昆虫（蛛形纲 / 多足亚门 / 甲壳亚门 / 环节动物 / 软体动物 / 爬行纲）
   { token: 'centipede', kind: 'not-insect', zh: ['百足虫'], en: ['centipede'] },
   { token: 'millipede', kind: 'not-insect', zh: ['马陆', '千足虫'], en: ['millipede'] },
-  { token: 'earthworm', kind: 'not-insect', zh: ['蚯蚓', '曲蟮'], en: ['earthworm'] },
+  // 2026-10-17 内容核校后，蚯蚓/earthworm 已命中虎甲与蝼蛄食性正文，不再作为零结果词条。
   { token: 'woodlouse', kind: 'not-insect', zh: ['鼠妇', '潮虫', '西瓜虫', '团子虫'], en: ['woodlouse', 'pill bug', 'roly poly'] },
   { token: 'scorpion', kind: 'not-insect', zh: ['蝎子', '全蝎'], en: ['scorpion'] },
   { token: 'leech', kind: 'not-insect', zh: ['水蛭', '蚂蟥'], en: ['leech'] },

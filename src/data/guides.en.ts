@@ -411,47 +411,47 @@ export const GUIDES: Record<string, Guide> = {
   locust: {
     lesson: [
       {
-        title: "How the Hindlegs Leap So Far",
-        body: "The hindleg's femur is unusually thick, packed with jumping muscles; before a jump it coils like a spring, then releases instantly, launching the locust over ten body lengths—its fastest escape from predators.",
+        title: 'Growing Through the Nymph Stage',
+        body: 'Oriental Migratory Locusts hatch as nymphs and pass through five instars before adulthood. Temperature affects egg, nymph and adult development; these responses help predict when each stage will appear.',
         anchor: 'hindleg',
       },
       {
-        title: "How Crowding Triggers a Change",
-        body: "Repeated touching of antennae and hindlegs by other locusts raises body serotonin; past a critical density, locusts shift from solitary to a bright, gregarious form—a physiological shift, not a genetic one.",
+        title: 'Crowding and Behavioral Change',
+        body: 'Migratory locust nymph experiments found that dopamine or its agonist can initiate gregarious behavior. Serotonin acts differently from its role in desert locusts, so the mechanism varies between species.',
         anchor: 'antenna',
       },
       {
-        title: "Wings Built for Long Migration",
-        body: "In the gregarious form, wings grow longer than the body and flight muscles grow stronger, letting a swarm fly hundreds of kilometers without landing; the solitary form has shorter wings and relies on jumping.",
+        title: 'From Marching Bands to Flying Swarms',
+        body: 'Gregarious locust nymphs form marching bands; winged adults form flying swarms. Asian migratory locusts usually fly near breeding areas, sometimes spreading farther with weather conditions and damaging crops.',
         anchor: 'wing',
       },
       {
-        title: "How It Hears Its Neighbors",
-        body: "Each side of the first abdominal segment carries a thin membrane, the eardrum (tympanum), picking up sound as locusts rub wings together. This ear sits on the abdomen, not the head, shared across grasshoppers.",
+        title: 'Temperature Shapes Breeding',
+        body: 'Climate affects how many generations Oriental Migratory Locusts complete. In fields, Chengde and Tumotezuoqi have one per year, and Wen’an two; climate-simulation rearing also links heat to breeding success.',
         anchor: 'tympanum',
       },
     ],
     motion: {
-      title: "Swarms Migrating on the Wind",
-      body: "Once a gregarious swarm takes to the air, individuals do not fly randomly; they keep formation by tracking wing-rubbing sounds and each other's position, riding the wind to save energy, covering dozens of kilometers a day.",
+      title: 'Movement Changes With Life Stage',
+      body: 'Gregarious locust nymphs march in bands, while adults form flying swarms. Asian migratory locusts usually make local flights around breeding areas, with occasional wider movements depending on weather.',
     },
     quiz: [
       {
-        question: "What is the most direct trigger for a locust switching from the solitary to the gregarious form?",
-        options: ["A new genetic mutation appearing in the population", "Repeated contact under high density triggering a change in serotonin levels", "A sharp temperature drop causing a color change"],
+        question: 'What change can shift migratory locusts between solitary and gregarious behavior?',
+        options: ['Every generation becomes a new species', 'A change in population density', 'All individuals lose their wings together'],
         answer: 1,
-        explain: "The solitary and gregarious forms express the same genes differently: crowding raises serotonin, changing color and behavior—not a mutation.",
+        explain: 'Population density can shift behavior within the same species. Solitary and gregarious locusts are different phases.',
       },
       {
-        question: "Where on the body is a locust's hearing organ (tympanum) located?",
-        options: ["On the tibia of the foreleg", "On both sides of the first abdominal segment", "At the base of the antennae"],
+        question: 'Which treatment initiated gregarious behavior in migratory locust nymph experiments?',
+        options: ['Removing all legs', 'Injecting dopamine or its agonist', 'Preventing all feeding'],
         answer: 1,
-        explain: "A locust's tympanum sits on both sides of the first abdominal segment, unlike katydids and crickets, whose hearing organs sit on the foreleg tibia.",
+        explain: 'Dopamine or its agonist initiated gregarious behavior in the experiment; the desert locust serotonin result cannot simply be transferred.',
       },
     ],
     habitat: {
-      title: "Between Grassland and Farmland",
-      body: "The solitary form lives scattered across riverbanks and wasteland, feeding on wild grasses, easy to overlook; once vegetation withers and the population crowds into limited green, swarms shift and turn to farmland crops.",
+      title: 'Life Along Reed-Lined Shores',
+      body: 'Asian migratory locusts mainly inhabit reeds and sedges beside rivers, lakes and coasts, favoring grasses. Changing water conditions alter food plants and egg-laying sites, affecting local population numbers.',
     },
   },
 
@@ -620,54 +620,46 @@ export const GUIDES: Record<string, Guide> = {
   swallowtail: {
     lesson: [
       {
-        title: "The White Band Is the Male's Signature",
-        body: 'A jade-white band crosses the hindwing; in males it is stable and barely varies, the most direct way to spot a male afield. Female patterns are far more variable, with several strikingly different forms.',
+        title: 'White Markings on Black Wings',
+        body: 'Male Common Mormons have black wings, with a row of white hindwing spots and white spots near forewing edges. Females vary: a non-mimetic form resembles males, while other forms copy unpalatable swallowtails.',
         anchor: 'hindwing',
       },
       {
-        title: "Tricking a Bird's Beak With Tails",
-        body: 'A slender tail from the hindwing tip, with nearby markings, forms a false antenna, tricking predators into striking the wing edge, not the head. Losing that corner lets it escape — better than losing the head.',
+        title: 'A Caterpillar’s Changing Disguise',
+        body: 'Young Common Mormon larvae are brown with white patches and resemble bird droppings. Later they turn pale green. When threatened, a forked organ on the prothorax emerges and releases repellent chemicals.',
         anchor: 'tail',
       },
       {
-        title: 'Why Females Disguise as a Toxic Species',
-        body: 'Some females have forewing patterns mimicking the toxic Crimson Rose; harmless yet copying a toxic relative is called Batesian mimicry. A bird that learns to avoid a real Crimson Rose spares look-alikes too.',
+        title: 'Borrowing an Unpalatable Appearance',
+        body: 'Some female Common Mormons resemble unpalatable swallowtails such as Pachliopta aristolochiae. The edible mimic gains protection through Batesian mimicry; forms and model species differ between regions.',
         anchor: 'forewing',
       },
       {
-        title: 'Siblings Can Hatch Into Different Forms',
-        body: "A female's mimetic form is controlled as a unit by one gene stretch; within one brood, mimetic and non-mimetic females can hatch side by side, making the species a classic subject for studying mimicry genetics.",
+        title: 'The Genetics Behind Mimicry',
+        body: 'Female mimicry is linked to a region containing doublesex. Experiments on Japanese populations also found differences in egg production and lifespan between female genotypes, suggesting a physiological cost.',
       },
     ],
     motion: {
-      title: 'Testing Host Plants With the Forelegs',
-      body: "Before laying eggs, a female taps a leaf with her forelegs; chemoreceptors on her feet taste for citrus, Sichuan pepper, or another rue-family plant. Once confirmed, she lays eggs on the underside, so larvae find the right food.",
+      title: 'Tasting Leaves With the Forelegs',
+      body: 'Before laying eggs, females drum leaves with their forelegs, sampling plant chemicals through contact receptors. Eggs may be placed on either leaf surface; host plants such as citrus then feed the larvae.',
     },
     quiz: [
       {
-        question: 'Some female Common Mormon butterflies mimic the highly toxic Crimson Rose swallowtail in wing pattern — what type of mimicry is this?',
-        options: [
-          'Both species are toxic, warning predators together',
-          'Harmless itself, it fools predators by copying a toxic relative',
-          'Pure coincidence, with no evolutionary link between the two species',
-        ],
+        question: 'What is it called when edible Common Mormons resemble unpalatable swallowtails?',
+        options: ['Both species are toxic and share a warning', 'Batesian mimicry: an edible species gains protection by resemblance', 'Random coloration unrelated to predation'],
         answer: 1,
-        explain: 'This is Batesian mimicry: the harmless female copies the toxic Crimson Rose, fooling predators that learned to avoid it into leaving her alone too.',
+        explain: 'This is Batesian mimicry: edible females resemble unpalatable swallowtails and can thereby reduce their risk of being eaten.',
       },
       {
-        question: 'What role do the hindwing tail and surrounding markings of the Common Mormon play in defending against predators?',
-        options: [
-          'They mimic a false antenna and head, drawing attacks to the wing edge rather than a vital spot',
-          'They store extra fat reserves used during flight',
-          'They help maintain aerodynamic balance during sharp turns',
-        ],
+        question: 'What do male Common Mormons obtain by drinking from moist ground and watersides?',
+        options: ['Salts and minerals', 'Extra fat stored in the hindwing tails', 'Materials that turn hindwings into forewings'],
         answer: 0,
-        explain: 'The tail and markings form a false head, tricking predators into biting the wing edge; losing that corner lets it fly off, not a bite to its head.',
+        explain: 'Puddling provides salts and minerals. Males can transfer them to females through spermatophores, and the materials can reach the eggs.',
       },
     ],
     habitat: {
-      title: 'Orchards and City Gardens',
-      body: 'Larvae depend on citrus, Sichuan pepper, and other rue-family plants, so this butterfly turns up in gardens, street trees, and orchards, adapting well to settlements. Adults range wider for flowers, often at beds and fruit trees.',
+      title: 'Host Plants, Flowers and Moist Ground',
+      body: 'Common Mormons inhabit tropical and subtropical forests, farms, gardens and cities. Larvae need rue-family hosts such as citrus, adults need nectar, and males also seek salty fluids at moist ground and watersides.',
     },
   },
 
@@ -782,108 +774,92 @@ export const GUIDES: Record<string, Guide> = {
   'tiger-beetle': {
     lesson: [
       {
-        title: 'Scissor-Like Mandibles for Hunting',
-        body: 'Sickle-shaped mandibles cross like scissors, closing off-center at rest; it lunges and snaps shut, crushing the exoskeleton of ants and other prey — with blistering speed, a top predator on forest trails.',
+        title: 'Two Ways of Finding Food',
+        body: 'In related Japanese beetles, adults search the ground for ants, earthworms and caterpillars, and also eat dead animals. Larvae wait at their burrows for passing ants, flies, spiders and other small prey.',
         anchor: 'mandible',
       },
       {
-        title: 'Too Fast to See Clearly',
-        body: 'Its large compound eyes lock onto prey, but at top speed they cannot keep up with the changing image, causing brief blindness. That is why tiger beetles sprint a few steps, stop, then dash again in bursts.',
+        title: 'Blur and Visual Pursuit',
+        body: 'In other tiger beetles, fast running can blur the prey image and reduce its contrast, prompting pauses to relocate it. A clear target, or one moving more slowly across the view, can allow continuous pursuit.',
         anchor: 'eye',
       },
       {
-        title: 'Legs Behind an Insect Sprint Record',
-        body: 'Its three pairs of slender legs support extremely fast running; measured in body lengths per second, it ranks near the top among insects. This speed serves both for chasing prey and escaping predators.',
+        title: 'Antennae Detect Obstacles',
+        body: 'In other daytime tiger beetles, antennae point forward with tips near the ground during running. Touching an obstacle helps raise the body to avoid a collision; the experiments concern obstacles, not prey.',
         anchor: 'leg',
       },
       {
-        title: 'Larvae Ambush From Their Burrows',
-        body: 'Larvae do not run; they hide in a self-dug burrow, anchored by abdominal hooks while the head plugs the entrance, disguised as ground. A wandering insect is seized in a lunge — unlike the adult pursuit.',
+        title: 'An Ambush at the Burrow Entrance',
+        body: 'Larvae of related Japanese beetles wait at burrow entrances, seize passing prey with their jaws and pull it inside. They close the entrance for molting, then reopen and enlarge it to fit their growing bodies.',
       },
     ],
     motion: {
-      title: 'An Ambush Strike From the Burrow',
-      body: "The larva's head and forebody fuse into a plug sealing the burrow entrance. When prey draws near, it braces on abdominal hooks and springs out, seizing the target with its mandibles, then hauls it back into the burrow to feed.",
+      title: 'Seizing Prey at the Burrow Mouth',
+      body: 'Larvae of related Japanese beetles wait near their burrow entrances, where prey movement can trigger a strike. They grasp prey and drag it inside by day or night; adults instead search the ground for food.',
     },
     quiz: [
       {
-        question: 'Why does a Chinese Tiger Beetle often sprint just a few steps and then stop abruptly?',
-        options: [
-          'It burns energy too fast and needs frequent rest',
-          'Its speed outpaces what its compound eyes can process, leaving it briefly unable to see clearly ahead',
-          'It stops to wait for prey to approach on its own',
-        ],
+        question: 'Why can pursuit become stop-and-go in experiments on other tiger beetles?',
+        options: ['Each pause is for sleeping', 'Motion blur reduces the contrast of the prey image', 'Larvae must leave their burrows to chase'],
         answer: 1,
-        explain: "At top speed the beetle's eyes cannot keep up with the changing image and briefly go blind, so it stops to relocate its prey — not from fatigue.",
+        explain: 'Motion blur reduces prey contrast, prompting pauses to relocate it; high-contrast conditions can also allow continuous pursuit.',
       },
       {
-        question: 'Which statement correctly describes how Chinese Tiger Beetle larvae hunt?',
-        options: [
-          'Like adults, they chase prey by running fast across the ground',
-          'They lurk in a vertical burrow, disguising its entrance to ambush passing prey',
-          'They spin a web and wait, trapping prey with sticky silk',
-        ],
+        question: 'How do larvae of related Japanese tiger beetles hunt?',
+        options: ['They prowl over the ground like adults', 'They seize passing small animals at the burrow entrance', 'They build sticky webs'],
         answer: 1,
-        explain: 'Larvae never chase prey; they lurk in a burrow, anchored by abdominal hooks with the head disguising the entrance, striking when prey draws near.',
+        explain: 'Larvae wait at self-dug burrow entrances, grasp passing small animals and pull them inside. Adults instead prowl for food.',
       },
     ],
     habitat: {
-      title: 'Territory on Bare Ground and Trails',
-      body: 'Adults favor sunny, sparse sandy trails and riverbank clearings; open terrain suits high-speed hunting and lets them spot predators early. Larvae stay confined to their burrow, struggling to defend themselves away from that shaft.',
+      title: 'Mountain Paths and Bare Ground',
+      body: 'Related Japanese beetles live on bare ground along paths, around temples and in dry riverbeds, with firm, moderately moist soil. Larvae grow in self-dug burrows, enlarging the entrances after molting and waiting for prey.',
     },
   },
 
   'stag-beetle': {
     lesson: [
       {
-        title: 'How the Mandibles Do Battle',
-        body: "Sharp-toothed mandibles along the inner edge are the male's main weapon for sap spots and mates. Rivals cross mandibles, clamp bodies, and heave up to flip the loser off the trunk; the holder claims the wound.",
+        title: 'Different Forms of the Mandibles',
+        body: 'Chinese Stag Beetle jaws resemble long swords, with a prominent projection and a smaller inner tooth. Males have three jaw and body forms, making the species useful for exploring how these structures develop.',
         anchor: 'mandible',
       },
       {
-        title: 'A Wide Head for a Strong Bite',
-        body: "The broad, flattened head conceals strong muscles that power the mandibles' bite. The wider and stronger the head, the longer a male can clamp down, giving him the edge in a drawn-out standoff.",
+        title: 'Exploring Jaws Through Genes',
+        body: 'A chromosome-level reference genome was built from Chinese Stag Beetles collected in Anhui. These genetic data provide a starting point for exploring how differences in male jaws and body forms arise.',
         anchor: 'head',
       },
       {
-        title: 'Claws That Withstand the Strain',
-        body: 'Sharp claws at the leg tips hook tightly into the rough bark grain. When a rival clamps down and hauls at his body, the grip of these small claws decides whether he holds his ground or gets flipped.',
+        title: 'Day and Night Around Tree Hollows',
+        body: 'Adults of the Japanese subspecies hide in sap-bearing tree hollows by day and visit sap at night. Large males often occupy good feeding sites; smaller males and females more often fly to lights.',
         anchor: 'leg',
       },
       {
-        title: 'Siblings Can Grow Worlds Apart',
-        body: 'Larval nutrition determines adult mandible length; brothers from one brood fed differently can emerge with mandibles differing over double. Smaller-mandibled males often turn to ambush tactics for a sap spot.',
+        title: 'Food, Hormones and Jaw Growth',
+        body: 'In another stag beetle, Cyclommatus metallifer, better larval food conditions produced longer male jaws. A juvenile-hormone analogue applied during the prepupal stage also enhanced relative jaw growth.',
       },
     ],
     motion: {
-      title: 'A Grapple to Lift and Flip',
-      body: "Two males lock mandibles and heave upward together; whoever gets thrown off the trunk loses. Most bouts are ritualized strength tests that rarely pierce a rival's elytra, and the loser finds a new sap wound elsewhere.",
+      title: 'Occupying a Sap-Feeding Site',
+      body: 'Adults of the Japanese subspecies often visit sap at night. Large males occupy good feeding sites and tend to stay in their territories, while smaller males and females more often fly to lights; activity differs with size.',
     },
     quiz: [
       {
-        question: 'Why can the mandible length of male Chinese Stag Beetles from the same brood differ so much after they emerge?',
-        options: [
-          'It is determined entirely by genes; nutrition has no effect on mandible shape',
-          'Different nutrition levels during the larval stage directly affect how the adult mandibles develop',
-          'It is just measurement error; the actual difference is small',
-        ],
+        question: 'What affected male jaw growth in experiments on Cyclommatus metallifer?',
+        options: ['Genes alone, with food having no role', 'Larval food conditions and hormonal action at a particular developmental stage', 'Every adult fight makes the jaws grow longer'],
         answer: 1,
-        explain: 'Mandible length is shaped by larval nutrition; if feeding varies within a brood, mandibles can end up differing over double, not simply genetics.',
+        explain: 'Food conditions and prepupal hormone treatment affected jaw growth in that experimental species, rather than establishing a result for Dorcus hopei.',
       },
       {
-        question: 'How does a male Chinese Stag Beetle with smaller mandibles usually behave when facing a rival with stout mandibles?',
-        options: [
-          "He fights to the death, until he pierces the rival's elytra",
-          'He switches to ambush or opportunistic tactics, seizing a sap spot when the chance arises',
-          'He abandons that sap spot entirely and never contests one again',
-        ],
+        question: 'Which individuals tend to remain at sap-feeding territories in the Japanese subspecies?',
+        options: ['All females stay in one place for life', 'Large males occupying favorable feeding sites', 'Every small male stops visiting sap'],
         answer: 1,
-        explain: 'A male with smaller mandibles is disadvantaged head-on, so he shifts to ambush tactics, seizing a sap spot while a rival is distracted.',
+        explain: 'Large males of the Japanese subspecies often occupy good sap sites and stay in their territories; smaller males and females more often fly to lights.',
       },
     ],
     habitat: {
-      title: 'Rotten Wood and Sap Wounds',
-      body: 'Larvae live inside rotting logs or hollows, feeding on decomposing wood, rarely seeing light. Adults, active by night, lick sap from trunk wounds shared with other stag or rhinoceros beetles, resting by day in bark or leaf litter.',
+      title: 'White-Rotted Wood and Tree Sap',
+      body: 'Japanese-subspecies larvae inhabit drier parts of large white-rotted fallen or standing dead trees. Adults visit sap at night; local woodland development and overcollection damage both wood and feeding sites.',
     },
   },
 
@@ -999,55 +975,47 @@ export const GUIDES: Record<string, Guide> = {
   'mole-cricket': {
     lesson: [
       {
-        title: 'Forelegs Are Shovels, Not Springs',
-        body: 'Its forelegs are flat, shovel-like tools with hard teeth on the shin for loosening and pushing soil forward. All its power goes into digging, so jumping is weak; when threatened, it burrows instead of leaping.',
+        title: 'Scraping Differs From Digging',
+        body: 'Broad forelegs suit underground digging. Scraping briefly presses the ground without moving soil; digging applies sustained force, pushes soil aside and moves the body forward to form a tunnel.',
         anchor: 'foreleg',
       },
       {
-        title: 'A Shield-Shaped Plate for Pushing On',
-        body: 'The plate behind the head (pronotum) swells into a rounded shield covering the neck and foreleg base; through a tunnel, it acts like a cap, pushing loosened soil aside and cutting friction against the wall.',
+        title: 'Different Burrows, Different Uses',
+        body: 'Oriental Mole Crickets feed in horizontal and deeper vertical tunnels. Vertical ones also serve refuge, rest, molting and overwintering; horizontal ones serve escape and mating. Tunnels change as needs change.',
         anchor: 'pronotum',
       },
       {
-        title: 'Sensing Vibration With the Cerci',
-        body: 'A pair of sensory appendages (cerci) at the abdomen tip is sensitive to faint vibrations through ground and tunnel walls. Even in complete darkness, it uses these to sense a predator or prey well in advance.',
+        title: 'Body Movements Create Vibrations',
+        body: 'Oriental Mole Crickets rock their whole bodies to vibrate the ground, more often when neighbors approach, possibly for defense. They also scrape or tap with their forelegs and tap with their palps.',
         anchor: 'abdomen',
       },
       {
-        title: 'Occasionally Takes to the Air',
-        body: 'Most of the time it lives underground and rarely surfaces. During nighttime dispersal, it unfolds hindwings tucked beneath short forewings for short flights, and is drawn to light — why it turns up near lamps.',
+        title: 'Seasonal Changes in Wing Form',
+        body: 'In western Japanese wetlands, long-winged adults appear mainly in summer, and short-winged ones from autumn to early summer. The forms are linked to overwintering as nymphs or adults, respectively.',
         anchor: 'wing',
       },
     ],
     motion: {
-      title: 'Digging Like a Breaststroke Swimmer',
-      body: 'In soft, moist soil, it digs by alternating forelegs, like a breaststroke swimmer: one leg sweeps soil outward while the other draws back for the next stroke, and the pronotum pushes dirt aside. A new tunnel forms in minutes.',
+      title: 'Moving Soil Aside to Advance',
+      body: 'When digging, Oriental Mole Crickets press with their forelegs, push soil sideways and move forward. Scraping produces stronger vibrations but leaves soil in place, without forward body movement; the two actions differ.',
     },
     quiz: [
       {
-        question: 'When facing a predator, how does the Oriental Mole Cricket usually escape danger?',
-        options: [
-          'Like a grasshopper, it leaps far away using powerful hindlegs',
-          'Its forelegs are not built for jumping, so it escapes by quickly burrowing into loose soil',
-          'It unfolds its wings and flies off immediately',
-        ],
+        question: 'How do foreleg scraping and digging differ in Oriental Mole Crickets?',
+        options: ['Neither movement touches the ground', 'Scraping leaves soil in place; digging moves it sideways', 'Only the hindlegs can touch tunnel walls'],
         answer: 1,
-        explain: "The mole cricket's forelegs are built for digging, not jumping, so it burrows into loose soil when threatened, unlike grasshoppers or crickets.",
+        explain: 'Scraping briefly presses the ground without moving soil. Digging uses sustained pressure to push soil aside as the body moves forward.',
       },
       {
-        question: 'The Oriental Mole Cricket burrows and feeds year-round in farmland soil — what objective effect does this have on the soil itself?',
-        options: [
-          'Its digging compacts the soil, hindering root growth',
-          'Its digging loosens the soil, promoting air and water penetration',
-          'Its digging has no effect at all on soil structure',
-        ],
+        question: 'Besides feeding, what can vertical Oriental Mole Cricket burrows be used for?',
+        options: ['Turning larvae into pupae', 'Refuge, rest, molting and overwintering', 'Storing eggs that hatch only underwater'],
         answer: 1,
-        explain: 'Feeding on roots and seedlings makes it a farmland pest, but its burrowing loosens soil and aids water penetration — a benefit often overlooked.',
+        explain: 'Vertical tunnels serve feeding, refuge, rest, molting and overwintering; horizontal tunnels serve escape and mating, with egg chambers beside them.',
       },
     ],
     habitat: {
-      title: 'Tunnels Through Soft Soil Layers',
-      body: 'It favors soft, moist soil easy to dig, like farmland, vegetable plots, and riverbanks, staying deep in tunnels by day and moving toward the surface at night to feed. It avoids compacted or dry ground where burrowing is hard.',
+      title: 'Underground in Wetlands and Farmland',
+      body: 'Oriental Mole Crickets burrow in wetland and farmland soil. Horizontal and vertical tunnels serve feeding, refuge and breeding, with egg chambers beside horizontal burrows. They alter tunnels or move sites as needs change.',
     },
   },
   'water-strider': {
