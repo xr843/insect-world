@@ -58,11 +58,14 @@
       才启动 —— 和上面字体注释里是同一类教训。放在应用入口之后，最坏也
       只是统计丢失，页面照常。
       站点已在 Umami 后台创建（insect-world / insect-world.pages.dev）。
+      data-domains 只放行正式域名：别人整站搭的副本（2026-10 实测 30 天约 14% 访客来自
+      more.dicomp.net 等镜像）、本地开发与 Pages 预览地址都不再上报，统计只算本站。
     -->
     <script
       defer
       src="https://analytics.fojin.app/script.js"
       data-website-id="9d5062c4-6c2d-40c7-bab1-112ad6ba431d"
+      data-domains="insect-world.pages.dev"
     ></script>
   </body>
 </html>
