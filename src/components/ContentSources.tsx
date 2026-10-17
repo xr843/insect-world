@@ -17,6 +17,10 @@ const claimKeys = {
   'winter-clustering': 'sources.winterClustering',
   'mantis-forelegs-and-eggs': 'sources.mantisForelegsEggs',
   'mantis-us-bird-records': 'sources.mantisBirdRecords',
+  'longhorn-beetle-adult-morphology': 'sources.longhornMorphology',
+  'longhorn-beetle-life-cycle-and-boring': 'sources.longhornLifeCycle',
+  'longhorn-beetle-hosts-and-damage': 'sources.longhornHostsDamage',
+  'longhorn-beetle-distribution-and-pathways': 'sources.longhornDistribution',
 } as const satisfies Record<ContentClaim, string>
 
 const accessKeys = {

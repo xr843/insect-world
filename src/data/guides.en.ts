@@ -512,53 +512,53 @@ export const GUIDES: Record<string, Guide> = {
     lesson: [
       {
         title: 'How Long Are the Antennae',
-        body: "Black-and-white banded antennae reach nearly twice body length in males — the trait that most easily sets this beetle apart. Sensors on the antennae surface detect host-tree scent and mates' pheromones.",
+        body: "The 11 antennal segments are white or pale blue at the base, black at the tip. They reach about 1.7–2 times body length in males, 1.2 in females; male elytra taper, female elytra have parallel sides.",
         anchor: 'antenna',
       },
       {
         title: 'What the Mandibles Are For',
-        body: 'The stout mandibles serve many uses: adults gnaw bark for food, and before laying eggs, females carve a notch, deposit eggs inside, then seal it with secretions so hatched grubs can bore into the trunk.',
+        body: 'Newly emerged adults feed on twigs, petioles and bark for about 10–15 days before mating. A female then chews a T-shaped slit in bark near the ground so she can insert her ovipositor, laying one egg per slit.',
         anchor: 'mandible',
       },
       {
         title: 'Reading the White-Spotted Elytra',
-        body: 'Irregular white spots scatter across the black elytra, varying between beetles so no two look alike. This bold pattern makes it easy to spot on tree trunks — the opposite strategy from camouflaged beetles.',
+        body: 'The glossy black elytra usually bear 10–20 irregular white patches, sometimes pale yellow. Its 20–40 basal tubercles make the surface grainy, the main way to tell it from the Asian longhorned beetle.',
         anchor: 'elytra',
       },
       {
         title: 'Wintering Inside the Trunk',
-        body: 'After hatching, the grub bores from the notch into the sapwood, tunneling through trunk and roots to feed for one to two years, rarely emerging. This hidden habit makes detection and control especially hard.',
+        body: 'Grubs first feed in the cambium under the bark, then bore into the trunk base and roots; most overwinter as larvae. With little early frass, infested trees can go unnoticed for years, so control is hard.',
       },
     ],
     motion: {
       title: 'Boring a Tunnel Through the Trunk',
-      body: "A hatched grub bores from the egg notch into the sapwood, pushing frass out as it advances with its mandibles. The tunnel winds along the grain for tens of centimeters until the grub pupates at its end one to two years later.",
+      body: "A young grub first feeds in the cambium, then bores an oval tunnel into sapwood and heartwood, mostly down to the roots. Frass is pushed out near the egg site and piles at the trunk base; the grub pupates at the tunnel end.",
     },
     quiz: [
       {
-        question: 'Why does a female Citrus Longhorned Beetle carve a notch in the bark with her mandibles before laying eggs?',
+        question: 'Why does a female Citrus Longhorned Beetle chew a T-shaped slit in the bark with her mandibles when laying eggs?',
         options: [
-          'The notch marks territory to drive off other females',
-          'Eggs are laid inside the notch and sealed, so hatched grubs can easily bore into the sapwood',
-          "Sap oozing from the notch becomes the female's own food source",
+          'To mark territory and drive off other females',
+          'To insert her ovipositor and lay an egg in the bark',
+          "To leave a mark so she can find the same tree again",
         ],
         answer: 1,
-        explain: 'The notch is sealed with secretions to protect the eggs inside, letting hatched grubs bore straight into the trunk to feed.',
+        explain: 'The T-shaped slit lets her insert the ovipositor; she lays one egg per slit, within or under the bark.',
       },
       {
-        question: 'The Citrus Longhorned Beetle is native to East Asia — why has it established wild populations in several European countries?',
+        question: 'The Citrus Longhorned Beetle is native to Asia — how has it mainly reached Europe and other regions?',
         options: [
           'It can fly long distances across open sea on its own',
-          'It hitchhikes unnoticed on nursery stock and wooden packaging through trade',
+          'It travels hidden in imported live plants such as bonsai and nursery stock',
           'Migratory birds carried its grubs to Europe',
         ],
         answer: 1,
-        explain: 'Grubs hide unnoticed inside trunks, often reaching Europe and North America in nursery stock or wooden packaging — not by flying across the sea.',
+        explain: 'In trade it moves mainly as eggs, larvae or pupae inside bonsai and nursery stock; importing host plants is the main pathway.',
       },
     ],
     habitat: {
       title: 'A Lifetime Hidden Inside Trunks',
-      body: 'As grubs they live deep in the sapwood of living trees, tunneling from trunk base to roots, rarely seeing daylight. Only as adults do they chew through bark to roam forests, orchards, and city trees, gnawing bark, seeking mates.',
+      body: 'Grubs live in the trunk base and roots of living trees. Adults exit via round holes usually 10–15 mm wide near the trunk base, then eat twigs and leaves and mate. Abroad it favors urban trees; in Türkiye, hazelnut orchards too.',
     },
   },
 

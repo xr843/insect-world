@@ -13,6 +13,10 @@ export type ContentClaim =
   | 'winter-clustering'
   | 'mantis-forelegs-and-eggs'
   | 'mantis-us-bird-records'
+  | 'longhorn-beetle-adult-morphology'
+  | 'longhorn-beetle-life-cycle-and-boring'
+  | 'longhorn-beetle-hosts-and-damage'
+  | 'longhorn-beetle-distribution-and-pathways'
 
 export interface ContentSource {
   id: string
@@ -21,12 +25,55 @@ export interface ContentSource {
     | 'sources.ncLadybirdTitle' | 'sources.cornellLadybirdTitle' | 'sources.adwLadybirdTitle' | 'sources.bleedingTitle'
     | 'sources.ufBeeTitle' | 'sources.waggleTitle' | 'sources.psuWinterTitle'
     | 'sources.ncMantisTitle' | 'sources.mantisBirdTitle'
+    | 'sources.eppoAnoplophoraDatasheetTitle' | 'sources.eppoAnoplophoraDistributionTitle' | 'sources.eppoAnoplophoraReportingTitle' | 'sources.efsaAnoplophoraSurveyCardTitle' | 'sources.haackAnoplophoraReviewTitle'
   supports: readonly ContentClaim[]
   access: 'full-text' | 'official-page' | 'abstract'
   checkedAt: string
 }
 
 export const CONTENT_SOURCES: Readonly<Record<string, readonly ContentSource[]>> = {
+  'longhorn-beetle': [
+    {
+      id: 'eppo-anoplophora-chinensis-datasheet',
+      url: 'https://gd.eppo.int/taxon/ANOLCN/datasheet',
+      titleKey: 'sources.eppoAnoplophoraDatasheetTitle',
+      supports: ['longhorn-beetle-adult-morphology', 'longhorn-beetle-life-cycle-and-boring', 'longhorn-beetle-hosts-and-damage', 'longhorn-beetle-distribution-and-pathways'],
+      access: 'official-page',
+      checkedAt: '2026-10-17',
+    },
+    {
+      id: 'eppo-anoplophora-chinensis-distribution',
+      url: 'https://gd.eppo.int/taxon/ANOLCN/distribution',
+      titleKey: 'sources.eppoAnoplophoraDistributionTitle',
+      supports: ['longhorn-beetle-distribution-and-pathways'],
+      access: 'official-page',
+      checkedAt: '2026-10-17',
+    },
+    {
+      id: 'eppo-reporting-anoplophora-chinensis',
+      url: 'https://gd.eppo.int/taxon/ANOLCN/reporting',
+      titleKey: 'sources.eppoAnoplophoraReportingTitle',
+      supports: ['longhorn-beetle-distribution-and-pathways', 'longhorn-beetle-hosts-and-damage'],
+      access: 'official-page',
+      checkedAt: '2026-10-17',
+    },
+    {
+      id: 'efsa-anoplophora-chinensis-survey-card',
+      url: 'https://wapi.gov.me/download/8cb1a239-729e-4de2-a2b6-82321c6d43f6?version=1.0',
+      titleKey: 'sources.efsaAnoplophoraSurveyCardTitle',
+      supports: ['longhorn-beetle-adult-morphology', 'longhorn-beetle-life-cycle-and-boring', 'longhorn-beetle-hosts-and-damage', 'longhorn-beetle-distribution-and-pathways'],
+      access: 'full-text',
+      checkedAt: '2026-10-17',
+    },
+    {
+      id: 'haack-2010-anoplophora-review',
+      url: 'https://research.fs.usda.gov/download/treesearch/34395.pdf',
+      titleKey: 'sources.haackAnoplophoraReviewTitle',
+      supports: ['longhorn-beetle-adult-morphology', 'longhorn-beetle-life-cycle-and-boring', 'longhorn-beetle-hosts-and-damage', 'longhorn-beetle-distribution-and-pathways'],
+      access: 'full-text',
+      checkedAt: '2026-10-17',
+    },
+  ],
   mantis: [
     {
       id: 'nc-state-chinese-mantid',
