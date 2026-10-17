@@ -464,7 +464,7 @@ export const INSECTS: Insect[] = [
     lifecycle: ['Egg', 'Larva (five instars)', 'Pupa', 'Adult'],
     range: 'Asia from Pakistan and India eastward, including southern coastal China, Malaysia, Indonesia, the Philippines and southwestern Japanese islands',
     status: 'Occurs in farmland, gardens and cities; larvae can damage host plants',
-    relatives: ['Crimson Rose', 'Asian Swallowtail', 'Great Mormon'],
+    relatives: ['Common Rose', 'Asian Swallowtail', 'Great Mormon'],
     accent: '#8a3f4a',
   },
   {
