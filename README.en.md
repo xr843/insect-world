@@ -99,7 +99,7 @@ hovering really is stationary.
 ## A whole life
 
 The **life cycle** card at the bottom steps the stand through egg, larva and pupa
-as you page through the panel. Twenty-three species so far, **61 stage models**. Complete metamorphosis: **Japanese
+as you page through the panel. Twenty-eight species so far, **74 stage models**. Complete metamorphosis: **Japanese
 rhinoceros beetle** (a creamy white grub → a pupa that already carries the
 beginnings of the horn → the glossy black adult — the sharpest contrast of the
 set), **monarch**, **Chinese oak silkmoth** (the caterpillar plus a
@@ -121,7 +121,7 @@ is a burrow ambusher — its metallic head shield plugs the hole and a hooked hu
 on its back anchors it to the wall; the pupa lies on its back on dorsal spines)
 and **the common Mormon swallowtail** (a smooth round egg; a final-instar
 caterpillar with false eyespots and an orange osmeterium; a *girdled* pupa slung
-from a twig by a silk belt, against the monarch's hanging one), **the house fly** (a banana-shaped egg; a legless, headless maggot showing only the tips of its black mouth hooks and a pair of D-shaped spiracular plates on its blunt rear; a dark reddish-brown *puparium* — the hardened skin of the last larval instar, with no legs or wings visible), **the jewel beetle** (a flat disc-shaped egg in a bark crevice; a classic flat-headed borer with a broad hammer-like prothorax marked by a Y-shaped groove; a pale exarate pupa lying on its back) and **the bamboo weevil** (an egg set in a hole chewed into a bamboo-shoot wall; a brown-headed, legless C-shaped grub; a supine pupa with its long snout pressed along the midline of its belly). Incomplete
+from a twig by a silk belt, against the monarch's hanging one), **the house fly** (a banana-shaped egg; a legless, headless maggot showing only the tips of its black mouth hooks and a pair of D-shaped spiracular plates on its blunt rear; a dark reddish-brown *puparium* — the hardened skin of the last larval instar, with no legs or wings visible), **the jewel beetle** (a flat disc-shaped egg in a bark crevice; a classic flat-headed borer with a broad hammer-like prothorax marked by a Y-shaped groove; a pale exarate pupa lying on its back) **the bamboo weevil** (an egg set in a hole chewed into a bamboo-shoot wall; a brown-headed, legless C-shaped grub; a supine pupa with its long snout pressed along the midline of its belly), **the rove beetle** (a spherical egg; a slender campodeiform larva with three pairs of thoracic legs and tail processes), **the giant hornet** (everything inside grey-brown *paper* hexagonal cells that open downward — against the honeybee's wax — with a pale silk cap over the pupa) and **the crane fly** (a black elongate egg; a grey-brown "leatherjacket" whose tail end carries a ring of fleshy lobes around two spiracles; a pupa with breathing horns and rows of abdominal spines). Incomplete
 metamorphosis, as the
 contrast: **the black cicada** (fossorial forelegs plus wing pads), **the
 emperor dragonfly** nymph (the hinged, mask-like labium plus four wing pads),
@@ -131,7 +131,7 @@ the soil under a plug of hardened foam; the hopper's wing pads are *reversed* �
 front and back swapped relative to the adult), **the German cockroach** (a
 ribbed, purse-shaped ootheca; a dark nymph with a pale stripe down its back) and
 **the stick insect** (seed-like eggs with a lid and a micropylar plate; the nymph
-is a smaller, greener twig — the adult is wingless, so there are no wing pads), **the oriental mole cricket** (a greyish oval egg; a nymph already armed with shovel-like digging forelegs and small wing pads lying flat on its back) and **the water strider** (elongate eggs glued in a row along a water-plant stem; a wingless nymph with enormously long middle and hind legs).
+is a smaller, greener twig — the adult is wingless, so there are no wing pads), **the oriental mole cricket** (a greyish oval egg; a nymph already armed with shovel-like digging forelegs and small wing pads lying flat on its back) **the water strider** (elongate eggs glued in a row along a water-plant stem; a wingless nymph with enormously long middle and hind legs), **the damselfly** (eggs inserted into a water-plant stem; a nymph with three leaf-like caudal gills that set it apart from the dragonfly's) and **the shore earwig** (a clutch of white eggs in a soil chamber; a pale nymph with short, straight forceps).
 
 **Those wing pads are the visible evidence that the wings are still "buds"** —
 the difference between complete and incomplete metamorphosis is the first thing
